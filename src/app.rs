@@ -1,4 +1,4 @@
-use crate::protocol::{Event, ProtocolWriter, diagnostic};
+use crate::protocol::{Event, ProtocolWriter, Version, diagnostic};
 use crate::renderer::Renderer;
 use crate::state::RendererState;
 use crate::transport::{self, Update};
@@ -13,6 +13,7 @@ use std::sync::{
 
 #[derive(Clone)]
 pub struct Output {
+    pub version: Version,
     pub writer: ProtocolWriter,
     pub failed: Arc<AtomicBool>,
     pub closing: Arc<AtomicBool>,
@@ -24,7 +25,7 @@ impl Output {
         if self.closing.load(Ordering::SeqCst) {
             return;
         }
-        if let Err(error) = self.writer.send(event) {
+        if let Err(error) = self.writer.send(self.version, event) {
             self.failed.store(true, Ordering::SeqCst);
             diagnostic(error);
             self.stop(cx);
@@ -96,10 +97,12 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
         .detach();
         cx.spawn(async move |cx| {
             let mut window: Option<WindowHandle<Renderer>> = None;
+            let mut output = output;
             while let Ok(update) = updates.recv().await {
                 let stop = matches!(update, Update::Shutdown | Update::Fatal(_) | Update::Eof);
                 let result = cx.update(|cx| match update {
-                    Update::Hello(hello) => {
+                    Update::Hello(version, hello) => {
+                        output.version = version;
                         let grid = hello.grid;
                         let bounds = Bounds::centered(
                             None,

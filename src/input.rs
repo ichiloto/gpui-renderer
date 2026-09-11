@@ -1,35 +1,44 @@
 use crate::protocol::Event;
 use gpui::Keystroke;
 
-/// Physical/logical identities only; action bindings belong to PHP.
+/// Physical/logical identities only; action bindings belong to PHP in BOTH versions.
 pub fn normalize(stroke: &Keystroke) -> Option<Event> {
-    // v1 has no modifier-chord vocabulary. Never turn cmd-W into plain W.
-    if stroke.modifiers.control
-        || stroke.modifiers.alt
-        || stroke.modifiers.platform
-        || stroke.modifiers.function
-    {
+    if stroke.modifiers.control || stroke.modifiers.alt || stroke.modifiers.platform {
         return None;
     }
-    let key = match stroke.key.as_str() {
-        "up" | "down" | "left" | "right" | "enter" | "space" | "escape" => stroke.key.clone(),
-        "w" | "a" | "s" | "d" | "q" | "W" | "A" | "S" | "D" | "Q" => {
-            // key_char preserves caps-lock/keyboard-layout case where available.
-            if let Some(character) = &stroke.key_char {
-                if character.eq_ignore_ascii_case(&stroke.key) {
-                    character.clone()
-                } else if stroke.modifiers.shift {
-                    stroke.key.to_ascii_uppercase()
-                } else {
-                    stroke.key.clone()
-                }
-            } else if stroke.modifiers.shift {
-                stroke.key.to_ascii_uppercase()
-            } else {
-                stroke.key.clone()
-            }
+    let name = stroke.key.as_str();
+    let function_key = (0..=20).any(|n| name == format!("f{n}"));
+    // GPUI macOS maps native special keys before ordinary characters. Fn can produce
+    // a standalone delete/home/pageup/F-key. Never degrade Fn+ordinary letters.
+    let standalone = match name {
+        "up" | "down" | "left" | "right" | "enter" | "space" | "escape" | "backspace"
+        | "delete" | "insert" | "home" | "end" | "do" | "find" | "help" | "next" | "previous"
+        | "select" => Some(name),
+        "pageup" => Some("page_up"),
+        "pagedown" => Some("page_down"),
+        "tab" if stroke.modifiers.shift => Some("shift_tab"),
+        "tab" => Some("tab"),
+        _ if function_key => Some(name),
+        _ => None,
+    };
+    let key = if let Some(key) = standalone {
+        key.to_owned()
+    } else if !stroke.modifiers.function
+        && name.len() == 1
+        && name.as_bytes()[0].is_ascii_alphabetic()
+    {
+        // Match key_char only for the same letter, preserving reported case/caps lock.
+        if let Some(character) = &stroke.key_char
+            && character.eq_ignore_ascii_case(name)
+        {
+            character.clone()
+        } else if stroke.modifiers.shift {
+            name.to_ascii_uppercase()
+        } else {
+            name.to_owned()
         }
-        _ => return None,
+    } else {
+        return None;
     };
     Some(Event::Key { key })
 }
@@ -37,45 +46,92 @@ pub fn normalize(stroke: &Keystroke) -> Option<Event> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn required_keys_serialize_as_identities() {
-        for key in [
-            "up", "down", "left", "right", "w", "a", "s", "d", "W", "A", "S", "D", "enter",
-            "space", "escape", "q", "Q",
-        ] {
-            let event = normalize(&Keystroke {
-                key: key.into(),
-                ..Default::default()
-            })
-            .unwrap();
-            assert_eq!(event, Event::Key { key: key.into() });
-            let mut bytes = Vec::new();
-            crate::protocol::write_event(&mut bytes, &event).unwrap();
-            assert_eq!(
-                serde_json::from_slice::<serde_json::Value>(&bytes).unwrap()["key"],
-                key
-            );
+    fn key(name: &str) -> Keystroke {
+        Keystroke {
+            key: name.into(),
+            ..Default::default()
         }
     }
+    fn event(name: &str) -> Option<Event> {
+        Some(Event::Key { key: name.into() })
+    }
     #[test]
-    fn shift_caps_lock_and_unsupported_chords() {
-        let mut stroke = Keystroke {
-            key: "w".into(),
-            ..Default::default()
-        };
-        stroke.modifiers.shift = true;
-        assert_eq!(normalize(&stroke), Some(Event::Key { key: "W".into() }));
-        stroke.modifiers.shift = false;
-        stroke.key_char = Some("W".into());
-        assert_eq!(normalize(&stroke), Some(Event::Key { key: "W".into() }));
-        stroke.modifiers.platform = true;
-        assert!(normalize(&stroke).is_none());
-        assert!(
-            normalize(&Keystroke {
-                key: "f1".into(),
-                ..Default::default()
-            })
-            .is_none()
-        );
+    fn every_letter_and_standalone_identity() {
+        for name in (b'a'..=b'z')
+            .chain(b'A'..=b'Z')
+            .map(|b| (b as char).to_string())
+            .chain((0..=20).map(|n| format!("f{n}")))
+            .chain(
+                [
+                    "up",
+                    "down",
+                    "left",
+                    "right",
+                    "enter",
+                    "space",
+                    "escape",
+                    "tab",
+                    "backspace",
+                    "delete",
+                    "insert",
+                    "home",
+                    "end",
+                    "do",
+                    "find",
+                    "help",
+                    "next",
+                    "previous",
+                    "select",
+                ]
+                .map(str::to_owned),
+            )
+        {
+            assert_eq!(normalize(&key(&name)), event(&name));
+        }
+        assert_eq!(normalize(&key("pageup")), event("page_up"));
+        assert_eq!(normalize(&key("pagedown")), event("page_down"));
+    }
+    #[test]
+    fn native_gpui_shift_and_key_char_case() {
+        for name in ["c", "m", "t", "q", "w", "a", "s", "d"] {
+            let mut stroke = key(name);
+            stroke.modifiers.shift = true;
+            assert_eq!(normalize(&stroke), event(&name.to_uppercase()));
+            stroke.key_char = Some(name.to_uppercase());
+            assert_eq!(normalize(&stroke), event(&name.to_uppercase()));
+            stroke.modifiers.shift = false;
+            assert_eq!(normalize(&stroke), event(&name.to_uppercase()));
+            stroke.modifiers.shift = true;
+            stroke.key_char = Some(name.into());
+            assert_eq!(normalize(&stroke), event(name)); // reported caps+shift case
+        }
+        let mut tab = key("tab");
+        tab.key_char = Some("\t".into());
+        tab.modifiers.shift = true;
+        assert_eq!(normalize(&tab), event("shift_tab"));
+    }
+    #[test]
+    fn modifiers_never_degrade_chords() {
+        for name in ["w", "c", "x", "tab", "f5", "up"] {
+            for modifier in 0..3 {
+                let mut stroke = key(name);
+                match modifier {
+                    0 => stroke.modifiers.platform = true,
+                    1 => stroke.modifiers.control = true,
+                    _ => stroke.modifiers.alt = true,
+                }
+                assert_eq!(normalize(&stroke), None);
+            }
+        }
+        let mut stroke = key("w");
+        stroke.modifiers.function = true;
+        assert_eq!(normalize(&stroke), None);
+        for name in ["f0", "f5", "f20", "delete", "home", "pageup"] {
+            stroke.key = name.into();
+            assert!(normalize(&stroke).is_some());
+        }
+        for name in ["f21", "f01", "F5", "KeyC", "0", "é", "", "shift"] {
+            assert_eq!(normalize(&key(name)), None);
+        }
     }
 }

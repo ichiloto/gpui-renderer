@@ -1,10 +1,10 @@
 use crate::assets::AssetRoot;
-use crate::protocol::{self, Hello, Message};
+use crate::protocol::{self, Hello, Incoming, Message, Version};
 use crate::state::PreparedFrame;
 use std::io::{BufRead, Read};
 
 pub enum Update {
-    Hello(Hello),
+    Hello(Version, Hello),
     Frame(PreparedFrame),
     Error(String),
     Fatal(String),
@@ -14,26 +14,44 @@ pub enum Update {
 
 #[derive(Default)]
 pub struct Session {
-    initialized: Option<(Hello, AssetRoot)>,
+    initialized: Option<(Version, Hello, AssetRoot)>,
 }
 
 impl Session {
-    pub fn prepare(&mut self, message: Message) -> Result<Update, String> {
-        match message {
+    pub fn prepare(&mut self, incoming: Incoming) -> Result<Update, String> {
+        if let Some((version, _, _)) = &self.initialized
+            && *version != incoming.version
+        {
+            return Err(format!(
+                "message protocol {} differs from session protocol {}",
+                incoming.version.number(),
+                version.number()
+            ));
+        }
+        match incoming.message {
             Message::Hello(hello) => {
                 if self.initialized.is_some() {
                     return Err("hello has already initialized this session".into());
                 }
                 let assets = AssetRoot::new(&hello.asset_root)?;
-                self.initialized = Some((hello.clone(), assets));
-                Ok(Update::Hello(hello))
+                self.initialized = Some((incoming.version, hello.clone(), assets));
+                Ok(Update::Hello(incoming.version, hello))
             }
             Message::Frame(frame) => {
-                let (hello, assets) = self
+                let (_, hello, assets) = self
                     .initialized
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
                 Ok(Update::Frame(PreparedFrame::prepare(
+                    frame, hello.grid, assets,
+                )?))
+            }
+            Message::FrameV2(frame) => {
+                let (_, hello, assets) = self
+                    .initialized
+                    .as_ref()
+                    .ok_or("frame requires a successful hello")?;
+                Ok(Update::Frame(PreparedFrame::prepare_v2(
                     frame, hello.grid, assets,
                 )?))
             }
@@ -145,5 +163,77 @@ mod tests {
                 )
                 .is_err()
         );
+    }
+    fn hello(version: u32) -> Vec<u8> {
+        serde_json::to_vec(&serde_json::json!({"protocol":version,"type":"hello","title":"Session","assetRoot":std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures"),"grid":{"columns":80,"rows":24,"cellWidth":16,"cellHeight":24}})).unwrap()
+    }
+    #[test]
+    fn failed_hello_does_not_select_session_then_v2_can_initialize() {
+        let mut session = Session::default();
+        let mut bad: serde_json::Value = serde_json::from_slice(&hello(2)).unwrap();
+        bad["assetRoot"] = "/nonexistent-ichiloto-assets".into();
+        assert!(
+            session
+                .prepare(protocol::parse(&serde_json::to_vec(&bad).unwrap()).unwrap())
+                .is_err()
+        );
+        assert!(session.initialized.is_none());
+        assert!(matches!(
+            session
+                .prepare(protocol::parse(&hello(2)).unwrap())
+                .unwrap(),
+            Update::Hello(Version::V2, _)
+        ));
+        assert_eq!(session.initialized.as_ref().unwrap().0, Version::V2);
+    }
+    #[test]
+    fn second_hello_and_mixed_versions_never_change_or_stop_session() {
+        for version in [1, 2] {
+            let mut session = Session::default();
+            session
+                .prepare(protocol::parse(&hello(version)).unwrap())
+                .unwrap();
+            for data in [
+                hello(version),
+                hello(3 - version),
+                format!(r#"{{"protocol":{},"type":"shutdown"}}"#, 3 - version).into_bytes(),
+                if version == 2 {
+                    br#"{"protocol":1,"type":"frame","frame":1,"text":[],"sprites":[]}"#.to_vec()
+                } else {
+                    br#"{"protocol":2,"type":"frame","frame":1,"textLayers":[],"sprites":[]}"#
+                        .to_vec()
+                },
+            ] {
+                assert!(session.prepare(protocol::parse(&data).unwrap()).is_err());
+                assert_eq!(session.initialized.as_ref().unwrap().0.number(), version);
+            }
+            assert!(matches!(
+                session
+                    .prepare(
+                        protocol::parse(
+                            format!(r#"{{"protocol":{version},"type":"shutdown"}}"#).as_bytes()
+                        )
+                        .unwrap()
+                    )
+                    .unwrap(),
+                Update::Shutdown
+            ));
+        }
+    }
+    #[test]
+    fn malformed_and_mixed_input_recovers_in_v2() {
+        let mut bytes = hello(2);
+        bytes.extend_from_slice(b"\nmalformed\n{\"protocol\":1,\"type\":\"shutdown\"}\n{\"protocol\":2,\"type\":\"frame\",\"frame\":1,\"textLayers\":[],\"sprites\":[]}\n{\"protocol\":2,\"type\":\"shutdown\"}\n");
+        let mut updates = vec![];
+        read_protocol(bytes.as_slice(), |u| {
+            updates.push(u);
+            true
+        });
+        assert_eq!(updates.len(), 5);
+        assert!(matches!(updates[0], Update::Hello(Version::V2, _)));
+        assert!(matches!(updates[1], Update::Error(_)));
+        assert!(matches!(updates[2], Update::Error(_)));
+        assert!(matches!(updates[3], Update::Frame(_)));
+        assert!(matches!(updates[4], Update::Shutdown));
     }
 }

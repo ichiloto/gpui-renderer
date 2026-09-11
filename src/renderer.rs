@@ -1,7 +1,8 @@
 use crate::app::Output;
+use crate::color::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
 use crate::input;
 use crate::protocol::{Anchor, Grid, Sprite};
-use crate::state::RendererState;
+use crate::state::{PaintItem, RendererState, painted_cells};
 use gpui::{
     Context, FocusHandle, IntoElement, KeyDownEvent, Render, Window, div, img, prelude::*, px, rgb,
 };
@@ -39,8 +40,8 @@ impl Render for Renderer {
             .w(px(grid.columns as f32 * cw))
             .h(px(grid.rows as f32 * ch))
             .overflow_hidden()
-            .bg(rgb(0x111820))
-            .text_color(rgb(0xd9e1e8))
+            .bg(rgb(DEFAULT_BACKGROUND))
+            .text_color(rgb(DEFAULT_FOREGROUND))
             .font_family(if cfg!(target_os = "macos") {
                 "Menlo"
             } else {
@@ -49,40 +50,62 @@ impl Render for Renderer {
             .text_size(px((cw * 0.9).min(ch * 0.75)))
             .line_height(px(ch));
         if let Some(frame) = &self.state.frame {
-            // Explicit cell positions avoid font metrics changing the grid pitch.
-            // Missing rows and trailing cells stay blank because every frame rebuilds the surface.
-            for (y, row) in frame.text.iter().enumerate() {
-                for (x, glyph) in row.chars().enumerate() {
-                    if glyph == ' ' {
-                        continue;
+            for item in &frame.plan {
+                match *item {
+                    PaintItem::LegacyText => {
+                        for (row, text) in frame.text.iter().enumerate() {
+                            for (column, glyph) in text.chars().enumerate() {
+                                if glyph != ' ' {
+                                    surface = surface.child(
+                                        cell(column as u32, row as u32, cw, ch)
+                                            .child(glyph.to_string()),
+                                    );
+                                }
+                            }
+                        }
                     }
-                    surface = surface.child(
-                        div()
-                            .absolute()
-                            .left(px(x as f32 * cw))
-                            .top(px(y as f32 * ch))
-                            .w(px(cw))
-                            .h(px(ch))
-                            .overflow_hidden()
-                            .text_center()
-                            .child(glyph.to_string()),
-                    );
+                    PaintItem::Text(index) => {
+                        for text in painted_cells(&frame.text_layers[index]) {
+                            let mut painted = cell(text.column, text.row, cw, ch)
+                                .bg(rgb(text.background))
+                                .text_color(rgb(text.foreground));
+                            if let Some(glyph) = text.glyph {
+                                painted = painted.child(glyph.to_string());
+                            }
+                            surface = surface.child(painted);
+                        }
+                    }
+
+                    PaintItem::Sprite(index) => {
+                        let item = &frame.sprites[index];
+                        let (left, top) = sprite_origin(&item.sprite, grid);
+                        surface = surface.child(
+                            img(item.image.clone())
+                                .absolute()
+                                .left(px(left))
+                                .top(px(top))
+                                .w(px(item.sprite.width as f32))
+                                .h(px(item.sprite.height as f32)),
+                        );
+                    }
                 }
             }
-            for item in &frame.sprites {
-                let (left, top) = sprite_origin(&item.sprite, grid);
-                surface = surface.child(
-                    img(item.image.clone())
-                        .absolute()
-                        .left(px(left))
-                        .top(px(top))
-                        .w(px(item.sprite.width as f32))
-                        .h(px(item.sprite.height as f32)),
-                );
-            }
         }
+
         surface
     }
+}
+
+fn cell(column: u32, row: u32, cw: f32, ch: f32) -> gpui::Div {
+    // Cell pitch never depends on glyph advance or font metrics.
+    div()
+        .absolute()
+        .left(px(column as f32 * cw))
+        .top(px(row as f32 * ch))
+        .w(px(cw))
+        .h(px(ch))
+        .overflow_hidden()
+        .text_center()
 }
 
 #[cfg(test)]

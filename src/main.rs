@@ -1,5 +1,6 @@
 mod app;
 mod assets;
+mod color;
 mod input;
 mod protocol;
 mod renderer;
@@ -16,6 +17,7 @@ fn main() -> std::process::ExitCode {
     let failed = Arc::new(AtomicBool::new(false));
     app::run(
         app::Output {
+            version: protocol::Version::V1,
             writer,
             failed: failed.clone(),
             closing: Arc::new(AtomicBool::new(false)),

@@ -3,23 +3,60 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::path::PathBuf;
 
-pub const VERSION: u32 = 1;
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum Version {
+    #[default]
+    V1,
+    V2,
+}
+
+impl Version {
+    pub fn number(self) -> u32 {
+        match self {
+            Self::V1 => 1,
+            Self::V2 => 2,
+        }
+    }
+}
 pub const MAX_LINE_BYTES: usize = 4 * 1024 * 1024;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct Incoming {
-    pub protocol: u32,
-    #[serde(flatten)]
+    pub version: Version,
     pub message: Message,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Debug)]
 pub enum Message {
     Hello(Hello),
     Frame(Frame),
+    FrameV2(FrameV2),
     Shutdown,
 }
+
+#[derive(Deserialize)]
+struct VersionProbe {
+    protocol: u32,
+}
+
+#[derive(Deserialize)]
+struct Envelope<F> {
+    protocol: u32,
+    #[serde(flatten)]
+    message: WireMessage<F>,
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case", deny_unknown_fields)]
+enum WireMessage<F> {
+    Hello(Hello),
+    Frame(F),
+    Shutdown(Empty),
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Empty {}
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -83,27 +120,107 @@ impl Frame {
                 "text rows must not contain control characters (including ANSI or tabs)".into(),
             );
         }
-        if self.sprites.len() > 1024 {
-            return Err("frame exceeds the S1 limit of 1024 sprites".into());
-        }
-        let mut ids = std::collections::HashSet::new();
-        for sprite in &self.sprites {
-            if sprite.id.is_empty() || !ids.insert(&sprite.id) {
-                return Err("sprite ids must be nonempty and unique within a frame".into());
-            }
-            if sprite.width == 0
-                || sprite.height == 0
-                || sprite.width > 4096
-                || sprite.height > 4096
-            {
-                return Err("sprite dimensions must be between 1 and 4096 logical pixels".into());
-            }
-        }
-        Ok(())
+        validate_sprites(&self.sprites)
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+pub const MAX_TEXT_LAYERS: usize = 64;
+pub const MAX_TEXT_RUNS: usize = 32768;
+pub const MAX_TEXT_SCALARS: usize = 524288;
+pub const MAX_LAYER_ID_BYTES: usize = 256;
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FrameV2 {
+    pub frame: u64,
+    pub text_layers: Vec<TextLayer>,
+    pub sprites: Vec<Sprite>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct TextLayer {
+    pub id: String,
+    pub layer: i32,
+    pub runs: Vec<TextRun>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct TextRun {
+    pub row: u32,
+    pub column: u32,
+    pub text: String,
+    // Explicit null is allowed; omission is malformed, not an implicit default.
+    #[serde(deserialize_with = "required_color")]
+    pub foreground: Option<crate::color::ColorSpec>,
+    #[serde(deserialize_with = "required_color")]
+    pub background: Option<crate::color::ColorSpec>,
+}
+
+fn required_color<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> Result<Option<crate::color::ColorSpec>, D::Error> {
+    Option::deserialize(d)
+}
+
+impl FrameV2 {
+    pub fn validate(&self, grid: Grid) -> Result<(), String> {
+        if self.text_layers.len() > MAX_TEXT_LAYERS {
+            return Err("frame exceeds 64 text layers".into());
+        }
+        let mut ids = std::collections::HashSet::new();
+        let mut runs = 0;
+        let mut scalars = 0;
+        for layer in &self.text_layers {
+            if layer.id.is_empty() || layer.id.len() > MAX_LAYER_ID_BYTES || !ids.insert(&layer.id)
+            {
+                return Err(
+                    "text layer ids must be nonempty, unique, and at most 256 UTF-8 bytes".into(),
+                );
+            }
+            runs += layer.runs.len();
+            if runs > MAX_TEXT_RUNS {
+                return Err("frame exceeds 32768 text runs".into());
+            }
+            for run in &layer.runs {
+                let count = run.text.chars().count();
+                scalars += count;
+                if scalars > MAX_TEXT_SCALARS {
+                    return Err("frame exceeds 524288 text scalars".into());
+                }
+                if run.row >= grid.rows
+                    || run.column >= grid.columns
+                    || count > (grid.columns - run.column) as usize
+                {
+                    return Err("text run exceeds the configured grid".into());
+                }
+                if run.text.chars().any(char::is_control) {
+                    return Err("text runs must not contain control characters (including ANSI, tabs, or newlines)".into());
+                }
+            }
+        }
+        validate_sprites(&self.sprites)
+    }
+}
+
+fn validate_sprites(sprites: &[Sprite]) -> Result<(), String> {
+    if sprites.len() > 1024 {
+        return Err("frame exceeds the limit of 1024 sprites".into());
+    }
+    let mut ids = std::collections::HashSet::new();
+    for sprite in sprites {
+        if sprite.id.is_empty() || !ids.insert(&sprite.id) {
+            return Err("sprite ids must be nonempty and unique within a frame".into());
+        }
+        if sprite.width == 0 || sprite.height == 0 || sprite.width > 4096 || sprite.height > 4096 {
+            return Err("sprite dimensions must be between 1 and 4096 logical pixels".into());
+        }
+    }
+    Ok(())
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct Sprite {
     pub id: String,
@@ -122,16 +239,39 @@ pub enum Anchor {
     BottomCenter,
 }
 
-pub fn parse(line: &[u8]) -> Result<Message, String> {
-    let incoming: Incoming =
-        serde_json::from_slice(line).map_err(|e| format!("invalid protocol message: {e}"))?;
-    if incoming.protocol != VERSION {
-        return Err(format!(
-            "unsupported protocol version {}; expected {VERSION}",
-            incoming.protocol
-        ));
+pub fn parse(line: &[u8]) -> Result<Incoming, String> {
+    fn decode<F: serde::de::DeserializeOwned>(line: &[u8]) -> Result<WireMessage<F>, String> {
+        let envelope: Envelope<F> =
+            serde_json::from_slice(line).map_err(|e| format!("invalid protocol message: {e}"))?;
+        debug_assert!(matches!(envelope.protocol, 1 | 2));
+        Ok(envelope.message)
     }
-    if let Message::Hello(hello) = &incoming.message {
+    let probe: VersionProbe =
+        serde_json::from_slice(line).map_err(|e| format!("invalid protocol message: {e}"))?;
+    let (version, message) = match probe.protocol {
+        1 => (
+            Version::V1,
+            match decode::<Frame>(line)? {
+                WireMessage::Hello(h) => Message::Hello(h),
+                WireMessage::Frame(f) => Message::Frame(f),
+                WireMessage::Shutdown(_) => Message::Shutdown,
+            },
+        ),
+        2 => (
+            Version::V2,
+            match decode::<FrameV2>(line)? {
+                WireMessage::Hello(h) => Message::Hello(h),
+                WireMessage::Frame(f) => Message::FrameV2(f),
+                WireMessage::Shutdown(_) => Message::Shutdown,
+            },
+        ),
+        other => {
+            return Err(format!(
+                "unsupported protocol version {other}; expected 1 or 2"
+            ));
+        }
+    };
+    if let Message::Hello(hello) = &message {
         hello.grid.validate()?;
         if !hello.asset_root.is_absolute() {
             return Err("assetRoot must be an absolute directory path".into());
@@ -140,7 +280,7 @@ pub fn parse(line: &[u8]) -> Result<Message, String> {
             return Err("title must be nonempty and contain no control characters".into());
         }
     }
-    Ok(incoming.message)
+    Ok(Incoming { version, message })
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
@@ -159,9 +299,9 @@ struct Outgoing<'a> {
     event: &'a Event,
 }
 
-pub fn write_event(mut writer: impl Write, event: &Event) -> std::io::Result<()> {
+pub fn write_event(mut writer: impl Write, version: Version, event: &Event) -> std::io::Result<()> {
     let mut line = serde_json::to_vec(&Outgoing {
-        protocol: VERSION,
+        protocol: version.number(),
         event,
     })?;
     line.push(b'\n');
@@ -176,7 +316,7 @@ pub fn diagnostic(message: String) {
 }
 
 #[derive(Clone)]
-pub struct ProtocolWriter(async_channel::Sender<Event>);
+pub struct ProtocolWriter(async_channel::Sender<(Version, Event)>);
 
 pub struct WriterCompletion {
     pub done: async_channel::Receiver<Result<(), String>>,
@@ -188,9 +328,9 @@ impl ProtocolWriter {
         self.0.close();
     }
     // The UI only enqueues. A slow/unread pipe can never block GPUI.
-    pub fn send(&self, event: Event) -> Result<(), String> {
+    pub fn send(&self, version: Version, event: Event) -> Result<(), String> {
         self.0
-            .try_send(event)
+            .try_send((version, event))
             .map_err(|e| format!("protocol output unavailable: {e}"))
     }
 
@@ -202,8 +342,8 @@ impl ProtocolWriter {
             let stdout = std::io::stdout();
             let mut stdout = stdout.lock();
             let result: std::io::Result<()> = (|| {
-                while let Ok(event) = rx.recv_blocking() {
-                    write_event(&mut stdout, &event)?;
+                while let Ok((version, event)) = rx.recv_blocking() {
+                    write_event(&mut stdout, version, &event)?;
                     if let Event::Error { message } = event {
                         eprintln!("{message}");
                     }
@@ -235,14 +375,14 @@ mod tests {
     #[test]
     fn valid_hello() {
         assert!(matches!(
-            parse(HELLO.as_bytes()).unwrap(),
+            parse(HELLO.as_bytes()).unwrap().message,
             Message::Hello(_)
         ));
     }
     #[test]
     fn unsupported_version() {
         assert!(
-            parse(HELLO.replace("\"protocol\":1", "\"protocol\":2").as_bytes())
+            parse(HELLO.replace("\"protocol\":1", "\"protocol\":3").as_bytes())
                 .unwrap_err()
                 .contains("unsupported")
         );
@@ -259,7 +399,7 @@ mod tests {
     }
     #[test]
     fn valid_frame_and_anchor() {
-        let Message::Frame(frame) = parse(FRAME.as_bytes()).unwrap() else {
+        let Message::Frame(frame) = parse(FRAME.as_bytes()).unwrap().message else {
             panic!()
         };
         assert_eq!(frame.sprites[0].anchor, Anchor::BottomCenter);
@@ -287,7 +427,9 @@ mod tests {
     #[test]
     fn shutdown_parsing() {
         assert!(matches!(
-            parse(br#"{"protocol":1,"type":"shutdown"}"#).unwrap(),
+            parse(br#"{"protocol":1,"type":"shutdown"}"#)
+                .unwrap()
+                .message,
             Message::Shutdown
         ));
     }
@@ -302,12 +444,225 @@ mod tests {
             Event::Key { key: "W".into() },
         ] {
             let mut bytes = Vec::new();
-            write_event(&mut bytes, &event).unwrap();
+            write_event(&mut bytes, Version::V1, &event).unwrap();
             assert_eq!(bytes.iter().filter(|&&b| b == b'\n').count(), 1);
             let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
             assert_eq!(value["protocol"], 1);
             if let Event::Key { key } = event {
                 assert_eq!(value["key"], key);
+            }
+        }
+    }
+    fn v2() -> serde_json::Value {
+        serde_json::json!({"protocol":2,"type":"frame","frame":1,"textLayers":[{"id":"world","layer":0,"runs":[{"row":4,"column":2,"text":"Hello ","foreground":null,"background":null}]}],"sprites":[]})
+    }
+    fn grid() -> Grid {
+        Grid {
+            columns: 135,
+            rows: 36,
+            cell_width: 10,
+            cell_height: 20,
+        }
+    }
+    fn frame_v2(value: serde_json::Value) -> Result<FrameV2, String> {
+        let Message::FrameV2(frame) = parse(value.to_string().as_bytes())?.message else {
+            panic!()
+        };
+        frame.validate(grid())?;
+        Ok(frame)
+    }
+    #[test]
+    fn v2_hello_and_frame_with_explicit_null_styles() {
+        assert_eq!(
+            parse(HELLO.replace("protocol\":1", "protocol\":2").as_bytes())
+                .unwrap()
+                .version,
+            Version::V2
+        );
+        let frame = frame_v2(v2()).unwrap();
+        assert_eq!(frame.text_layers[0].runs[0].text, "Hello ");
+        assert_eq!(frame.text_layers[0].runs[0].foreground, None);
+        assert_eq!(frame.text_layers[0].runs[0].background, None);
+    }
+    #[test]
+    fn cross_version_fields_and_unknown_fields_rejected() {
+        for (field, value) in [
+            ("textLayers", serde_json::json!([])),
+            ("unknown", serde_json::json!(0)),
+        ] {
+            let mut old: serde_json::Value = serde_json::from_str(FRAME).unwrap();
+            old[field] = value;
+            assert!(parse(old.to_string().as_bytes()).is_err());
+        }
+        for path in [
+            vec!["extra"],
+            vec!["text"],
+            vec!["textLayers", "0", "extra"],
+            vec!["textLayers", "0", "runs", "0", "extra"],
+        ] {
+            let mut value = v2();
+            let mut node = &mut value;
+            for part in &path[..path.len() - 1] {
+                node = if *part == "0" {
+                    &mut node[0]
+                } else {
+                    &mut node[*part]
+                };
+            }
+            node[*path.last().unwrap()] = serde_json::json!(0);
+            assert!(frame_v2(value).is_err());
+        }
+        for version in [1, 2] {
+            assert!(
+                parse(
+                    format!(r#"{{"protocol":{version},"type":"shutdown","extra":1}}"#).as_bytes()
+                )
+                .is_err()
+            );
+        }
+    }
+    #[test]
+    fn all_v2_fields_are_required_and_typed() {
+        for field in ["frame", "textLayers", "sprites"] {
+            let mut value = v2();
+            value.as_object_mut().unwrap().remove(field);
+            assert!(frame_v2(value).is_err());
+        }
+        for field in ["id", "layer", "runs"] {
+            let mut value = v2();
+            value["textLayers"][0]
+                .as_object_mut()
+                .unwrap()
+                .remove(field);
+            assert!(frame_v2(value).is_err());
+        }
+        for field in ["row", "column", "text", "foreground", "background"] {
+            let mut value = v2();
+            value["textLayers"][0]["runs"][0]
+                .as_object_mut()
+                .unwrap()
+                .remove(field);
+            assert!(frame_v2(value).is_err(), "{field}");
+        }
+        for bad in [
+            serde_json::json!(-1),
+            serde_json::json!(1.5),
+            serde_json::json!("4"),
+            serde_json::json!(4294967296u64),
+        ] {
+            let mut value = v2();
+            value["textLayers"][0]["runs"][0]["row"] = bad;
+            assert!(frame_v2(value).is_err());
+        }
+        let mut value = v2();
+        value["textLayers"][0]["layer"] = serde_json::json!(2147483648u64);
+        assert!(frame_v2(value).is_err());
+    }
+    #[test]
+    fn runs_must_fit_and_reject_controls() {
+        for (row, column, text) in [
+            (36, 0, "x"),
+            (0, 135, "x"),
+            (0, 134, "xx"),
+            (0, 0, "a\tb"),
+            (0, 0, "a\nb"),
+            (0, 0, "\u{1b}[31m"),
+            (0, 0, "\u{85}"),
+        ] {
+            let mut value = v2();
+            let run = &mut value["textLayers"][0]["runs"][0];
+            run["row"] = row.into();
+            run["column"] = column.into();
+            run["text"] = text.into();
+            assert!(frame_v2(value).is_err(), "{row} {column} {text:?}");
+        }
+        let mut value = v2();
+        let run = &mut value["textLayers"][0]["runs"][0];
+        run["row"] = 35.into();
+        run["column"] = 133.into();
+        run["text"] = "é猫".into();
+        assert!(frame_v2(value).is_ok()); // two scalars, independent of bytes/advance
+    }
+    #[test]
+    fn layer_ids_are_nonempty_unique_bounded_utf8() {
+        for id in [String::new(), "é".repeat(129)] {
+            let mut value = v2();
+            value["textLayers"][0]["id"] = id.into();
+            assert!(frame_v2(value).is_err());
+        }
+        let mut value = v2();
+        value["textLayers"][0]["id"] = "é".repeat(128).into();
+        assert!(frame_v2(value).is_ok());
+        let mut value = v2();
+        let duplicate = value["textLayers"][0].clone();
+        value["textLayers"].as_array_mut().unwrap().push(duplicate);
+        assert!(frame_v2(value).is_err());
+        assert!(
+            parse(b"{\"protocol\":2,\"type\":\"frame\",\"textLayers\":[{\"id\":\"\xff\"}]}")
+                .is_err()
+        );
+    }
+    #[test]
+    fn v2_resource_boundaries_include_full_current_layouts() {
+        let base = frame_v2(v2()).unwrap();
+        let mut frame = base.clone();
+        frame.text_layers = (0..MAX_TEXT_LAYERS)
+            .map(|i| TextLayer {
+                id: i.to_string(),
+                ..base.text_layers[0].clone()
+            })
+            .collect();
+        assert!(frame.validate(grid()).is_ok());
+        frame.text_layers.push(TextLayer {
+            id: "overflow".into(),
+            ..base.text_layers[0].clone()
+        });
+        assert!(frame.validate(grid()).is_err());
+        let mut frame = base.clone();
+        let mut run = frame.text_layers[0].runs[0].clone();
+        run.text = String::new();
+        frame.text_layers[0].runs = vec![run.clone(); MAX_TEXT_RUNS];
+        assert!(frame.validate(grid()).is_ok());
+        frame.text_layers[0].runs.push(run.clone());
+        assert!(frame.validate(grid()).is_err());
+        let mut frame = base.clone();
+        run.column = 0;
+        run.text = "x".repeat(512);
+        frame.text_layers[0].runs = vec![run.clone(); MAX_TEXT_SCALARS / 512];
+        let big = Grid {
+            columns: 512,
+            ..grid()
+        };
+        assert!(frame.validate(big).is_ok());
+        frame.text_layers[0].runs.push(run);
+        assert!(frame.validate(big).is_err());
+        let mut frame = base;
+        frame.text_layers[0].runs = (0..36)
+            .map(|row| TextRun {
+                row,
+                column: 0,
+                text: " ".repeat(135),
+                foreground: None,
+                background: None,
+            })
+            .collect();
+        assert!(frame.validate(grid()).is_ok());
+    }
+    #[test]
+    fn every_event_preserves_both_protocol_versions() {
+        for version in [Version::V1, Version::V2] {
+            for event in [
+                Event::Ready,
+                Event::Key { key: "C".into() },
+                Event::CloseRequested,
+                Event::Error {
+                    message: "bad".into(),
+                },
+            ] {
+                let mut bytes = vec![];
+                write_event(&mut bytes, version, &event).unwrap();
+                let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+                assert_eq!(value["protocol"], version.number());
             }
         }
     }

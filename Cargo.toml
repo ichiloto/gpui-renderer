@@ -2,7 +2,7 @@
 name = "gpui-renderer"
 version = "0.1.0"
 edition = "2024"
-description = "Ichiloto's standalone presentation and keyboard surface (S0/S1 spike)"
+description = "Ichiloto's standalone native presentation and keyboard surface"
 
 [dependencies]
 gpui = "=0.2.2"
