@@ -2,7 +2,15 @@
 name = "gpui-renderer"
 version = "0.1.0"
 edition = "2024"
+description = "Ichiloto's standalone presentation and keyboard surface (S0/S1 spike)"
 
 [dependencies]
-gpui = { version = "*" }
-gpui_platform = { version = "*", features = ["font-kit", "wayland", "x11"] }
+gpui = "=0.2.2"
+async-channel = "2"
+futures-lite = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[dev-dependencies]
+tempfile = "3"
