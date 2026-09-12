@@ -3,8 +3,7 @@ use crate::renderer::Renderer;
 use crate::state::RendererState;
 use crate::transport::{self, Update};
 use gpui::{
-    App, AppContext, Application, Bounds, TitlebarOptions, WindowBounds, WindowHandle,
-    WindowOptions, px, size,
+    App, AppContext, Application, TitlebarOptions, WindowBounds, WindowHandle, WindowOptions,
 };
 use std::sync::{
     Arc,
@@ -13,6 +12,7 @@ use std::sync::{
 
 #[derive(Clone)]
 pub struct Output {
+    pub diagnostics: crate::diagnostics::Diagnostics,
     pub version: Version,
     pub writer: ProtocolWriter,
     pub failed: Arc<AtomicBool>,
@@ -21,6 +21,22 @@ pub struct Output {
 }
 
 impl Output {
+    pub fn emit_key(
+        &self,
+        event: Event,
+        trace: Option<crate::diagnostics::KeyTrace>,
+        cx: &mut App,
+    ) {
+        if self.closing.load(Ordering::SeqCst) {
+            return;
+        }
+        if let Err(error) = self.writer.send_traced(self.version, event, trace) {
+            self.failed.store(true, Ordering::SeqCst);
+            diagnostic(error);
+            self.stop(cx);
+        }
+    }
+
     pub fn emit(&self, event: Event, cx: &mut App) {
         if self.closing.load(Ordering::SeqCst) {
             return;
@@ -65,6 +81,14 @@ impl Output {
                 diagnostic(format!("protocol output shutdown failed: {error}"));
                 output.failed.store(true, Ordering::SeqCst);
             }
+            let trace_result = futures_lite::future::race(output.diagnostics.finish(), async {
+                gpui::Timer::after(std::time::Duration::from_secs(2)).await;
+                Err("stderr diagnostics did not drain within 2 seconds".into())
+            })
+            .await;
+            if trace_result.is_err() {
+                output.failed.store(true, Ordering::SeqCst);
+            }
             if output.failed.load(Ordering::SeqCst) {
                 std::process::exit(1);
             }
@@ -104,24 +128,28 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                     Update::Hello(version, hello) => {
                         output.version = version;
                         let grid = hello.grid;
-                        let bounds = Bounds::centered(
-                            None,
-                            size(
-                                px((grid.columns * grid.cell_width) as f32),
-                                px((grid.rows * grid.cell_height) as f32),
-                            ),
+                        let initial = match crate::window_layout::initial_window(
+                            grid,
                             cx,
-                        );
+                            &output.diagnostics,
+                        ) {
+                            Ok(initial) => initial,
+                            Err(error) => {
+                                output.fatal(error, cx);
+                                return;
+                            }
+                        };
                         let close_output = output.clone();
                         let view_output = output.clone();
                         match cx.open_window(
                             WindowOptions {
-                                window_bounds: Some(WindowBounds::Windowed(bounds)),
+                                window_bounds: Some(WindowBounds::Windowed(initial.bounds)),
+                                display_id: Some(initial.display_id),
                                 titlebar: Some(TitlebarOptions {
                                     title: Some(hello.title.clone().into()),
                                     ..Default::default()
                                 }),
-                                is_resizable: false,
+                                is_resizable: true,
                                 ..Default::default()
                             },
                             move |window, cx| {
@@ -140,6 +168,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         state: RendererState { hello, frame: None },
                                         focus,
                                         output: view_output,
+                                        last_viewport: None,
                                     }
                                 })
                             },

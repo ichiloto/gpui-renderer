@@ -1,0 +1,14 @@
+{"diagnostic":"geometry","stage":"initial_window","at_ns":352212041,"values":[["display_id",1.0],["screen_x",0.0],["screen_y",0.0],["screen_width",1920.0],["screen_height",1200.0],["work_x",0.0],["work_y",77.0],["work_width",1920.0],["work_height",1093.0],["available_content_width",1920.0],["available_content_height",1061.0],["logical_width",1280.0],["logical_height",576.0],["content_width",1280.0],["content_height",576.0],["outer_width",1280.0],["outer_height",608.0],["display_relative_left",320.0],["display_relative_top",272.0],["scale",1.0]]}
+{"diagnostic":"geometry","stage":"viewport","at_ns":492342333,"values":[["outer_left",320.0],["outer_top",272.0],["outer_width",1280.0],["outer_height",608.0],["width",1280.0],["height",576.0],["scale",1.0],["offset_x",0.0],["offset_y",0.0],["presented_width",1280.0],["presented_height",576.0]]}
+{"diagnostic":"geometry","stage":"viewport","at_ns":19355189333,"values":[["outer_left",320.0],["outer_top",272.0],["outer_width",640.0],["outer_height",320.0],["width",640.0],["height",288.0],["scale",0.5],["offset_x",0.0],["offset_y",0.0],["presented_width",640.0],["presented_height",288.0]]}
+{"diagnostic":"key","id":1,"stage":"native","at_ns":19795954166,"key":"right","is_held":false}
+{"diagnostic":"key","id":1,"stage":"normalized","at_ns":19795988500,"key":"right","is_held":false}
+{"diagnostic":"key","id":1,"stage":"queued","at_ns":19795991666,"key":"right","is_held":false,"pending_before_enqueue":0}
+{"diagnostic":"key","id":1,"stage":"write_started","at_ns":19796011916,"key":"right","is_held":false,"pending_after_dequeue":0,"in_flight":true}
+{"diagnostic":"key","id":1,"stage":"written","at_ns":19796114666,"key":"right","is_held":false,"in_flight":false}
+{"diagnostic":"key","id":2,"stage":"native","at_ns":19842485541,"key":"c","is_held":false}
+{"diagnostic":"key","id":2,"stage":"normalized","at_ns":19842504250,"key":"C","is_held":false}
+{"diagnostic":"key","id":2,"stage":"queued","at_ns":19842505833,"key":"C","is_held":false,"pending_before_enqueue":0}
+{"diagnostic":"key","id":2,"stage":"write_started","at_ns":19842514500,"key":"C","is_held":false,"pending_after_dequeue":0,"in_flight":true}
+{"diagnostic":"key","id":2,"stage":"written","at_ns":19842539750,"key":"C","is_held":false,"in_flight":false}
+{"diagnostic":"summary","dropped_records":0}

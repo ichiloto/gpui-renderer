@@ -1,0 +1,2 @@
+{"protocol":2,"type":"ready"}
+{"protocol":2,"type":"error","message":"text run exceeds the configured grid"}

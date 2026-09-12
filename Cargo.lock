@@ -2176,9 +2176,11 @@ name = "gpui-renderer"
 version = "0.1.0"
 dependencies = [
  "async-channel 2.5.0",
+ "cocoa 0.26.0",
  "futures-lite 2.6.1",
  "gpui",
  "image",
+ "objc",
  "serde",
  "serde_json",
  "tempfile",

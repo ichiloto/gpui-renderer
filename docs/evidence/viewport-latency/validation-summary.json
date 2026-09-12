@@ -1,0 +1,43 @@
+{
+  "checked_at_utc": "2026-09-12T04:25:13.393924+00:00",
+  "cases": {
+    "oversized": {
+      "protocol": 2,
+      "exit_status": 0,
+      "events": 2,
+      "keys": 0,
+      "viewport_samples": 1,
+      "initial_outer_fits_work_area": true,
+      "dropped_records": 0
+    },
+    "last-legend": {
+      "protocol": 2,
+      "exit_status": 0,
+      "events": 86,
+      "keys": 84,
+      "viewport_samples": 9,
+      "initial_outer_fits_work_area": true,
+      "dropped_records": 0
+    },
+    "v1": {
+      "protocol": 1,
+      "exit_status": 0,
+      "events": 4,
+      "keys": 2,
+      "viewport_samples": 2,
+      "initial_outer_fits_work_area": true,
+      "dropped_records": 0
+    },
+    "tall": {
+      "protocol": 2,
+      "exit_status": 0,
+      "events": 2,
+      "keys": 0,
+      "viewport_samples": 1,
+      "initial_outer_fits_work_area": true,
+      "dropped_records": 0
+    }
+  },
+  "smoke_passes": 13,
+  "rust_tests_passed": 52
+}

@@ -1,11 +1,14 @@
 mod app;
 mod assets;
 mod color;
+mod diagnostics;
 mod input;
 mod protocol;
 mod renderer;
 mod state;
 mod transport;
+mod viewport;
+mod window_layout;
 
 use std::sync::{
     Arc,
@@ -17,6 +20,7 @@ fn main() -> std::process::ExitCode {
     let failed = Arc::new(AtomicBool::new(false));
     app::run(
         app::Output {
+            diagnostics: diagnostics::Diagnostics::from_environment(),
             version: protocol::Version::V1,
             writer,
             failed: failed.clone(),

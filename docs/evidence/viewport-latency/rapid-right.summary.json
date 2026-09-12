@@ -1,0 +1,56 @@
+{
+  "source": "last-legend.stderr.ndjson",
+  "boundary": "GPUI on_key_down callback -> successful stdout write_all + flush",
+  "selected_ids": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "count": 10,
+  "gpui_is_held_true_count": 0,
+  "ignored_ids": [],
+  "incomplete_ids": [],
+  "dropped_records": [
+    0
+  ],
+  "callback_to_flush_ms": {
+    "median": 0.6114585,
+    "maximum": 5.356334
+  },
+  "normalization_ms": {
+    "median": 0.0215835,
+    "maximum": 3.047292
+  },
+  "submission_to_writer_start_ms": {
+    "median": 0.509625,
+    "maximum": 1.062833
+  },
+  "write_and_flush_ms": {
+    "median": 0.025479,
+    "maximum": 1.453959
+  },
+  "maximum_pending_before_enqueue": 1,
+  "maximum_pending_after_dequeue": 1,
+  "peak_submission_through_flush_outstanding": 2,
+  "native_arrival": {
+    "interval_ms": {
+      "median": 16.369709,
+      "maximum": 31.012125
+    },
+    "events_per_second": 59.40906123636514
+  },
+  "writer_completion": {
+    "interval_ms": {
+      "median": 16.662708,
+      "maximum": 31.298375
+    },
+    "events_per_second": 61.3815279630098
+  }
+}

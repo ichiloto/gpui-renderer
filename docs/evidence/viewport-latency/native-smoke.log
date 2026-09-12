@@ -1,0 +1,13 @@
+PASS fixture then shutdown drains ready: status=0; events=ready
+PASS recoverable error drains before shutdown: status=0; events=ready,error
+PASS shutdown before hello: status=0; events=
+PASS EOF before hello is fatal: status=1; events=error
+PASS unsupported version then shutdown: status=0; events=error
+PASS broken stdout: status=1
+PASS unread stdout: bounded shutdown, status=1
+PASS v2 fixture and style replacement shutdown: status=0; events=ready
+PASS v2 malformed and mixed input stays v2: status=0; events=ready,error,error,error,error
+PASS failed v2 hello then valid v2 session: status=0; events=error,ready,error
+PASS v1 rejects mixed v2 without shutdown: status=0; events=ready,error,error
+PASS v2 invalid colour then valid replacement: status=0; events=ready,error
+PASS v2 invalid run then empty replacement: status=0; events=ready,error

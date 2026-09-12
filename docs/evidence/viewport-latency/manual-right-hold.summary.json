@@ -1,0 +1,105 @@
+{
+  "source": "last-legend.stderr.ndjson",
+  "boundary": "GPUI on_key_down callback -> successful stdout write_all + flush",
+  "selected_ids": [
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84
+  ],
+  "count": 59,
+  "gpui_is_held_true_count": 0,
+  "ignored_ids": [],
+  "incomplete_ids": [],
+  "dropped_records": [
+    0
+  ],
+  "callback_to_flush_ms": {
+    "median": 0.202708,
+    "maximum": 2.787542
+  },
+  "normalization_ms": {
+    "median": 0.065625,
+    "maximum": 1.776167
+  },
+  "submission_to_writer_start_ms": {
+    "median": 0.037958,
+    "maximum": 0.574208
+  },
+  "write_and_flush_ms": {
+    "median": 0.088958,
+    "maximum": 1.911084
+  },
+  "maximum_pending_before_enqueue": 0,
+  "maximum_pending_after_dequeue": 0,
+  "peak_submission_through_flush_outstanding": 1,
+  "native_arrival": {
+    "interval_ms": {
+      "median": 83.4343955,
+      "maximum": 477.9205
+    },
+    "events_per_second": 11.090755219718138
+  },
+  "writer_completion": {
+    "interval_ms": {
+      "median": 83.444812,
+      "maximum": 475.282583
+    },
+    "events_per_second": 11.096173614373447
+  }
+}

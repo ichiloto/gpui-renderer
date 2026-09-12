@@ -315,8 +315,30 @@ pub fn diagnostic(message: String) {
     std::thread::spawn(move || eprintln!("{message}"));
 }
 
+struct QueuedEvent {
+    version: Version,
+    event: Event,
+    trace: Option<crate::diagnostics::KeyTrace>,
+}
+
+fn write_queued(
+    mut writer: impl Write,
+    queued: &QueuedEvent,
+    pending_after_dequeue: usize,
+) -> std::io::Result<()> {
+    if let Some(trace) = &queued.trace {
+        trace.write_started(pending_after_dequeue);
+    }
+    write_event(&mut writer, queued.version, &queued.event)?;
+    // This stage is recorded only after the complete line AND flush succeed.
+    if let Some(trace) = &queued.trace {
+        trace.written();
+    }
+    Ok(())
+}
+
 #[derive(Clone)]
-pub struct ProtocolWriter(async_channel::Sender<(Version, Event)>);
+pub struct ProtocolWriter(async_channel::Sender<QueuedEvent>);
 
 pub struct WriterCompletion {
     pub done: async_channel::Receiver<Result<(), String>>,
@@ -329,9 +351,29 @@ impl ProtocolWriter {
     }
     // The UI only enqueues. A slow/unread pipe can never block GPUI.
     pub fn send(&self, version: Version, event: Event) -> Result<(), String> {
+        self.send_traced(version, event, None)
+    }
+
+    pub fn send_traced(
+        &self,
+        version: Version,
+        event: Event,
+        trace: Option<crate::diagnostics::KeyTrace>,
+    ) -> Result<(), String> {
+        let queued_trace = trace
+            .as_ref()
+            .map(|trace| (trace.clone(), trace.now(), self.0.len()));
         self.0
-            .try_send((version, event))
-            .map_err(|e| format!("protocol output unavailable: {e}"))
+            .try_send(QueuedEvent {
+                version,
+                event,
+                trace,
+            })
+            .map_err(|e| format!("protocol output unavailable: {e}"))?;
+        if let Some((trace, at_ns, pending_before)) = queued_trace {
+            trace.queued(at_ns, pending_before);
+        }
+        Ok(())
     }
 
     pub fn start() -> (Self, WriterCompletion) {
@@ -342,9 +384,9 @@ impl ProtocolWriter {
             let stdout = std::io::stdout();
             let mut stdout = stdout.lock();
             let result: std::io::Result<()> = (|| {
-                while let Ok((version, event)) = rx.recv_blocking() {
-                    write_event(&mut stdout, version, &event)?;
-                    if let Event::Error { message } = event {
+                while let Ok(queued) = rx.recv_blocking() {
+                    write_queued(&mut stdout, &queued, rx.len())?;
+                    if let Event::Error { message } = queued.event {
                         eprintln!("{message}");
                     }
                 }
@@ -369,6 +411,76 @@ impl ProtocolWriter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn traced_output_preserves_schema_and_only_marks_success_after_flush() {
+        use crate::diagnostics::Diagnostics;
+        use std::sync::{Arc, Mutex};
+        #[derive(Clone)]
+        struct Capture(Arc<Mutex<Vec<u8>>>);
+        impl Write for Capture {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                self.0.lock().unwrap().extend_from_slice(bytes);
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        struct ShortWriter {
+            bytes: Vec<u8>,
+            fail_flush: bool,
+            flushed: bool,
+        }
+        impl Write for ShortWriter {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                let count = bytes.len().min(3);
+                self.bytes.extend_from_slice(&bytes[..count]);
+                Ok(count)
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                self.flushed = true;
+                if self.fail_flush {
+                    Err(std::io::Error::other("test flush failure"))
+                } else {
+                    Ok(())
+                }
+            }
+        }
+        for version in [Version::V1, Version::V2] {
+            for fail_flush in [false, true] {
+                let records = Arc::new(Mutex::new(Vec::new()));
+                let d = Diagnostics::with_writer(Capture(records.clone()));
+                let trace = d.native_key("right", true).unwrap();
+                let queued = QueuedEvent {
+                    version,
+                    event: Event::Key {
+                        key: "right".into(),
+                    },
+                    trace: Some(trace),
+                };
+                let mut writer = ShortWriter {
+                    bytes: vec![],
+                    fail_flush,
+                    flushed: false,
+                };
+                assert_eq!(write_queued(&mut writer, &queued, 0).is_err(), fail_flush);
+                assert!(writer.flushed);
+                let mut expected = vec![];
+                write_event(&mut expected, version, &queued.event).unwrap();
+                assert_eq!(writer.bytes, expected);
+                futures_lite::future::block_on(d.finish()).unwrap();
+                let records: Vec<serde_json::Value> =
+                    String::from_utf8(records.lock().unwrap().clone())
+                        .unwrap()
+                        .lines()
+                        .map(|line| serde_json::from_str(line).unwrap())
+                        .collect();
+                assert_eq!(records.iter().any(|r| r["stage"] == "written"), !fail_flush);
+                assert!(records.iter().any(|r| r["stage"] == "write_started"));
+            }
+        }
+    }
     const HELLO: &str = r#"{"protocol":1,"type":"hello","title":"Home","assetRoot":"/tmp","grid":{"columns":80,"rows":24,"cellWidth":16,"cellHeight":24}}"#;
     const FRAME: &str = r#"{"protocol":1,"type":"frame","frame":1,"text":["Home"],"sprites":[{"id":"test","asset":"test.png","x":8,"y":4,"width":32,"height":48,"anchor":"bottom_center","layer":100}]}"#;
 

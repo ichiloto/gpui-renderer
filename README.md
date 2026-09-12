@@ -25,7 +25,10 @@ Optional `--binary PATH` selects an executable, and `--evidence-dir PATH` record
 per-case stdout, stderr and exit status.
 
 Validated on macOS/Apple Silicon, with Xcode/SDK/Metal toolchain installed.
-Linux is supported by GPUI but has not been natively validated here. Upstream
+Initial usable-area fitting is currently implemented on macOS. Other targets keep
+the platform-neutral paint model but explicitly reject native window creation until
+a work-area adapter exists; GPUI 0.2.2's full display bounds are insufficient for
+that guarantee. Cross-target compilation has not been validated here. Upstream
 `block 0.1.6` and `proc-macro-error2 2.0.1` report future-compatibility warnings;
 current builds, Clippy and tests pass. See [S7-R validation](docs/s7-r-validation.md)
 and the historical [S1 validation](docs/s1-validation.md).
@@ -44,7 +47,7 @@ or `protocol:2`; one successful hello selects the version for the entire process
 
 The hello shape is identical in both versions. Dimensions must satisfy the bounds
 below. `assetRoot` must be absolute and canonicalize to an existing directory; title
-must be nonempty without control characters. A successful hello opens one fixed
+must be nonempty without control characters. A successful hello opens one resizable
 native window, then emits `ready`. The version is latched before opening it, so even
 a window-creation error uses that version. A second hello cannot open another window.
 
@@ -171,10 +174,111 @@ left  = feetX - width / 2
 top   = feetY - height
 ```
 
-The grid starts at the native content origin below the titlebar, with no padding.
-Geometry uses GPUI logical pixels (macOS points); display scaling affects both text
-and images. Larger sprites never change cell pitch. Font advance does not control
-positions. Existing Menlo glyph sizing/spacing remains unchanged by S7-R.
+Geometry uses logical presentation pixels (1× corresponds to macOS points).
+The viewport transform below places the grid inside native content, below the
+titlebar. Larger sprites never change cell pitch; font advance never controls cell
+positions. Retina backing scale applies equally to text and images.
+
+## Logical grid and native viewport
+
+The hello fixes the logical surface for the entire session:
+`logicalWidth = columns * cellWidth`, `logicalHeight = rows * cellHeight`.
+Native window dimensions are independent. Every paint uses the actual
+`Window::viewport_size()` and the pure `ViewportTransform` model:
+
+```text
+scale = min(1, viewportWidth / logicalWidth, viewportHeight / logicalHeight)
+presentedWidth  = logicalWidth * scale
+presentedHeight = logicalHeight * scale
+offsetX = (viewportWidth - presentedWidth) / 2
+offsetY = (viewportHeight - presentedHeight) / 2
+```
+
+Smaller windows scale the complete surface uniformly. Larger windows keep 1×
+rendering centered with letterboxing. Text pitch, font size, line height, opaque
+cell backgrounds, sprite origins/dimensions and bottom-center anchors share this
+transform. The inner surface clips off-grid sprites at the logical grid boundary;
+the outer viewport paints the default background. There are no scrollbars or
+independent X/Y scaling. Resizing requests a GPUI repaint; it never modifies stored
+frames, negotiates a grid, sends protocol resize events or changes gameplay/camera
+coordinates. A zero-sized viewport paints no surface and retains the focus root.
+Large maps can extend beyond this fixed logical viewport: PHP's camera scrolls the
+visible portion and sends new snapshots. The renderer does not fit an entire map
+unless its caller deliberately sends the entire map as the logical surface.
+
+On macOS, `window_layout.rs` reads `NSScreen.mainScreen` (first screen fallback),
+`frame`, `visibleFrame` and `NSScreenNumber`. It matches that display to GPUI and
+passes its explicit `display_id` when opening. AppKit's
+`contentRectForFrameRect:styleMask:` and `frameRectForContentRect:styleMask:` account
+for the actual normal resizable titlebar. Fitted content is selected first, capped
+at 1× and rounded inward to whole points, then its outer frame is centered in the
+usable work area. The top-left is aligned to whole points to prevent AppKit from
+rounding fractional initial rectangles outward. Centering may differ by less than
+one point due to this alignment. No screen dimensions, Dock/menu sizes or chrome
+constants are guessed.
+
+Pinned GPUI's `PlatformDisplay` exposes no usable-area API, and `MacDisplay::bounds`
+discards global display origins. The adapter therefore converts AppKit's global
+bottom-left coordinates to the display-relative outer top-left expected by pinned
+`MacWindow::open`. Tests cover positive and negative monitor origins. Native
+validation currently covers the development display, not a physical multi-monitor
+setup. Direct macOS dependencies reuse the already locked cocoa/objc versions;
+no GPUI or registry source is patched.
+
+The logical size, initial native-size policy, actual viewport and paint transform
+are separate boundaries. Future preferred scale/size, explicit upscale or fullscreen
+configuration can change the window policy and transform policy without rewriting
+protocol snapshots. Such configuration is not implemented in this phase.
+An explicit fixed native-window policy could fit a preferred size and disable
+resizing while leaving camera scrolling intact; the current policy is resizable.
+
+## Opt-in input latency diagnostics
+
+`ICHILOTO_GPUI_TRACE=1` enables NDJSON observations on **stderr only**. It is off by
+default; stdout event schemas are unchanged. Each key has one session-local ID,
+GPUI `is_held`, and monotonic nanoseconds from a process-local epoch at:
+
+1. `native`: first operation in the GPUI key-down callback, before key formatting.
+2. `normalized`: identity normalization completed (`ignored` for rejected keys).
+3. `queued`: timestamp immediately before a successful nonblocking writer submission.
+4. `write_started`: writer dequeued the event and is about to serialize/write it.
+5. `written`: the complete stdout line and flush both succeeded.
+
+The producer's `pending_before_enqueue` and consumer's `pending_after_dequeue` are
+separate channel-length snapshots, excluding the in-flight write. They must not be
+added together or treated as an atomic outstanding count. `in_flight` marks the
+writer start/completion. The analyzer reconstructs submission-through-flush event
+lifetimes separately. Correlate by ID and timestamps, not stderr line order: the
+consumer can start before the producer records its successful submission.
+
+Diagnostics use a separate bounded 4096-record worker. GPUI and the protocol writer
+only attempt nonblocking diagnostic submissions; a slow stderr sink drops records
+instead of blocking input. A closing summary reports `dropped_records`; incomplete
+or dropped traces cannot substantiate complete timings. Shutdown drains normal
+stdout first and allows up to two additional seconds for enabled diagnostics.
+Initial sizing and changed viewport geometry are also recorded, without changing
+frame state. No frame-receive, frame-paint or PHP timings are measured by this switch.
+
+```sh
+ICHILOTO_GPUI_TRACE=1 python3 scripts/inspect-fixture.py --geometry last-legend \
+  > /tmp/events.ndjson 2> /tmp/trace.ndjson
+python3 scripts/analyze-trace.py /tmp/trace.ndjson --events /tmp/events.ndjson
+# Select an inclusive ID interval or only events GPUI flags as held:
+python3 scripts/analyze-trace.py /tmp/trace.ndjson --ids 3:12
+python3 scripts/analyze-trace.py /tmp/trace.ndjson --held
+```
+
+On pinned GPUI 0.2.2 macOS, nonprinting keys can pass through
+`do_command_by_selector`, which reconstructs their key-down event with
+`is_held=false`. The physical Right-hold validation encountered this limitation:
+59 events arrived at a repeat cadence, but every flag was false. The logger retains
+the supplied flag unchanged; `--held` cannot identify that interval. Use the
+user-confirmed interval's IDs instead of inferring taps from a false flag.
+
+See [viewport and latency validation](docs/viewport-latency-validation.md) for native
+measurements and evidence. Callback-to-flush timing does not measure OS-to-GPUI
+delivery, PHP consumption, frame presentation or end-to-end game responsiveness.
+Key-repeat semantics remain unchanged: every accepted GPUI key-down is forwarded.
 
 Asset paths canonicalize beneath canonical `assetRoot`. Absolute replacements,
 paths and symlinks escaping the root are rejected. In-root parent traversal/symlinks
@@ -265,7 +369,11 @@ changes colours without changing text; `first` restores; `invalid` attempts a mi
 asset; `clear` empties the snapshot; `shutdown` exits via the protocol. Use the native
 window for actual keyboard testing. Native close also ends the driver. `--protocol 1`
 selects the original Home calibration fixture. `--binary PATH` supports a local app
-bundle executable. All fixture assets belong to this repository; no Ichiloto/PHP,
+bundle executable. `--geometry last-legend` selects 135×36 at10×20 and adds a complete
+grid border; `--geometry oversized` selects 135×36 at20×40 (2700×1440 logical).
+`--geometry oversized-tall` selects 135×36 at20×80 to exercise height/chrome fitting.
+The unused area is intentional; these are alignment fixtures, not game screens.
+All fixture assets belong to this repository; no Ichiloto/PHP,
 game checkout, game process or audio is used. Check existing processes first and
 keep only one interactive fixture window open.
 
@@ -276,8 +384,10 @@ keep only one interactive fixture window open.
 hello/session ordering on a bounded background stdin reader. `assets.rs` safely loads
 PNGs. `state.rs` builds the immutable prepared snapshot, explicit opaque cells and
 stable `PaintItem` plan; v1 gets a dedicated legacy-text item before all sprites.
-`renderer.rs` paints that plan using fixed cell rectangles and GPUI images. `input.rs`
-normalizes keys; `app.rs` owns the one window and lifecycle.
+`renderer.rs` paints that plan with the shared `viewport.rs` transform and fixed cell
+rectangles. `window_layout.rs` selects initial native bounds. `input.rs` normalizes
+keys; `diagnostics.rs` optionally observes the key path; `app.rs` owns the one window
+and lifecycle.
 
 The UI never reads stdin, decodes PNGs or writes pipes. Queues are bounded at two
 input updates and 256 output events. Every queued event carries its own version, so

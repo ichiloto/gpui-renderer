@@ -1,0 +1,4 @@
+{"protocol":1,"type":"ready"}
+{"protocol":1,"type":"key","key":"right"}
+{"protocol":1,"type":"key","key":"C"}
+{"protocol":1,"type":"close_requested"}
