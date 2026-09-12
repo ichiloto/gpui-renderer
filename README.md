@@ -256,8 +256,9 @@ only attempt nonblocking diagnostic submissions; a slow stderr sink drops record
 instead of blocking input. A closing summary reports `dropped_records`; incomplete
 or dropped traces cannot substantiate complete timings. Shutdown drains normal
 stdout first and allows up to two additional seconds for enabled diagnostics.
-Initial sizing and changed viewport geometry are also recorded, without changing
-frame state. No frame-receive, frame-paint or PHP timings are measured by this switch.
+Initial sizing and changed viewport geometry are also recorded. Frame lifecycle
+records and clock anchors use the same switch, as described below. PHP consumption
+and actual GPU/display completion are not measured by this renderer.
 
 ```sh
 ICHILOTO_GPUI_TRACE=1 python3 scripts/inspect-fixture.py --geometry last-legend \
@@ -279,6 +280,56 @@ See [viewport and latency validation](docs/viewport-latency-validation.md) for n
 measurements and evidence. Callback-to-flush timing does not measure OS-to-GPUI
 delivery, PHP consumption, frame presentation or end-to-end game responsiveness.
 Key-repeat semantics remain unchanged: every accepted GPUI key-down is forwarded.
+
+## Clock alignment and frame diagnostics
+
+With tracing enabled, macOS emits a `clock_anchor` at startup and shutdown. Each
+record contains `clock:"CLOCK_UPTIME_RAW"`, the renderer `pid`, `host_ns`, and
+`elapsed_before_ns`/`elapsed_after_ns` bracketing that host-clock read. The Darwin
+`clock_gettime_nsec_np` API and libc's `clockid_t`/`CLOCK_UPTIME_RAW` definition are
+used directly. The development host's PHP build was verified to use the same clock
+for `hrtime(true)`. Other platforms emit `clock_anchor_unavailable`; they do not
+pretend to share that clock. Non-macOS graphical startup remains unsupported here.
+
+To align an event's process-relative `at_ns` to the same host clock, use integer
+nanosecond arithmetic and retain the uncertainty interval:
+
+```text
+offsetLow  = host_ns - elapsed_after_ns
+offsetHigh = host_ns - elapsed_before_ns
+eventHost  ∈ [at_ns + offsetLow, at_ns + offsetHigh]
+```
+
+Check startup/shutdown anchor consistency and the clock used by the other process.
+These anchors do not synchronize separate machines or arbitrary PHP/platform clocks.
+Raw `Instant` epochs from different processes must never be subtracted directly.
+
+Every parsed frame receives an optional renderer-local `sequence`, distinct from
+its source `frame` number. The trace record also includes `protocol`, `stage` and
+monotonic `at_ns`. Source numbers can repeat or decrease; sequence correlates that
+particular received snapshot through these stages:
+
+| Stage | Observation boundary |
+| --- | --- |
+| `received` | Complete bounded NDJSON line read, before parsing; emitted only when parsing identifies a frame |
+| `accepted` | Session/frame validation and asset preparation succeeded, before submitting the prepared update |
+| `replaced` | GPUI app handler replaced the current prepared snapshot, before requesting repaint |
+| `render_callback` | Renderer callback entry for the current snapshot, before constructing elements |
+
+Receipt-to-acceptance includes parsing, validation and preparation. Acceptance-to-
+replacement includes the bounded reader queue and UI scheduling; startup also
+includes native window creation. A render callback is **not GPU completion or proof
+of visible pixels**. GPUI can coalesce intermediate snapshots and repaint the same
+snapshot more than once. Interpret missing stages alongside protocol errors,
+shutdown/capture boundaries and dropped-record counts, not as automatic evidence
+of a lost frame. Malformed lines without a parsed frame have no frame trace.
+
+Observation context is internal Rust metadata, never a protocol field, frame
+acknowledgment or gameplay identifier. It is absent when tracing is disabled.
+Diagnostics are serialized into complete lines on the worker; stderr can also
+contain ordinary error messages. The key analyzer reports those separately and
+rejects malformed diagnostic lines. See [frame diagnostic validation](docs/frame-diagnostics-validation.md)
+for paired PHP clock probes, native lifecycle traces, screenshots and limitations.
 
 Asset paths canonicalize beneath canonical `assetRoot`. Absolute replacements,
 paths and symlinks escaping the root are rejected. In-root parent traversal/symlinks

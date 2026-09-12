@@ -16,7 +16,16 @@ parser.add_argument('--events', type=Path)
 parser.add_argument('--ids', help='inclusive FIRST:LAST key ID range')
 parser.add_argument('--held', action='store_true', help='only GPUI is_held=true events (not reliable for macOS special keys)')
 args = parser.parse_args()
-records = [json.loads(line) for line in args.trace.read_text().splitlines()]
+records, stderr_messages = [], []
+for line in args.trace.read_text().splitlines():
+    try:
+        records.append(json.loads(line))
+    except json.JSONDecodeError:
+        # Expected protocol rejections also print ordinary stderr messages. Never
+        # silently discard a damaged diagnostic line when evaluating completeness.
+        if line.startswith('{"diagnostic":'):
+            raise
+        stderr_messages.append(line)
 keys = {}
 for record in records:
     if record.get('diagnostic') == 'key':
@@ -89,6 +98,7 @@ print(json.dumps(dict(
     ignored_ids=ignored,
     incomplete_ids=incomplete,
     dropped_records=[r['dropped_records'] for r in records if r.get('diagnostic')=='summary'],
+    ordinary_stderr_messages=stderr_messages,
     callback_to_flush_ms=distribution(elapsed('native','written')),
     normalization_ms=distribution(elapsed('native','normalized')),
     submission_to_writer_start_ms=distribution(elapsed('queued','write_started')),

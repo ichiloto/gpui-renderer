@@ -1,0 +1,97 @@
+{
+  "anchors": [
+    {
+      "diagnostic": "clock_anchor",
+      "stage": "start",
+      "clock": "CLOCK_UPTIME_RAW",
+      "pid": 83239,
+      "elapsed_before_ns": 10875,
+      "host_ns": 145552892141791,
+      "elapsed_after_ns": 31625,
+      "offset_lower_ns": 145552892110166,
+      "offset_upper_ns": 145552892130916,
+      "bracket_width_ns": 20750
+    },
+    {
+      "diagnostic": "clock_anchor",
+      "stage": "shutdown",
+      "clock": "CLOCK_UPTIME_RAW",
+      "pid": 83239,
+      "elapsed_before_ns": 88011163917,
+      "host_ns": 145640903285125,
+      "elapsed_after_ns": 88011164750,
+      "offset_lower_ns": 145552892120375,
+      "offset_upper_ns": 145552892121208,
+      "bracket_width_ns": 833
+    }
+  ],
+  "shared_offset_intersection_ns": [
+    145552892120375,
+    145552892121208
+  ],
+  "php_anchor_enclosures_pass": true,
+  "frames": {
+    "1": {
+      "frame": 1,
+      "stages": [
+        "received",
+        "accepted",
+        "replaced",
+        "render_callback",
+        "render_callback"
+      ],
+      "receive_to_accept_ms": 1.967459,
+      "accept_to_replace_ms": 1187.809291,
+      "replace_to_first_callback_ms": 61.029417
+    },
+    "2": {
+      "frame": 2,
+      "stages": [
+        "received",
+        "accepted",
+        "replaced",
+        "render_callback"
+      ],
+      "receive_to_accept_ms": 7.18875,
+      "accept_to_replace_ms": 0.115584,
+      "replace_to_first_callback_ms": 15.884041
+    },
+    "3": {
+      "frame": 1,
+      "stages": [
+        "received"
+      ]
+    },
+    "4": {
+      "frame": 1,
+      "stages": [
+        "received",
+        "accepted",
+        "replaced",
+        "render_callback"
+      ],
+      "receive_to_accept_ms": 12.484292,
+      "accept_to_replace_ms": 2.431167,
+      "replace_to_first_callback_ms": 13.541833
+    },
+    "5": {
+      "frame": 3,
+      "stages": [
+        "received",
+        "accepted",
+        "replaced",
+        "render_callback"
+      ],
+      "receive_to_accept_ms": 0.380916,
+      "accept_to_replace_ms": 0.109625,
+      "replace_to_first_callback_ms": 11.25125
+    }
+  },
+  "ordinary_stderr": [
+    "cannot resolve asset: No such file or directory (os error 2)"
+  ],
+  "dropped_records": 0,
+  "exit_status": 0,
+  "rust_tests_passed": 55,
+  "native_smoke_passes": 13
+}

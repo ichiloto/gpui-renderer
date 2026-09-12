@@ -2180,6 +2180,7 @@ dependencies = [
  "futures-lite 2.6.1",
  "gpui",
  "image",
+ "libc",
  "objc",
  "serde",
  "serde_json",

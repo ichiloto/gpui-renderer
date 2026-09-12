@@ -1,0 +1,4 @@
+invalid protocol message: expected value at line 1 column 1
+message protocol 1 differs from session protocol 2
+message protocol 1 differs from session protocol 2
+hello has already initialized this session

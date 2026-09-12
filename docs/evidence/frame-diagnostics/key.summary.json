@@ -1,0 +1,44 @@
+{
+  "source": "fixture.stderr.log",
+  "boundary": "GPUI on_key_down callback -> successful stdout write_all + flush",
+  "selected_ids": [
+    1
+  ],
+  "count": 1,
+  "gpui_is_held_true_count": 0,
+  "ignored_ids": [],
+  "incomplete_ids": [],
+  "dropped_records": [
+    0
+  ],
+  "ordinary_stderr_messages": [
+    "cannot resolve asset: No such file or directory (os error 2)"
+  ],
+  "callback_to_flush_ms": {
+    "median": 0.298125,
+    "maximum": 0.298125
+  },
+  "normalization_ms": {
+    "median": 0.049625,
+    "maximum": 0.049625
+  },
+  "submission_to_writer_start_ms": {
+    "median": 0.036959,
+    "maximum": 0.036959
+  },
+  "write_and_flush_ms": {
+    "median": 0.192833,
+    "maximum": 0.192833
+  },
+  "maximum_pending_before_enqueue": 0,
+  "maximum_pending_after_dequeue": 0,
+  "peak_submission_through_flush_outstanding": 1,
+  "native_arrival": {
+    "interval_ms": null,
+    "events_per_second": null
+  },
+  "writer_completion": {
+    "interval_ms": null,
+    "events_per_second": null
+  }
+}

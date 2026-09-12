@@ -27,6 +27,13 @@ pub fn sprite_origin(sprite: &Sprite, grid: Grid) -> (f32, f32) {
 
 impl Render for Renderer {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        // Observes callback entry only: GPUI can coalesce frames or repaint the
+        // same snapshot. This is not GPU completion or proof of visible pixels.
+        if let Some(frame) = &self.state.frame {
+            self.output
+                .diagnostics
+                .frame_stage(frame.observation, "render_callback");
+        }
         let grid = self.state.hello.grid;
         let cw = grid.cell_width as f32;
         let ch = grid.cell_height as f32;

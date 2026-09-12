@@ -81,6 +81,7 @@ impl Output {
                 diagnostic(format!("protocol output shutdown failed: {error}"));
                 output.failed.store(true, Ordering::SeqCst);
             }
+            output.diagnostics.clock_anchor("shutdown");
             let trace_result = futures_lite::future::race(output.diagnostics.finish(), async {
                 gpui::Timer::after(std::time::Duration::from_secs(2)).await;
                 Err("stderr diagnostics did not drain within 2 seconds".into())
@@ -99,7 +100,7 @@ impl Output {
 }
 
 pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
-    let updates = transport::start_reader();
+    let updates = transport::start_reader(output.diagnostics.clone());
     Application::new().run(move |cx: &mut App| {
         let closed_output = output.clone();
         cx.on_window_closed(move |cx| {
@@ -187,7 +188,9 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                         if let Some(window) = window {
                             let number = frame.number;
                             if let Err(error) = window.update(cx, |view, _, cx| {
+                                let observation = frame.observation;
                                 view.state.replace(frame);
+                                view.output.diagnostics.frame_stage(observation, "replaced");
                                 cx.notify();
                             }) {
                                 output.fatal(format!("cannot present frame {number}: {error}"), cx);

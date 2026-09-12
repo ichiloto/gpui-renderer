@@ -1,4 +1,5 @@
 use crate::assets::AssetRoot;
+use crate::diagnostics::Diagnostics;
 use crate::protocol::{self, Hello, Incoming, Message, Version};
 use crate::state::PreparedFrame;
 use std::io::{BufRead, Read};
@@ -60,17 +61,28 @@ impl Session {
     }
 }
 
-pub fn start_reader() -> async_channel::Receiver<Update> {
+pub fn start_reader(diagnostics: Diagnostics) -> async_channel::Receiver<Update> {
     // Backpressure pauses only the reader. No polling loop or presentation timer.
     let (tx, rx) = async_channel::bounded(2);
     std::thread::spawn(move || {
         let stdin = std::io::stdin();
-        read_protocol(stdin.lock(), |update| tx.send_blocking(update).is_ok());
+        read_protocol_observed(stdin.lock(), &diagnostics, |update| {
+            tx.send_blocking(update).is_ok()
+        });
     });
     rx
 }
 
-fn read_protocol(mut reader: impl BufRead, mut send: impl FnMut(Update) -> bool) {
+#[cfg(test)]
+fn read_protocol(reader: impl BufRead, send: impl FnMut(Update) -> bool) {
+    read_protocol_observed(reader, &Diagnostics::default(), send);
+}
+
+fn read_protocol_observed(
+    mut reader: impl BufRead,
+    diagnostics: &Diagnostics,
+    mut send: impl FnMut(Update) -> bool,
+) {
     let mut session = Session::default();
     loop {
         let mut bytes = Vec::new();
@@ -101,8 +113,29 @@ fn read_protocol(mut reader: impl BufRead, mut send: impl FnMut(Update) -> bool)
             }
             continue;
         }
+        let received_at = diagnostics.now();
         let update = protocol::parse(&bytes)
-            .and_then(|message| session.prepare(message))
+            .and_then(|incoming| {
+                let observation = match &incoming.message {
+                    Message::Frame(frame) => diagnostics.frame_received(
+                        incoming.version.number(),
+                        frame.frame,
+                        received_at,
+                    ),
+                    Message::FrameV2(frame) => diagnostics.frame_received(
+                        incoming.version.number(),
+                        frame.frame,
+                        received_at,
+                    ),
+                    _ => None,
+                };
+                let mut update = session.prepare(incoming)?;
+                if let Update::Frame(frame) = &mut update {
+                    frame.observation = observation;
+                    diagnostics.frame_stage(observation, "accepted");
+                }
+                Ok(update)
+            })
             .unwrap_or_else(Update::Error);
         let shutdown = matches!(update, Update::Shutdown);
         if !send(update) || shutdown {
@@ -114,6 +147,102 @@ fn read_protocol(mut reader: impl BufRead, mut send: impl FnMut(Update) -> bool)
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn observed_frames_keep_duplicate_numbers_distinct_and_rejections_unaccepted() {
+        use std::io::Write;
+        use std::sync::{Arc, Mutex};
+        struct Capture(Arc<Mutex<Vec<u8>>>);
+        impl Write for Capture {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                self.0.lock().unwrap().extend_from_slice(bytes);
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        for version in [1, 2] {
+            let records = Arc::new(Mutex::new(Vec::new()));
+            let diagnostics = Diagnostics::with_writer(Capture(records.clone()));
+            let mut bytes = hello(version);
+            bytes.push(b'\n');
+            for (number, valid) in [(7, true), (8, false), (7, true), (2, true)] {
+                let mut frame = serde_json::json!({"protocol":version,"type":"frame","frame":number,"sprites":[]});
+                frame[if version == 1 { "text" } else { "textLayers" }] = serde_json::json!([]);
+                if !valid {
+                    frame["sprites"] = serde_json::json!([{"id":"bad","asset":"missing.png","x":1,"y":1,
+                        "width":32,"height":48,"anchor":"bottom_center","layer":100}]);
+                }
+                bytes.extend_from_slice(&serde_json::to_vec(&frame).unwrap());
+                bytes.push(b'\n');
+            }
+            bytes.extend_from_slice(
+                format!("malformed\n{{\"protocol\":{version},\"type\":\"shutdown\"}}\n").as_bytes(),
+            );
+            let mut updates = vec![];
+            read_protocol_observed(bytes.as_slice(), &diagnostics, |u| {
+                updates.push(u);
+                true
+            });
+            let accepted: Vec<_> = updates
+                .iter()
+                .filter_map(|u| match u {
+                    Update::Frame(frame) => {
+                        assert!(frame.observation.is_some());
+                        Some(frame.number)
+                    }
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(accepted, [7, 7, 2]);
+            assert_eq!(
+                updates
+                    .iter()
+                    .filter(|u| matches!(u, Update::Error(_)))
+                    .count(),
+                2
+            );
+            futures_lite::future::block_on(diagnostics.finish()).unwrap();
+            let records: Vec<serde_json::Value> =
+                String::from_utf8(records.lock().unwrap().clone())
+                    .unwrap()
+                    .lines()
+                    .map(|line| serde_json::from_str(line).unwrap())
+                    .collect();
+            let received: Vec<_> = records
+                .iter()
+                .filter(|r| r["stage"] == "received")
+                .collect();
+            assert_eq!(received.len(), 4);
+            for (index, frame) in [7, 8, 7, 2].iter().enumerate() {
+                assert_eq!(received[index]["sequence"], index + 1);
+                assert_eq!(received[index]["frame"], *frame);
+                assert_eq!(received[index]["protocol"], version);
+            }
+            let accepted: Vec<_> = records
+                .iter()
+                .filter(|r| r["stage"] == "accepted")
+                .collect();
+            assert_eq!(
+                accepted
+                    .iter()
+                    .map(|r| r["sequence"].as_u64().unwrap())
+                    .collect::<Vec<_>>(),
+                [1, 3, 4]
+            );
+            for record in accepted {
+                let source = received[(record["sequence"].as_u64().unwrap() - 1) as usize];
+                assert!(source["at_ns"].as_u64().unwrap() <= record["at_ns"].as_u64().unwrap());
+            }
+            assert!(
+                !records
+                    .iter()
+                    .any(|r| r["stage"] == "replaced" || r["stage"] == "render_callback")
+            );
+            assert_eq!(records.last().unwrap()["dropped_records"], 0);
+        }
+    }
     #[test]
     fn malformed_input_recovers_then_shutdown_stops_reading() {
         let mut updates = Vec::new();
@@ -234,6 +363,9 @@ mod tests {
         assert!(matches!(updates[1], Update::Error(_)));
         assert!(matches!(updates[2], Update::Error(_)));
         assert!(matches!(updates[3], Update::Frame(_)));
+        if let Update::Frame(frame) = &updates[3] {
+            assert!(frame.observation.is_none());
+        }
         assert!(matches!(updates[4], Update::Shutdown));
     }
 }

@@ -19,6 +19,7 @@ pub enum PaintItem {
 
 #[derive(Debug)]
 pub struct PreparedFrame {
+    pub observation: Option<crate::diagnostics::FrameTrace>,
     pub number: u64,
     pub text: Vec<String>,
     pub sprites: Vec<PreparedSprite>,
@@ -35,6 +36,7 @@ impl PreparedFrame {
             .chain((0..sprites.len()).map(PaintItem::Sprite))
             .collect();
         Ok(Self {
+            observation: None,
             number: frame.frame,
             text: frame.text,
             text_layers: vec![],
@@ -57,6 +59,7 @@ impl PreparedFrame {
             PaintItem::LegacyText => unreachable!(),
         });
         Ok(Self {
+            observation: None,
             number: frame.frame,
             text: vec![],
             text_layers: frame.text_layers,
