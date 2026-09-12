@@ -4,6 +4,7 @@ mod color;
 mod diagnostics;
 mod input;
 mod protocol;
+mod render_trace;
 mod renderer;
 mod state;
 mod transport;

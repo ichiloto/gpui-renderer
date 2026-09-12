@@ -1,0 +1,19 @@
+{
+  "binary_sha256": "58cfd712ef7123563afe9757f0bed09d18187576404e46f65029c0939b67f883",
+  "profile": "dev (unoptimized + debuginfo)",
+  "console_pid": 56882,
+  "game_pid": 56896,
+  "renderer_pid": 56906,
+  "exit": 0,
+  "stty_identical": true,
+  "process_check": "ps -p 56882,56896,56906 -o pid,ppid,command returned header only after normal close",
+  "keys": 14,
+  "frames": 192,
+  "offset_bounds": [
+    153592512357624,
+    153592512358291
+  ],
+  "physical_hold": "No user response or native key during bounded gate; pending, not performed",
+  "raw_log": "/tmp/ichiloto-renderer-burst-candidate-20260912/runtime/logs/latency.ndjson",
+  "raw_log_sha256": "5b8af64e36fb8a26d0b4a0775a26a2d4cdd7500db9270f3d9342f4647e3acce6"
+}

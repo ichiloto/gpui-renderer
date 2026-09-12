@@ -1,0 +1,4 @@
+{"diagnostic":"clock_anchor","stage":"start","clock":"CLOCK_UPTIME_RAW","pid":61084,"elapsed_before_ns":166,"host_ns":154738036801666,"elapsed_after_ns":333}
+unsupported protocol version 3; expected 1 or 2
+{"diagnostic":"clock_anchor","stage":"shutdown","clock":"CLOCK_UPTIME_RAW","pid":61084,"elapsed_before_ns":76223666,"host_ns":154738113025083,"elapsed_after_ns":76223750}
+{"diagnostic":"summary","dropped_records":0}

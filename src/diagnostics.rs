@@ -42,6 +42,10 @@ enum Record {
         frame: u64,
         stage: &'static str,
         at_ns: u64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        queued_updates: Option<usize>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        queue_capacity: Option<usize>,
     },
     Key {
         id: u64,
@@ -217,7 +221,33 @@ impl Diagnostics {
             frame: trace.frame,
             stage,
             at_ns,
+            queued_updates: None,
+            queue_capacity: None,
         });
+    }
+
+    /// Queue length is an instantaneous observation, not an atomic history of
+    /// enqueue/dequeue operations. A consumer may run before submit_end is logged.
+    pub fn frame_queue_stage(
+        &self,
+        trace: Option<FrameTrace>,
+        stage: &'static str,
+        queue: impl FnOnce() -> (usize, Option<usize>),
+    ) {
+        if let Some(trace) = trace
+            && let Some(at_ns) = self.now()
+        {
+            let (queued_updates, queue_capacity) = queue();
+            self.record(Record::Frame {
+                sequence: trace.sequence,
+                protocol: trace.protocol,
+                frame: trace.frame,
+                stage,
+                at_ns,
+                queued_updates: Some(queued_updates),
+                queue_capacity,
+            });
+        }
     }
 
     /// Called first in the native callback: timestamp precedes key cloning/formatting.
@@ -350,6 +380,9 @@ mod tests {
         assert!(d.frame_received(2, 1, d.now()).is_none());
         d.clock_anchor("test");
         d.frame_stage(None, "accepted");
+        d.frame_queue_stage(None, "submit_begin", || {
+            panic!("disabled must not inspect the channel")
+        });
         d.geometry("test", || {
             panic!("disabled must not build geometry records")
         });

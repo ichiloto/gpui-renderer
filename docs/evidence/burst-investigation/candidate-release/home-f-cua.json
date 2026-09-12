@@ -1,0 +1,22 @@
+[
+  {
+    "key": "Right",
+    "wall_before_ms": 1789196938601,
+    "wall_after_ms": 1789196938638
+  },
+  {
+    "key": "Left",
+    "wall_before_ms": 1789196938638,
+    "wall_after_ms": 1789196938641
+  },
+  {
+    "key": "Right",
+    "wall_before_ms": 1789196938641,
+    "wall_after_ms": 1789196938647
+  },
+  {
+    "key": "Left",
+    "wall_before_ms": 1789196938647,
+    "wall_after_ms": 1789196938784
+  }
+]

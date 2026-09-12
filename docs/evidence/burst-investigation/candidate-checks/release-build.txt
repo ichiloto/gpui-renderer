@@ -1,0 +1,940 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling libc v0.2.189
+   Compiling cfg-if v1.0.4
+   Compiling serde_core v1.0.229
+   Compiling autocfg v1.5.1
+   Compiling bitflags v2.13.2
+   Compiling libm v0.2.16
+   Compiling pin-project-lite v0.2.17
+   Compiling typeid v1.0.3
+   Compiling erased-serde v0.4.10
+   Compiling memchr v2.8.3
+   Compiling futures-core v0.3.34
+   Compiling crossbeam-utils v0.8.23
+   Compiling num-traits v0.2.19
+   Compiling futures-io v0.3.34
+   Compiling slab v0.4.12
+   Compiling core-foundation-sys v0.8.7
+   Compiling stable_deref_trait v1.2.1
+   Compiling arrayvec v0.7.8
+   Compiling parking v2.2.1
+   Compiling version_check v0.9.5
+   Compiling smallvec v1.16.0
+   Compiling cfg_aliases v0.2.2
+   Compiling find-msvc-tools v0.1.12
+   Compiling shlex v2.0.1
+   Compiling simd-adler32 v0.3.10
+   Compiling once_cell v1.21.4
+   Compiling cc v1.4.5
+   Compiling fastrand v2.5.0
+   Compiling adler2 v2.0.1
+   Compiling rustversion v1.0.23
+   Compiling concurrent-queue v2.5.0
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.17.1
+   Compiling crc32fast v1.5.1
+   Compiling futures-sink v0.3.34
+   Compiling zerocopy v0.8.57
+   Compiling atomic-waker v1.1.2
+   Compiling errno v0.3.14
+   Compiling core-foundation v0.10.0
+   Compiling serde_fmt v1.1.0
+   Compiling indexmap v2.14.2
+   Compiling syn v3.0.5
+   Compiling syn v2.0.119
+   Compiling value-bag-serde1 v1.14.1
+   Compiling value-bag v1.14.1
+   Compiling log v0.4.34
+   Compiling futures-lite v2.6.1
+   Compiling aho-corasick v1.1.5
+   Compiling rustix v1.1.4
+   Compiling itoa v1.0.18
+   Compiling zmij v1.0.23
+   Compiling typenum v1.20.1
+   Compiling bytes v1.12.1
+   Compiling regex-syntax v0.8.11
+   Compiling miniz_oxide v0.9.1
+   Compiling event-listener v5.4.2
+   Compiling either v1.18.0
+   Compiling futures-channel v0.3.34
+   Compiling event-listener-strategy v0.5.4
+   Compiling synstructure v0.13.2
+   Compiling getrandom v0.4.3
+   Compiling flate2 v1.1.10
+   Compiling regex-automata v0.4.18
+   Compiling crossbeam-epoch v0.9.21
+   Compiling thiserror v2.0.20
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.20
+   Compiling bytemuck_derive v1.12.0
+   Compiling zerovec-derive v0.11.6
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling zerocopy-derive v0.8.57
+   Compiling displaydoc v0.2.7
+   Compiling bytemuck v1.25.2
+   Compiling heck v0.5.0
+   Compiling zerofrom v0.1.8
+   Compiling futures-macro v0.3.34
+   Compiling mio v1.2.3
+   Compiling socket2 v0.6.5
+   Compiling async-io v2.6.0
+   Compiling futures-task v0.3.34
+   Compiling anyhow v1.0.104
+   Compiling yoke v0.8.3
+   Compiling serde v1.0.229
+   Compiling crossbeam-deque v0.8.8
+   Compiling unicase v2.9.0
+   Compiling futures-util v0.3.34
+   Compiling tokio v1.53.1
+   Compiling zerovec v0.11.8
+   Compiling polling v3.11.0
+   Compiling objc2 v0.6.4
+   Compiling async-task v4.7.1
+   Compiling paste v1.0.15
+   Compiling rayon-core v1.13.0
+   Compiling glob v0.3.4
+   Compiling clang-sys v1.9.1
+   Compiling hybrid-array v0.4.15
+   Compiling async-channel v2.5.0
+   Compiling piper v0.2.5
+   Compiling ring v0.17.14
+   Compiling rustc-hash v2.1.3
+   Compiling prettyplease v0.2.37
+   Compiling litemap v0.8.3
+   Compiling tinystr v0.8.4
+   Compiling objc2-encode v4.1.0
+   Compiling writeable v0.6.4
+   Compiling zeroize v1.9.0
+   Compiling rustls-pki-types v1.15.1
+   Compiling potential_utf v0.1.6
+   Compiling blocking v1.7.0
+   Compiling zerotrie v0.2.5
+   Compiling strum_macros v0.26.4
+   Compiling equator-macro v0.4.2
+   Compiling foreign-types-macros v0.2.4
+   Compiling icu_locale_core v2.3.0
+   Compiling async-lock v3.4.2
+   Compiling http v1.5.0
+   Compiling object v0.39.1
+   Compiling thiserror v1.0.69
+   Compiling minimal-lexical v0.2.1
+   Compiling icu_normalizer_data v2.3.0
+   Compiling utf8_iter v1.0.4
+   Compiling foreign-types-shared v0.3.1
+   Compiling icu_properties_data v2.3.0
+   Compiling foreign-types v0.5.0
+   Compiling icu_collections v2.3.0
+   Compiling nom v7.1.3
+   Compiling icu_provider v2.3.1
+   Compiling equator v0.4.2
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling thiserror-impl v1.0.69
+   Compiling num-integer v0.1.47
+   Compiling signal-hook-registry v1.4.8
+   Compiling getrandom v0.2.17
+   Compiling core-foundation v0.9.4
+   Compiling tracing-core v0.1.36
+   Compiling libloading v0.8.9
+   Compiling generic-array v0.14.7
+   Compiling bindgen v0.71.1
+   Compiling httparse v1.10.1
+   Compiling untrusted v0.9.0
+   Compiling bitflags v1.3.2
+   Compiling const-oid v0.10.2
+   Compiling serde_json v1.0.151
+   Compiling itertools v0.13.0
+   Compiling aligned-vec v0.6.4
+   Compiling digest v0.11.3
+   Compiling half v2.7.1
+   Compiling tracing v0.1.44
+   Compiling num-bigint v0.4.8
+   Compiling async-signal v0.2.14
+   Compiling cexpr v0.6.0
+   Compiling http-body v1.1.0
+   Compiling objc2-core-foundation v0.3.2
+   Compiling rayon v1.12.0
+   Compiling async-executor v1.14.0
+   Compiling tokio-util v0.7.19
+   Compiling mime_guess v2.0.5
+   Compiling regex v1.13.1
+   Compiling pin-project-internal v1.1.13
+   Compiling cpufeatures v0.3.1
+   Compiling euclid v0.22.14
+   Compiling malloc_buf v0.0.6
+   Compiling miniz_oxide v0.8.9
+   Compiling slotmap v1.1.1
+   Compiling bstr v1.13.1
+   Compiling semver v1.0.28
+   Compiling block v0.1.6
+   Compiling shlex v1.3.0
+   Compiling same-file v1.0.6
+   Compiling fnv v1.0.7
+   Compiling rustls v0.23.44
+   Compiling scopeguard v1.2.0
+   Compiling try-lock v0.2.5
+   Compiling want v0.3.1
+   Compiling walkdir v2.5.0
+   Compiling h2 v0.4.19
+   Compiling rustc_version v0.4.1
+   Compiling pin-project v1.1.13
+   Compiling globset v0.4.20
+   Compiling objc v0.2.7
+   Compiling sha2 v0.11.0
+   Compiling objc2-foundation v0.3.2
+   Compiling num-rational v0.4.2
+   Compiling ar_archive_writer v0.5.3
+   Compiling icu_properties v2.3.0
+   Compiling icu_normalizer v2.3.0
+   Compiling async-process v2.5.0
+   Compiling v_frame v0.3.9
+   Compiling rustls-webpki v0.103.15
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling block2 v0.6.2
+   Compiling profiling-procmacros v1.0.18
+   Compiling itertools v0.14.0
+   Compiling core-graphics-types v0.2.0
+   Compiling security-framework-sys v2.17.0
+   Compiling core_maths v0.1.1
+   Compiling fdeflate v0.3.7
+   Compiling nix v0.31.3
+   Compiling as-slice v0.2.1
+   Compiling float-cmp v0.9.0
+   Compiling tower-service v0.3.3
+   Compiling system-configuration-sys v0.6.0
+   Compiling winnow v0.7.15
+   Compiling syn v1.0.109
+   Compiling mime v0.3.17
+   Compiling ref-cast v1.0.27
+   Compiling subtle v2.6.1
+   Compiling av-scenechange v0.14.1
+   Compiling ryu v1.0.23
+   Compiling percent-encoding v2.3.2
+   Compiling rustix v0.38.44
+   Compiling toml_write v0.1.2
+   Compiling compression-core v0.4.33
+   Compiling built v0.8.1
+   Compiling parking_lot_core v0.9.12
+   Compiling deflate64 v0.1.12
+   Compiling compression-codecs v0.4.41
+   Compiling rav1e v0.8.1
+   Compiling form_urlencoded v1.2.2
+   Compiling toml_edit v0.22.27
+   Compiling strict-num v0.1.1
+   Compiling aligned v0.4.3
+   Compiling ttf-parser v0.25.1
+   Compiling security-framework v3.7.0
+   Compiling profiling v1.0.18
+   Compiling objc2-metal v0.3.2
+   Compiling hyper v1.11.1
+   Compiling idna_adapter v1.2.2
+   Compiling psm v0.1.32
+   Compiling rust-embed-utils v8.12.0
+   Compiling pathfinder_simd v0.5.6
+   Compiling lyon_geom v1.0.19
+   Compiling futures-executor v0.3.34
+   Compiling arg_enum_proc_macro v0.3.4
+   Compiling ref-cast-impl v1.0.27
+   Compiling serde_derive_internals v0.30.0
+   Compiling encoding_rs v0.8.41
+   Compiling nix v0.29.0
+   Compiling naga v25.0.1
+   Compiling pulp v0.22.3
+   Compiling no_std_io2 v0.9.4
+   Compiling nom v8.0.0
+   Compiling base64 v0.22.1
+   Compiling event-listener v2.5.3
+   Compiling pastey v0.1.1
+   Compiling foldhash v0.1.5
+   Compiling bit-vec v0.8.0
+   Compiling arrayref v0.3.9
+   Compiling termcolor v1.4.1
+   Compiling unicode-width v0.2.2
+   Compiling serde_json_lenient v0.2.4
+   Compiling quick-error v2.0.1
+   Compiling cbindgen v0.28.0
+   Compiling y4m v0.8.0
+   Compiling leak v0.1.2
+   Compiling tinyvec_macros v0.1.1
+   Compiling codespan-reporting v0.12.0
+   Compiling tempfile v3.27.0
+   Compiling tinyvec v1.13.2
+   Compiling leaky-cow v0.1.1
+   Compiling bit-set v0.8.0
+   Compiling objc2-quartz-core v0.3.2
+   Compiling hashbrown v0.15.5
+   Compiling tiny-skia-path v0.11.4
+   Compiling async-channel v1.9.0
+   Compiling schemars_derive v1.2.2
+   Compiling bitstream-io v4.10.0
+   Compiling av1-grain v0.2.5
+   Compiling lyon_path v1.0.19
+   Compiling futures v0.3.34
+   Compiling rust-embed-impl v8.12.0
+   Compiling hyper-util v0.1.20
+   Compiling idna v1.1.0
+   Compiling rustls-native-certs v0.8.4
+   Compiling tokio-rustls v0.26.5
+   Compiling toml v0.8.23
+   Compiling async-compression v0.4.46
+   Compiling core-graphics v0.24.0
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling maybe-rayon v0.1.1
+   Compiling lock_api v0.4.14
+   Compiling async-global-executor v2.4.1
+   Compiling core-graphics-types v0.1.3
+   Compiling strum v0.26.3
+   Compiling async-fs v2.2.0
+   Compiling async-net v2.0.0
+   Compiling rgb v0.8.53
+   Compiling num-complex v0.4.6
+   Compiling num-derive v0.4.2
+   Compiling kv-log-macro v1.0.7
+   Compiling proc-macro-error-attr2 v2.0.0
+   Compiling simd_helpers v0.1.0
+   Compiling dirs-sys v0.3.7
+   Compiling memmap2 v0.9.11
+   Compiling cgl v0.3.2
+   Compiling stacker v0.1.25
+   Compiling kurbo v0.11.3
+   Compiling sync_wrapper v1.0.2
+   Compiling option-ext v0.2.0
+   Compiling rustc-hash v1.1.0
+   Compiling pulp-wasm-simd-flag v0.1.1
+   Compiling weezl v0.1.12
+   Compiling hexf-parse v0.2.1
+   Compiling new_debug_unreachable v1.0.6
+   Compiling multiversion_no_op v1.0.0
+   Compiling reborrow v0.5.5
+   Compiling fastrand v1.9.0
+   Compiling unicode-ccc v0.4.0
+   Compiling pin-utils v0.1.0
+   Compiling dtor-proc-macro v0.0.5
+   Compiling dyn-clone v1.0.20
+   Compiling siphasher v1.0.3
+   Compiling unicode-script v0.5.8
+   Compiling tower-layer v0.3.3
+   Compiling home v0.5.12
+   Compiling imgref v1.12.3
+   Compiling zune-core v0.5.3
+   Compiling unicode-bidi-mirroring v0.4.0
+   Compiling unicode-properties v0.1.4
+   Compiling simdutf8 v0.1.5
+   Compiling heck v0.4.1
+   Compiling noop_proc_macro v0.3.0
+   Compiling waker-fn v1.2.0
+   Compiling futures-lite v1.13.0
+   Compiling gpui_collections v0.2.2
+   Compiling rustybuzz v0.20.1
+   Compiling svgtypes v0.15.3
+   Compiling zune-jpeg v0.5.15
+   Compiling loop9 v0.1.5
+   Compiling tower v0.5.3
+   Compiling which v6.0.3
+   Compiling dtor v0.0.6
+   Compiling schemars v1.2.2
+   Compiling async-std v1.13.2
+   Compiling dirs-sys v0.4.1
+   Compiling io-surface v0.16.1
+   Compiling fontdb v0.23.0
+   Compiling proc-macro-error2 v2.0.1
+   Compiling dirs v4.0.0
+   Compiling hidden-trait v0.1.2
+   Compiling smol v2.0.2
+   Compiling metal v0.29.0
+   Compiling parking_lot v0.12.5
+   Compiling digest v0.10.7
+   Compiling async_zip v0.0.17
+   Compiling hyper-rustls v0.27.9
+   Compiling rust-embed v8.12.0
+   Compiling system-configuration v0.6.1
+   Compiling command-fds v0.3.3
+   Compiling url v2.5.8
+   Compiling objc2-app-kit v0.3.2
+   Compiling serde_urlencoded v0.7.1
+   Compiling png v0.17.16
+   Compiling gpui_media v0.2.2
+   Compiling core-graphics2 v0.4.1
+   Compiling http-body-util v0.1.5
+   Compiling tokio-socks v0.5.3
+   Compiling rustls-pemfile v2.2.0
+   Compiling simplecss v0.2.2
+   Compiling cpufeatures v0.2.17
+   Compiling filetime v0.2.29
+   Compiling xattr v0.2.3
+   Compiling zune-inflate v0.2.54
+   Compiling avif-serialize v0.8.9
+   Compiling roxmltree v0.20.0
+   Compiling lebe v0.5.3
+   Compiling zed-font-kit v0.14.1-zed
+   Compiling raw-window-handle v0.6.2
+   Compiling bit_field v0.10.3
+   Compiling mint v0.5.9
+   Compiling unicode-vo v0.1.0
+   Compiling float_next_after v1.0.0
+   Compiling data-url v0.3.2
+   Compiling imagesize v0.13.0
+   Compiling take-until v0.2.0
+   Compiling convert_case v0.4.0
+   Compiling dunce v1.0.5
+   Compiling byteorder-lite v0.1.0
+   Compiling pico-args v0.5.0
+   Compiling unicode-bidi v0.3.18
+   Compiling ipnet v2.12.2
+   Compiling fax v0.2.7
+   Compiling ctor-proc-macro v0.0.6
+   Compiling color_quant v1.1.0
+   Compiling pxfm v0.1.30
+   Compiling xmlwriter v0.1.0
+   Compiling usvg v0.45.1
+   Compiling gif v0.14.2
+   Compiling ctor v0.4.3
+   Compiling zed-reqwest v0.12.15-zed
+   Compiling tiff v0.11.3
+   Compiling image-webp v0.2.4
+   Compiling derive_more v0.99.20
+   Compiling moxcms v0.8.1
+   Compiling gpui_util v0.2.2
+   Compiling blade-graphics v0.7.1
+   Compiling lyon_tessellation v1.0.22
+   Compiling exr v1.74.2
+   Compiling ravif v0.13.0
+   Compiling zed-async-tar v0.5.0-zed
+   Compiling sha2 v0.10.9
+   Compiling gpui_perf v0.2.2
+   Compiling core-video v0.4.3
+   Compiling tiny-skia v0.11.4
+   Compiling gpui v0.2.2
+   Compiling pathfinder_geometry v0.5.1
+   Compiling stacksafe-macro v0.1.4
+   Compiling dirs v5.0.1
+   Compiling core-text v21.0.0
+   Compiling lyon_algorithms v1.0.21
+   Compiling png v0.18.1
+   Compiling cocoa-foundation v0.2.0
+   Compiling qoi v0.4.1
+   Compiling strum_macros v0.27.2
+   Compiling gpui_derive_refineable v0.2.2
+   Compiling crossbeam-queue v0.3.14
+   Compiling sha1_smol v1.0.1
+   Compiling lazy_static v1.5.0
+   Compiling byteorder v1.5.0
+   Compiling grid v0.18.0
+   Compiling float-ord v0.3.2
+   Compiling atomic v0.5.3
+   Compiling pollster v0.2.5
+   Compiling svg_fmt v0.4.5
+   Compiling static_assertions v1.1.0
+   Compiling taffy v0.9.0
+   Compiling postage v0.5.0
+   Compiling strum v0.27.2
+   Compiling etagere v0.2.15
+   Compiling uuid v1.26.1
+   Compiling gpui_refineable v0.2.2
+   Compiling image v0.25.10
+   Compiling cocoa v0.26.0
+   Compiling lyon v1.0.19
+   Compiling stacksafe v0.1.4
+   Compiling resvg v0.45.1
+   Compiling gpui_util_macros v0.2.2
+   Compiling gpui_http_client v0.2.2
+   Compiling blade-util v0.3.0
+   Compiling gpui_sum_tree v0.2.2
+   Compiling gpui_semantic_version v0.2.2
+   Compiling gpui-macros v0.2.2
+   Compiling blade-macros v0.3.0
+   Compiling num_cpus v1.17.0
+   Compiling inventory v0.3.24
+   Compiling seahash v4.1.0
+error: gpui@0.2.2: metal shader compilation failed:
+error: failed to run custom build command for `gpui v0.2.2`
+
+Caused by:
+  process didn't exit successfully: `/Users/andrewmasiye/Development/php/games/engines/ichiloto/2.0/website/gpui-renderer/target/release/build/gpui-9e54eb8ce69117da/build-script-build` (exit status: 1)
+  --- stdout
+  cargo::rustc-check-cfg=cfg(gles)
+  cargo:rustc-link-lib=framework=System
+  cargo:rerun-if-env-changed=TARGET
+  cargo:rerun-if-env-changed=BINDGEN_EXTRA_CLANG_ARGS_aarch64-apple-darwin
+  cargo:rerun-if-env-changed=BINDGEN_EXTRA_CLANG_ARGS_aarch64_apple_darwin
+  cargo:rerun-if-env-changed=BINDGEN_EXTRA_CLANG_ARGS
+  cargo:rerun-if-changed=src/platform/mac/dispatch.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/dispatch.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityVersions.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityVersions.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternalLegacy.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternal.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/AvailabilityInternalLegacy.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/base.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_symbol_aliasing.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_posix_availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/ptrcheck.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/appleapiopts.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_int8_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_int16_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_int32_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_int64_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_u_int8_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_u_int16_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_u_int32_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_u_int64_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_intptr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uintptr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/endian.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/endian.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_endian.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_endian.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/_endian.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/__endian.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/libkern/_OSByteOrder.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/libkern/arm/_OSByteOrder.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_u_char.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_u_short.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_u_int.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_caddr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_dev_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_blkcnt_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_blksize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_gid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_in_addr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_in_port_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ino_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ino64_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_key_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_mode_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_nlink_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_id_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_pid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_off_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_clock_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ssize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_time_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_useconds_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_suseconds_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_rsize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_errno_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_setsize.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_set.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_clr.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_zero.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_isset.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_copy.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_attr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_cond_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_condattr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_mutex_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_mutexattr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_once_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_rwlock_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_rwlockattr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_key_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fsblkcnt_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fsfilcnt_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stddef.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_header_macro.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_ptrdiff_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_rsize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_wchar_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_null.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_max_align_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_offsetof.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_int8_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_int16_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_int32_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_int64_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint8_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint16_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint32_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint64_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_intptr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uintptr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_intmax_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uintmax_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdbool.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdarg.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stdarg_header_macro.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stdarg___gnuc_va_list.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stdarg_va_list.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stdarg_va_arg.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stdarg___va_copy.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stdarg_va_copy.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/string.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_string.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_null.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_rsize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_errno_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ssize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_strings.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_strings.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_common.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_string.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/secure/_common.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/unistd.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/unistd.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_posix_vdisable.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_seek_set.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ssize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint64_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint32_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ssize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_gid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_gid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_intptr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_off_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_pid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ssize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_useconds_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_null.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_ctermid.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/select.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/appleapiopts.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_timespec.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_timeval.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_time_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_suseconds_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_sigset_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_setsize.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_set.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_clr.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_isset.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_zero.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_copy.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_select.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_fd_def.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_timeval.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_dev_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_mode_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uuid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/gethostuuid.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_timespec.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uuid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/fcntl.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/fcntl.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_mode_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_off_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_pid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_o_sync.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_o_dsync.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_seek_set.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_s_ifmt.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_timespec.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_filesec_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/object.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/TargetConditionals.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/base.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/workgroup.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/workgroup_base.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stddef.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_header_macro.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_ptrdiff_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_rsize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_wchar_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_max_align_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_offsetof.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdbool.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/string.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_string.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/stdlib.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_stdlib.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/wait.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_pid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_id_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/signal.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/appleapiopts.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/signal.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/signal.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_mcontext.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/_mcontext.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/appleapiopts.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/machine/_structs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/arm/_structs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_pthread/_pthread_attr_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_sigaltstack.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ucontext.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_mcontext.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_sigaltstack.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_pid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_sigset_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_uid_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/resource.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/appleapiopts.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_timeval.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_id_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/endian.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/alloca.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_ct_rune_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_rune_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_wchar_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_null.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/malloc/_malloc.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/malloc/_malloc_type.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/malloc/_ptrcheck.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/ptrcheck.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/malloc/_ptrcheck.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_abort.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_bounds.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_dev_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_mode_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/_types/_uint32_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/port.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/boolean.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/machine/boolean.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/arm/boolean.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/machine/vm_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/arm/vm_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types/_mach_port_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/base.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/object.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/clock.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/base.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/workgroup_object.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/workgroup_interval.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/workgroup_parallel.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/os/workgroup_object.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/base.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/time.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/clock_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/time_value.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/machine/vm_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/object.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/qos.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/queue.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/block.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/source.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/port.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/message.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stddef.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_header_macro.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_ptrdiff_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_size_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_rsize_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_wchar_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_max_align_t.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/__stddef_offsetof.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/21/include/stdint.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/limits.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/limits.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/arm/_limits.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/machine/types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/port.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/boolean.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/kern_return.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/machine/kern_return.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/arm/kern_return.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/mach/machine/vm_types.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/appleapiopts.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/Availability.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/sys/signal.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/group.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/semaphore.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/once.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/data.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/io.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/workloop.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/dispatch_swift_shims.h
+  cargo:rerun-if-changed=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/dispatch/source.h
+  cargo:rerun-if-changed=/Users/andrewmasiye/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gpui-0.2.2/src/scene.rs
+  cargo:rerun-if-changed=/Users/andrewmasiye/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gpui-0.2.2/src/geometry.rs
+  cargo:rerun-if-changed=/Users/andrewmasiye/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gpui-0.2.2/src/color.rs
+  cargo:rerun-if-changed=/Users/andrewmasiye/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gpui-0.2.2/src/window.rs
+  cargo:rerun-if-changed=/Users/andrewmasiye/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gpui-0.2.2/src/platform.rs
+  cargo:rerun-if-changed=/Users/andrewmasiye/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/gpui-0.2.2/src/platform/mac/metal_renderer.rs
+  cargo:rerun-if-changed=./src/platform/mac/shaders.metal
+  cargo::error=metal shader compilation failed:
+  error: unable to open output file '/Users/andrewmasiye/.cache/clang/ModuleCache/J5RZHLGA325W/metal_types-3CWN49PAPL6EK.pcm': 'Operation not permitted'
+  <built-in>:1:10: fatal error: could not build module 'metal_types'
+  #include "metal_types"
+   ~~~~~~~~^~~~~~~~~~~~~
+  error: unable to open output file '/Users/andrewmasiye/.cache/clang/ModuleCache/J5RZHLGA325W/metal_stdlib-3CWN49PAPL6EK.pcm': 'Operation not permitted'
+  error: unable to open output file '/Users/andrewmasiye/.cache/clang/ModuleCache/J5RZHLGA325W/metal_matrix-3CWN49PAPL6EK.pcm': 'Operation not permitted'
+  4 errors generated.
+
+warning: build failed, waiting for other jobs to finish...

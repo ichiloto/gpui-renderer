@@ -1,0 +1,21 @@
+{"diagnostic":"clock_anchor","stage":"start","clock":"CLOCK_UPTIME_RAW","pid":61081,"elapsed_before_ns":208,"host_ns":154737607008708,"elapsed_after_ns":292}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"received","at_ns":100375}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"accepted","at_ns":208917}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"submit_begin","at_ns":210625,"queued_updates":1,"queue_capacity":2}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"submit_end","at_ns":210875,"queued_updates":2,"queue_capacity":2}
+{"diagnostic":"geometry","stage":"initial_window","at_ns":88870708,"values":[["display_id",1.0],["screen_x",0.0],["screen_y",0.0],["screen_width",1920.0],["screen_height",1200.0],["work_x",0.0],["work_y",76.0],["work_width",1920.0],["work_height",1094.0],["available_content_width",1920.0],["available_content_height",1062.0],["logical_width",1280.0],["logical_height",576.0],["content_width",1280.0],["content_height",576.0],["outer_width",1280.0],["outer_height",608.0],["display_relative_left",320.0],["display_relative_top",273.0],["scale",1.0]]}
+{"diagnostic":"geometry","stage":"viewport","at_ns":149415208,"values":[["outer_left",320.0],["outer_top",273.0],["outer_width",1280.0],["outer_height",608.0],["width",1280.0],["height",576.0],["scale",1.0],["offset_x",0.0],["offset_y",0.0],["presented_width",1280.0],["presented_height",576.0]]}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"dequeued","at_ns":152029750,"queued_updates":1,"queue_capacity":2}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"replace_begin","at_ns":152034875}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"replaced","at_ns":152034958}
+invalid protocol message: expected value at line 1 column 1
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"render_callback","at_ns":168131833}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"elements_built","at_ns":168326375}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"layout_request_begin","at_ns":168329167}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"layout_request_end","at_ns":168765083}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"prepaint_begin","at_ns":170698708}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"prepaint_end","at_ns":170845167}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"paint_begin","at_ns":170848375}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"paint_end","at_ns":172824250}
+{"diagnostic":"clock_anchor","stage":"shutdown","clock":"CLOCK_UPTIME_RAW","pid":61081,"elapsed_before_ns":203027542,"host_ns":154737810036041,"elapsed_after_ns":203027583}
+{"diagnostic":"summary","dropped_records":0}

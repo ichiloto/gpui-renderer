@@ -1,0 +1,32 @@
+{"diagnostic":"clock_anchor","stage":"start","clock":"CLOCK_UPTIME_RAW","pid":61092,"elapsed_before_ns":250,"host_ns":154740926718333,"elapsed_after_ns":417}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"received","at_ns":144375}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"accepted","at_ns":318583}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"submit_begin","at_ns":322083,"queued_updates":1,"queue_capacity":2}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"submit_end","at_ns":322333,"queued_updates":2,"queue_capacity":2}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"received","at_ns":324583}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"accepted","at_ns":437583}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"submit_begin","at_ns":439208,"queued_updates":2,"queue_capacity":2}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"submit_end","at_ns":87230792,"queued_updates":2,"queue_capacity":2}
+{"diagnostic":"geometry","stage":"initial_window","at_ns":87335750,"values":[["display_id",1.0],["screen_x",0.0],["screen_y",0.0],["screen_width",1920.0],["screen_height",1200.0],["work_x",0.0],["work_y",76.0],["work_width",1920.0],["work_height",1094.0],["available_content_width",1920.0],["available_content_height",1062.0],["logical_width",960.0],["logical_height",528.0],["content_width",960.0],["content_height",528.0],["outer_width",960.0],["outer_height",560.0],["display_relative_left",480.0],["display_relative_top",297.0],["scale",1.0]]}
+{"diagnostic":"geometry","stage":"viewport","at_ns":149517208,"values":[["outer_left",480.0],["outer_top",297.0],["outer_width",960.0],["outer_height",560.0],["width",960.0],["height",528.0],["scale",1.0],["offset_x",0.0],["offset_y",0.0],["presented_width",960.0],["presented_height",528.0]]}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"dequeued","at_ns":152069917,"queued_updates":1,"queue_capacity":2}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"replace_begin","at_ns":152074083}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"replaced","at_ns":152074333}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"dequeued","at_ns":152076458,"queued_updates":0,"queue_capacity":2}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"replace_begin","at_ns":152076583}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"replaced","at_ns":152079542}
+{"diagnostic":"frame","sequence":3,"protocol":1,"frame":1,"stage":"received","at_ns":152144833}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"render_callback","at_ns":168907417}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"elements_built","at_ns":169206333}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"layout_request_begin","at_ns":169209250}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"layout_request_end","at_ns":169744583}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"prepaint_begin","at_ns":171728875}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"prepaint_end","at_ns":171993500}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"paint_begin","at_ns":171997292}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"paint_end","at_ns":175712750}
+invalid protocol message: expected value at line 1 column 1
+message protocol 1 differs from session protocol 2
+message protocol 1 differs from session protocol 2
+hello has already initialized this session
+{"diagnostic":"clock_anchor","stage":"shutdown","clock":"CLOCK_UPTIME_RAW","pid":61092,"elapsed_before_ns":200617875,"host_ns":154741127335875,"elapsed_after_ns":200617917}
+{"diagnostic":"summary","dropped_records":0}

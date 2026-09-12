@@ -1,0 +1,23 @@
+{
+  "binary_sha256": "eda9ec05b582bcbbe90a67b19910fdb7d6e4a0ec9f7907b013a58fa7ce7cbdd9",
+  "profile": "release (optimized)",
+  "console_pid": 60545,
+  "game_pid": 60559,
+  "renderer_pid": 60569,
+  "exit": 0,
+  "stty_identical": true,
+  "process_check": "ps -p 60545,60559,60569 -o pid,ppid,command returned header only after normal close",
+  "keys": 29,
+  "frames": 203,
+  "offset_bounds": [
+    154353951986750,
+    154353951986791
+  ],
+  "native_smoke": {
+    "tracing_disabled": 13,
+    "tracing_enabled": 13
+  },
+  "physical_hold": "Pending; no repeat of the expired user gate",
+  "raw_log": "/tmp/ichiloto-renderer-burst-release-20260912/runtime/logs/latency.ndjson",
+  "raw_log_sha256": "299163662ba0bf563b983b1fcca72d7da893c0d3c3ddc0530ba2a8e545bda6bc"
+}

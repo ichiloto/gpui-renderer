@@ -143,3 +143,13 @@ Engine independently reviewed the final code and native state screenshots, reran
 all55 tests, and verified diff cleanliness and every evidence hash before approving
 this separate develop commit. Approval does not imply Linux/WSLg or end-to-end
 Last Legend acceptance.
+
+## Ordinary-game burst investigation follow-up
+
+The [burst investigation](burst-investigation.md) records the unchanged-binary
+ordinary Last Legend reproduction, native process samples, frame/clock correlation
+and the narrower diagnostic implementation. Matched debug/release native runs
+identify unoptimized foreground drawing as the dominant renderer delay; the same
+source's optimized runtime resolves that long interval in the sampled Home cases.
+The follow-up preserves all earlier protocol semantics and does not claim a
+scheduling fix or completion of Engine's broader gameplay acceptance.

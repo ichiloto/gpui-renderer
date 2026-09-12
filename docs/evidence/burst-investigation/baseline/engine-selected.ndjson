@@ -1,0 +1,680 @@
+{"stage": "transport.queued", "at_ns": 150867808031916, "pid": 7644, "iteration": 0, "input_id": null, "frame": null, "bytes": 224, "pending_bytes": 224}
+{"stage": "transport.queued", "at_ns": 150869129246750, "pid": 7644, "iteration": 1, "input_id": null, "frame": 1, "bytes": 8458, "pending_bytes": 8458}
+{"stage": "transport.key.parsed", "at_ns": 150941069879125, "pid": 7644, "iteration": 2711, "input_id": 1, "key": "enter", "observed_age_ns": 1167}
+{"stage": "client.key.queued", "at_ns": 150941069895708, "pid": 7644, "iteration": 2711, "input_id": 1, "key": "enter", "observed_age_ns": 17792}
+{"stage": "client.key.dequeued", "at_ns": 150941069902000, "pid": 7644, "iteration": 2711, "input_id": 1, "key": "enter", "observed_age_ns": 24084}
+{"stage": "input.queue", "at_ns": 150941069902875, "pid": 7644, "iteration": 2711, "input_id": 1, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 150941069911125, "pid": 7644, "iteration": 2711, "input_id": 1, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 150941069924625, "pid": 7644, "iteration": 2711, "input_id": 1, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 150941069925166, "pid": 7644, "iteration": 2711, "input_id": 1}
+{"stage": "input.keyboard.dispatched", "at_ns": 150941070672250, "pid": 7644, "iteration": 2711, "input_id": 1}
+{"stage": "game.update.begin", "at_ns": 150941070676041, "pid": 7644, "iteration": 2711, "input_id": 1, "scene": "Ichiloto\\Engine\\Scenes\\Title\\TitleScene"}
+{"stage": "game.update.end", "at_ns": 150941226639708, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 155965167, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": true, "player": [8, 3]}
+{"stage": "game.render.begin", "at_ns": 150941226641833, "pid": 7644, "iteration": 2711, "input_id": 1}
+{"stage": "presentation.begin", "at_ns": 150941227594708, "pid": 7644, "iteration": 2711, "input_id": 1, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 150941227680750, "pid": 7644, "iteration": 2711, "input_id": 1, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 150941227715083, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 33291, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 150941227716916, "pid": 7644, "iteration": 2711, "input_id": 1, "sprites": [{"id": "player", "x": 59, "y": 14}]}
+{"stage": "console.cells", "at_ns": 150941231036833, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 3304375}
+{"stage": "console.runs", "at_ns": 150941232357583, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 1315625, "style_parse_ns": 37624, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 150941232473333, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 96792, "style_parse_ns": 48502, "unique_cells": 28, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 150941232563500, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 4831750}
+{"stage": "presentation.message", "at_ns": 150941232607458, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 40417}
+{"stage": "presentation.compare", "at_ns": 150941232611250, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 2542, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 150941232740708, "pid": 7644, "iteration": 2711, "input_id": 1, "sha256": "bb320a92c2a0f9e89501db21675eb4814f397f02c9e32399c90c1f5150400d25"}
+{"stage": "transport.encode", "at_ns": 150941232801875, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 37750, "frame": 2, "bytes": 8226}
+{"stage": "transport.queued", "at_ns": 150941232806750, "pid": 7644, "iteration": 2711, "input_id": 1, "frame": 2, "bytes": 8226, "pending_bytes": 8226}
+{"stage": "presentation.frame.queued", "at_ns": 150941232808416, "pid": 7644, "iteration": 2711, "input_id": 1, "frame": 2}
+{"stage": "transport.drain", "at_ns": 150941232874958, "pid": 7644, "iteration": 2711, "input_id": 1, "written_bytes": 8226, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 150941232883250, "pid": 7644, "iteration": 2711, "input_id": 1, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 150941232886000, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 5291500, "changed": true}
+{"stage": "game.render.end", "at_ns": 150941232891541, "pid": 7644, "iteration": 2711, "input_id": 1, "duration_ns": 6249583}
+{"stage": "game.iteration.end", "at_ns": 150941232893000, "pid": 7644, "iteration": 2711, "input_id": 1, "keys_consumed": 1}
+{"stage": "transport.queued", "at_ns": 150941557539000, "pid": 7644, "iteration": 2722, "input_id": null, "frame": 3, "bytes": 9072, "pending_bytes": 9072}
+{"stage": "transport.queued", "at_ns": 150941595509083, "pid": 7644, "iteration": 2723, "input_id": null, "frame": 4, "bytes": 9072, "pending_bytes": 9072}
+{"stage": "transport.queued", "at_ns": 150941663311333, "pid": 7644, "iteration": 2725, "input_id": null, "frame": 5, "bytes": 9072, "pending_bytes": 9072}
+{"stage": "transport.queued", "at_ns": 150941733417458, "pid": 7644, "iteration": 2727, "input_id": null, "frame": 6, "bytes": 9072, "pending_bytes": 9072}
+{"stage": "transport.queued", "at_ns": 150941794806166, "pid": 7644, "iteration": 2729, "input_id": null, "frame": 7, "bytes": 9072, "pending_bytes": 9072}
+{"stage": "transport.queued", "at_ns": 150941855334791, "pid": 7644, "iteration": 2731, "input_id": null, "frame": 8, "bytes": 9072, "pending_bytes": 9072}
+{"stage": "transport.queued", "at_ns": 150941921945666, "pid": 7644, "iteration": 2733, "input_id": null, "frame": 9, "bytes": 9072, "pending_bytes": 9072}
+{"stage": "transport.queued", "at_ns": 150942033402666, "pid": 7644, "iteration": 2737, "input_id": null, "frame": 10, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942087826083, "pid": 7644, "iteration": 2739, "input_id": null, "frame": 11, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942140759500, "pid": 7644, "iteration": 2741, "input_id": null, "frame": 12, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942216557375, "pid": 7644, "iteration": 2744, "input_id": null, "frame": 13, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942271720666, "pid": 7644, "iteration": 2746, "input_id": null, "frame": 14, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942384173208, "pid": 7644, "iteration": 2750, "input_id": null, "frame": 15, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942447655666, "pid": 7644, "iteration": 2752, "input_id": null, "frame": 16, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942502541125, "pid": 7644, "iteration": 2754, "input_id": null, "frame": 17, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942565627791, "pid": 7644, "iteration": 2756, "input_id": null, "frame": 18, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942628626291, "pid": 7644, "iteration": 2758, "input_id": null, "frame": 19, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942690928041, "pid": 7644, "iteration": 2760, "input_id": null, "frame": 20, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942746573125, "pid": 7644, "iteration": 2762, "input_id": null, "frame": 21, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942871910458, "pid": 7644, "iteration": 2766, "input_id": null, "frame": 22, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942938268583, "pid": 7644, "iteration": 2768, "input_id": null, "frame": 23, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150942993069875, "pid": 7644, "iteration": 2770, "input_id": null, "frame": 24, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943111604625, "pid": 7644, "iteration": 2774, "input_id": null, "frame": 25, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943166118958, "pid": 7644, "iteration": 2776, "input_id": null, "frame": 26, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943224484833, "pid": 7644, "iteration": 2778, "input_id": null, "frame": 27, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943288739583, "pid": 7644, "iteration": 2780, "input_id": null, "frame": 28, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943341304458, "pid": 7644, "iteration": 2782, "input_id": null, "frame": 29, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943392812875, "pid": 7644, "iteration": 2784, "input_id": null, "frame": 30, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943451208750, "pid": 7644, "iteration": 2786, "input_id": null, "frame": 31, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943508157291, "pid": 7644, "iteration": 2788, "input_id": null, "frame": 32, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943571666041, "pid": 7644, "iteration": 2790, "input_id": null, "frame": 33, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943681679583, "pid": 7644, "iteration": 2794, "input_id": null, "frame": 34, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943736404041, "pid": 7644, "iteration": 2796, "input_id": null, "frame": 35, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943800763041, "pid": 7644, "iteration": 2798, "input_id": null, "frame": 36, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943876599000, "pid": 7644, "iteration": 2800, "input_id": null, "frame": 37, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150943927779625, "pid": 7644, "iteration": 2802, "input_id": null, "frame": 38, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944067837916, "pid": 7644, "iteration": 2807, "input_id": null, "frame": 39, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944123222250, "pid": 7644, "iteration": 2809, "input_id": null, "frame": 40, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944183960583, "pid": 7644, "iteration": 2811, "input_id": null, "frame": 41, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944250038291, "pid": 7644, "iteration": 2813, "input_id": null, "frame": 42, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944303129875, "pid": 7644, "iteration": 2815, "input_id": null, "frame": 43, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944358236416, "pid": 7644, "iteration": 2817, "input_id": null, "frame": 44, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944475180208, "pid": 7644, "iteration": 2821, "input_id": null, "frame": 45, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944532871666, "pid": 7644, "iteration": 2823, "input_id": null, "frame": 46, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944600021083, "pid": 7644, "iteration": 2825, "input_id": null, "frame": 47, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944708027541, "pid": 7644, "iteration": 2829, "input_id": null, "frame": 48, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944760122000, "pid": 7644, "iteration": 2831, "input_id": null, "frame": 49, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944813655875, "pid": 7644, "iteration": 2833, "input_id": null, "frame": 50, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.queued", "at_ns": 150944875889208, "pid": 7644, "iteration": 2835, "input_id": null, "frame": 51, "bytes": 9073, "pending_bytes": 9073}
+{"stage": "transport.key.parsed", "at_ns": 150978351975125, "pid": 7644, "iteration": 4004, "input_id": 2, "key": "enter", "observed_age_ns": 958}
+{"stage": "client.key.queued", "at_ns": 150978351991458, "pid": 7644, "iteration": 4004, "input_id": 2, "key": "enter", "observed_age_ns": 17500}
+{"stage": "client.key.dequeued", "at_ns": 150978351997000, "pid": 7644, "iteration": 4004, "input_id": 2, "key": "enter", "observed_age_ns": 23000}
+{"stage": "input.queue", "at_ns": 150978351997916, "pid": 7644, "iteration": 4004, "input_id": 2, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 150978352004875, "pid": 7644, "iteration": 4004, "input_id": 2, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 150978352006083, "pid": 7644, "iteration": 4004, "input_id": 2, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 150978352006750, "pid": 7644, "iteration": 4004, "input_id": 2}
+{"stage": "input.keyboard.dispatched", "at_ns": 150978352117666, "pid": 7644, "iteration": 4004, "input_id": 2}
+{"stage": "game.update.begin", "at_ns": 150978352122916, "pid": 7644, "iteration": 4004, "input_id": 2, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": true, "player": [8, 3]}
+{"stage": "game.update.end", "at_ns": 150978367869416, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 15749917, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": true, "player": [8, 3]}
+{"stage": "game.render.begin", "at_ns": 150978367872000, "pid": 7644, "iteration": 4004, "input_id": 2}
+{"stage": "presentation.begin", "at_ns": 150978368881000, "pid": 7644, "iteration": 4004, "input_id": 2, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 150978368899083, "pid": 7644, "iteration": 4004, "input_id": 2, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 150978368920500, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 20125, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 150978368922083, "pid": 7644, "iteration": 4004, "input_id": 2, "sprites": [{"id": "player", "x": 59, "y": 14}]}
+{"stage": "console.cells", "at_ns": 150978370798000, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 1872750}
+{"stage": "console.runs", "at_ns": 150978371516791, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 715834, "style_parse_ns": 23709, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 150978371559458, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 36584, "style_parse_ns": 16333, "unique_cells": 28, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 150978371589083, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 2664666}
+{"stage": "presentation.message", "at_ns": 150978371605250, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 14500}
+{"stage": "presentation.compare", "at_ns": 150978371606916, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 1084, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 150978371667375, "pid": 7644, "iteration": 4004, "input_id": 2, "sha256": "bb320a92c2a0f9e89501db21675eb4814f397f02c9e32399c90c1f5150400d25"}
+{"stage": "transport.encode", "at_ns": 150978371696166, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 18791, "frame": 52, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 150978371698000, "pid": 7644, "iteration": 4004, "input_id": 2, "frame": 52, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 150978371698625, "pid": 7644, "iteration": 4004, "input_id": 2, "frame": 52}
+{"stage": "transport.drain", "at_ns": 150978371722666, "pid": 7644, "iteration": 4004, "input_id": 2, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 150978371725833, "pid": 7644, "iteration": 4004, "input_id": 2, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 150978371726750, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 2846125, "changed": true}
+{"stage": "game.render.end", "at_ns": 150978371729208, "pid": 7644, "iteration": 4004, "input_id": 2, "duration_ns": 3857250}
+{"stage": "game.iteration.end", "at_ns": 150978371730125, "pid": 7644, "iteration": 4004, "input_id": 2, "keys_consumed": 1}
+{"stage": "transport.queued", "at_ns": 150978404274875, "pid": 7644, "iteration": 4005, "input_id": null, "frame": 53, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978435862666, "pid": 7644, "iteration": 4006, "input_id": null, "frame": 54, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978491868333, "pid": 7644, "iteration": 4008, "input_id": null, "frame": 55, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978550368166, "pid": 7644, "iteration": 4010, "input_id": null, "frame": 56, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978606231791, "pid": 7644, "iteration": 4012, "input_id": null, "frame": 57, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978668940416, "pid": 7644, "iteration": 4014, "input_id": null, "frame": 58, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978726160000, "pid": 7644, "iteration": 4016, "input_id": null, "frame": 59, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978784740166, "pid": 7644, "iteration": 4018, "input_id": null, "frame": 60, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978845533875, "pid": 7644, "iteration": 4020, "input_id": null, "frame": 61, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150978966365750, "pid": 7644, "iteration": 4024, "input_id": null, "frame": 62, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979029617708, "pid": 7644, "iteration": 4026, "input_id": null, "frame": 63, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979085858750, "pid": 7644, "iteration": 4028, "input_id": null, "frame": 64, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979154490250, "pid": 7644, "iteration": 4030, "input_id": null, "frame": 65, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979208256166, "pid": 7644, "iteration": 4032, "input_id": null, "frame": 66, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979260026750, "pid": 7644, "iteration": 4034, "input_id": null, "frame": 67, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979387218333, "pid": 7644, "iteration": 4038, "input_id": null, "frame": 68, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979448509500, "pid": 7644, "iteration": 4040, "input_id": null, "frame": 69, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979502012916, "pid": 7644, "iteration": 4042, "input_id": null, "frame": 70, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979564005666, "pid": 7644, "iteration": 4044, "input_id": null, "frame": 71, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979620492000, "pid": 7644, "iteration": 4046, "input_id": null, "frame": 72, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979691976750, "pid": 7644, "iteration": 4048, "input_id": null, "frame": 73, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979747377291, "pid": 7644, "iteration": 4050, "input_id": null, "frame": 74, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979796024666, "pid": 7644, "iteration": 4052, "input_id": null, "frame": 75, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979852762333, "pid": 7644, "iteration": 4054, "input_id": null, "frame": 76, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150979976982625, "pid": 7644, "iteration": 4058, "input_id": null, "frame": 77, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980043785250, "pid": 7644, "iteration": 4060, "input_id": null, "frame": 78, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980096543333, "pid": 7644, "iteration": 4062, "input_id": null, "frame": 79, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980152404708, "pid": 7644, "iteration": 4064, "input_id": null, "frame": 80, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980269557416, "pid": 7644, "iteration": 4068, "input_id": null, "frame": 81, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980323773791, "pid": 7644, "iteration": 4070, "input_id": null, "frame": 82, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980377887500, "pid": 7644, "iteration": 4072, "input_id": null, "frame": 83, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980431263166, "pid": 7644, "iteration": 4074, "input_id": null, "frame": 84, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980487261791, "pid": 7644, "iteration": 4076, "input_id": null, "frame": 85, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980602173125, "pid": 7644, "iteration": 4080, "input_id": null, "frame": 86, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980665557375, "pid": 7644, "iteration": 4082, "input_id": null, "frame": 87, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980721444208, "pid": 7644, "iteration": 4084, "input_id": null, "frame": 88, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980845849500, "pid": 7644, "iteration": 4088, "input_id": null, "frame": 89, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980899062750, "pid": 7644, "iteration": 4090, "input_id": null, "frame": 90, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150980949361166, "pid": 7644, "iteration": 4092, "input_id": null, "frame": 91, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981026877375, "pid": 7644, "iteration": 4095, "input_id": null, "frame": 92, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981146271416, "pid": 7644, "iteration": 4099, "input_id": null, "frame": 93, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981205977125, "pid": 7644, "iteration": 4101, "input_id": null, "frame": 94, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981319380625, "pid": 7644, "iteration": 4105, "input_id": null, "frame": 95, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981446651833, "pid": 7644, "iteration": 4109, "input_id": null, "frame": 96, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981508271833, "pid": 7644, "iteration": 4111, "input_id": null, "frame": 97, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981575310958, "pid": 7644, "iteration": 4113, "input_id": null, "frame": 98, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981638905375, "pid": 7644, "iteration": 4115, "input_id": null, "frame": 99, "bytes": 9059, "pending_bytes": 9059}
+{"stage": "transport.queued", "at_ns": 150981700198541, "pid": 7644, "iteration": 4117, "input_id": null, "frame": 100, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.key.parsed", "at_ns": 150988305925125, "pid": 7644, "iteration": 4347, "input_id": 3, "key": "enter", "observed_age_ns": 1625}
+{"stage": "client.key.queued", "at_ns": 150988305952375, "pid": 7644, "iteration": 4347, "input_id": 3, "key": "enter", "observed_age_ns": 29042}
+{"stage": "client.key.dequeued", "at_ns": 150988305963625, "pid": 7644, "iteration": 4347, "input_id": 3, "key": "enter", "observed_age_ns": 40334}
+{"stage": "input.queue", "at_ns": 150988305965041, "pid": 7644, "iteration": 4347, "input_id": 3, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 150988305974250, "pid": 7644, "iteration": 4347, "input_id": 3, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 150988305976875, "pid": 7644, "iteration": 4347, "input_id": 3, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 150988305977958, "pid": 7644, "iteration": 4347, "input_id": 3}
+{"stage": "input.keyboard.dispatched", "at_ns": 150988306034000, "pid": 7644, "iteration": 4347, "input_id": 3}
+{"stage": "game.update.begin", "at_ns": 150988306042750, "pid": 7644, "iteration": 4347, "input_id": 3, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": true, "player": [8, 3]}
+{"stage": "game.update.end", "at_ns": 150988313216833, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 7181166, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": true, "player": [8, 3]}
+{"stage": "game.render.begin", "at_ns": 150988313218791, "pid": 7644, "iteration": 4347, "input_id": 3}
+{"stage": "presentation.begin", "at_ns": 150988313642708, "pid": 7644, "iteration": 4347, "input_id": 3, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 150988313659750, "pid": 7644, "iteration": 4347, "input_id": 3, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 150988313680333, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 19458, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 150988313681583, "pid": 7644, "iteration": 4347, "input_id": 3, "sprites": [{"id": "player", "x": 59, "y": 14}]}
+{"stage": "console.cells", "at_ns": 150988315044250, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 1360125}
+{"stage": "console.runs", "at_ns": 150988315703666, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 657959, "style_parse_ns": 18582, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 150988315744750, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 36250, "style_parse_ns": 16248, "unique_cells": 28, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 150988315774583, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 2091167}
+{"stage": "presentation.message", "at_ns": 150988315790583, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 14625}
+{"stage": "presentation.compare", "at_ns": 150988315792375, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 1250, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 150988315851541, "pid": 7644, "iteration": 4347, "input_id": 3, "sha256": "bb320a92c2a0f9e89501db21675eb4814f397f02c9e32399c90c1f5150400d25"}
+{"stage": "transport.encode", "at_ns": 150988315878083, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 17917, "frame": 101, "bytes": 8228}
+{"stage": "transport.queued", "at_ns": 150988315880500, "pid": 7644, "iteration": 4347, "input_id": 3, "frame": 101, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "presentation.frame.queued", "at_ns": 150988315881250, "pid": 7644, "iteration": 4347, "input_id": 3, "frame": 101}
+{"stage": "transport.drain", "at_ns": 150988315905250, "pid": 7644, "iteration": 4347, "input_id": 3, "written_bytes": 8228, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 150988315907708, "pid": 7644, "iteration": 4347, "input_id": 3, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 150988315908583, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 2266000, "changed": true}
+{"stage": "game.render.end", "at_ns": 150988315910666, "pid": 7644, "iteration": 4347, "input_id": 3, "duration_ns": 2691875}
+{"stage": "game.iteration.end", "at_ns": 150988315911375, "pid": 7644, "iteration": 4347, "input_id": 3, "keys_consumed": 1}
+{"stage": "transport.queued", "at_ns": 150988342928916, "pid": 7644, "iteration": 4348, "input_id": null, "frame": 102, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.queued", "at_ns": 150988371379583, "pid": 7644, "iteration": 4349, "input_id": null, "frame": 103, "bytes": 9058, "pending_bytes": 9058}
+{"stage": "transport.queued", "at_ns": 150988406476000, "pid": 7644, "iteration": 4350, "input_id": null, "frame": 104, "bytes": 9058, "pending_bytes": 9058}
+{"stage": "transport.queued", "at_ns": 150988466288291, "pid": 7644, "iteration": 4352, "input_id": null, "frame": 105, "bytes": 9058, "pending_bytes": 9058}
+{"stage": "transport.queued", "at_ns": 150988524993500, "pid": 7644, "iteration": 4354, "input_id": null, "frame": 106, "bytes": 9058, "pending_bytes": 9058}
+{"stage": "transport.queued", "at_ns": 150988584292916, "pid": 7644, "iteration": 4356, "input_id": null, "frame": 107, "bytes": 9058, "pending_bytes": 9058}
+{"stage": "transport.queued", "at_ns": 150988644181750, "pid": 7644, "iteration": 4358, "input_id": null, "frame": 108, "bytes": 9058, "pending_bytes": 9058}
+{"stage": "transport.queued", "at_ns": 150988700080625, "pid": 7644, "iteration": 4360, "input_id": null, "frame": 109, "bytes": 9058, "pending_bytes": 9058}
+{"stage": "transport.key.parsed", "at_ns": 150997473315958, "pid": 7644, "iteration": 4677, "input_id": 4, "key": "enter", "observed_age_ns": 625}
+{"stage": "client.key.queued", "at_ns": 150997473329083, "pid": 7644, "iteration": 4677, "input_id": 4, "key": "enter", "observed_age_ns": 13750}
+{"stage": "client.key.dequeued", "at_ns": 150997494139250, "pid": 7644, "iteration": 4678, "input_id": 4, "key": "enter", "observed_age_ns": 20823667}
+{"stage": "input.queue", "at_ns": 150997494140958, "pid": 7644, "iteration": 4678, "input_id": 4, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 150997494162333, "pid": 7644, "iteration": 4678, "input_id": 4, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 150997494165125, "pid": 7644, "iteration": 4678, "input_id": 4, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 150997494166083, "pid": 7644, "iteration": 4678, "input_id": 4}
+{"stage": "input.keyboard.dispatched", "at_ns": 150997494220375, "pid": 7644, "iteration": 4678, "input_id": 4}
+{"stage": "game.update.begin", "at_ns": 150997494245208, "pid": 7644, "iteration": 4678, "input_id": 4, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": true, "player": [8, 4]}
+{"stage": "game.update.end", "at_ns": 150997497490708, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 3268833, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": true, "player": [8, 4]}
+{"stage": "game.render.begin", "at_ns": 150997497493125, "pid": 7644, "iteration": 4678, "input_id": 4}
+{"stage": "presentation.begin", "at_ns": 150997498571291, "pid": 7644, "iteration": 4678, "input_id": 4, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 150997498598666, "pid": 7644, "iteration": 4678, "input_id": 4, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 150997498639583, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 38042, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 150997498642625, "pid": 7644, "iteration": 4678, "input_id": 4, "sprites": [{"id": "player", "x": 59, "y": 15}]}
+{"stage": "console.cells", "at_ns": 150997500176875, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 1528500}
+{"stage": "console.runs", "at_ns": 150997500838833, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 659834, "style_parse_ns": 19043, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 150997500880625, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 36125, "style_parse_ns": 16083, "unique_cells": 28, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 150997500910666, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 2263583}
+{"stage": "presentation.message", "at_ns": 150997500925666, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 13459}
+{"stage": "presentation.compare", "at_ns": 150997500927083, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 1000, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 150997500988541, "pid": 7644, "iteration": 4678, "input_id": 4, "sha256": "10f335c37bf2fec467a0ea5081b67d414e56144e702b3a6459c2fcad89809398"}
+{"stage": "transport.encode", "at_ns": 150997501025375, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 23375, "frame": 110, "bytes": 8228}
+{"stage": "transport.queued", "at_ns": 150997501027375, "pid": 7644, "iteration": 4678, "input_id": 4, "frame": 110, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "presentation.frame.queued", "at_ns": 150997501028083, "pid": 7644, "iteration": 4678, "input_id": 4, "frame": 110}
+{"stage": "transport.drain", "at_ns": 150997501053958, "pid": 7644, "iteration": 4678, "input_id": 4, "written_bytes": 8228, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 150997501056875, "pid": 7644, "iteration": 4678, "input_id": 4, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 150997501057791, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 2487791, "changed": true}
+{"stage": "game.render.end", "at_ns": 150997501059958, "pid": 7644, "iteration": 4678, "input_id": 4, "duration_ns": 3566833}
+{"stage": "game.iteration.end", "at_ns": 150997501060500, "pid": 7644, "iteration": 4678, "input_id": 4, "keys_consumed": 1}
+{"stage": "transport.queued", "at_ns": 150997526327916, "pid": 7644, "iteration": 4679, "input_id": null, "frame": 111, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150997552937083, "pid": 7644, "iteration": 4680, "input_id": null, "frame": 112, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150997612295791, "pid": 7644, "iteration": 4682, "input_id": null, "frame": 113, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150997668316666, "pid": 7644, "iteration": 4684, "input_id": null, "frame": 114, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150997780958625, "pid": 7644, "iteration": 4688, "input_id": null, "frame": 115, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150997839073625, "pid": 7644, "iteration": 4690, "input_id": null, "frame": 116, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150997895028041, "pid": 7644, "iteration": 4692, "input_id": null, "frame": 117, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150997979366375, "pid": 7644, "iteration": 4695, "input_id": null, "frame": 118, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998037540208, "pid": 7644, "iteration": 4697, "input_id": null, "frame": 119, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998087718000, "pid": 7644, "iteration": 4699, "input_id": null, "frame": 120, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998144219375, "pid": 7644, "iteration": 4701, "input_id": null, "frame": 121, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998272706500, "pid": 7644, "iteration": 4705, "input_id": null, "frame": 122, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998331396708, "pid": 7644, "iteration": 4707, "input_id": null, "frame": 123, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998454174041, "pid": 7644, "iteration": 4711, "input_id": null, "frame": 124, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998510093625, "pid": 7644, "iteration": 4713, "input_id": null, "frame": 125, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998568131833, "pid": 7644, "iteration": 4715, "input_id": null, "frame": 126, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998686453166, "pid": 7644, "iteration": 4719, "input_id": null, "frame": 127, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998734734750, "pid": 7644, "iteration": 4721, "input_id": null, "frame": 128, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998792460750, "pid": 7644, "iteration": 4723, "input_id": null, "frame": 129, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.queued", "at_ns": 150998850144666, "pid": 7644, "iteration": 4725, "input_id": null, "frame": 130, "bytes": 9060, "pending_bytes": 9060}
+{"stage": "transport.key.parsed", "at_ns": 151006036253375, "pid": 7644, "iteration": 4975, "input_id": 5, "key": "enter", "observed_age_ns": 1458}
+{"stage": "client.key.queued", "at_ns": 151006036269750, "pid": 7644, "iteration": 4975, "input_id": 5, "key": "enter", "observed_age_ns": 17917}
+{"stage": "client.key.dequeued", "at_ns": 151006036280291, "pid": 7644, "iteration": 4975, "input_id": 5, "key": "enter", "observed_age_ns": 28500}
+{"stage": "input.queue", "at_ns": 151006036281166, "pid": 7644, "iteration": 4975, "input_id": 5, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151006036287875, "pid": 7644, "iteration": 4975, "input_id": 5, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151006036290791, "pid": 7644, "iteration": 4975, "input_id": 5, "key": "enter", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151006036291375, "pid": 7644, "iteration": 4975, "input_id": 5}
+{"stage": "input.keyboard.dispatched", "at_ns": 151006036320750, "pid": 7644, "iteration": 4975, "input_id": 5}
+{"stage": "game.update.begin", "at_ns": 151006036329333, "pid": 7644, "iteration": 4975, "input_id": 5, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": true, "player": [8, 4]}
+{"stage": "game.update.end", "at_ns": 151006041996791, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 5675083, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.render.begin", "at_ns": 151006041998750, "pid": 7644, "iteration": 4975, "input_id": 5}
+{"stage": "presentation.begin", "at_ns": 151006042374750, "pid": 7644, "iteration": 4975, "input_id": 5, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151006042391875, "pid": 7644, "iteration": 4975, "input_id": 5, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 151006042407250, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 14500, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151006042409000, "pid": 7644, "iteration": 4975, "input_id": 5, "sprites": [{"id": "player", "x": 59, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151006044077083, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 1664125}
+{"stage": "console.runs", "at_ns": 151006045172250, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 1090125, "style_parse_ns": 27877, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151006045219583, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 39291, "style_parse_ns": 18662, "unique_cells": 28, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151006045254333, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 2843208}
+{"stage": "presentation.message", "at_ns": 151006045273208, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 16958}
+{"stage": "presentation.compare", "at_ns": 151006045274583, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 875, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151006045335458, "pid": 7644, "iteration": 4975, "input_id": 5, "sha256": "10f335c37bf2fec467a0ea5081b67d414e56144e702b3a6459c2fcad89809398"}
+{"stage": "transport.encode", "at_ns": 151006045367625, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 17875, "frame": 131, "bytes": 8228}
+{"stage": "transport.queued", "at_ns": 151006045369750, "pid": 7644, "iteration": 4975, "input_id": 5, "frame": 131, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "presentation.frame.queued", "at_ns": 151006045370416, "pid": 7644, "iteration": 4975, "input_id": 5, "frame": 131}
+{"stage": "transport.drain", "at_ns": 151006045397375, "pid": 7644, "iteration": 4975, "input_id": 5, "written_bytes": 8228, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151006045400583, "pid": 7644, "iteration": 4975, "input_id": 5, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 151006045401750, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 3027125, "changed": true}
+{"stage": "game.render.end", "at_ns": 151006045403958, "pid": 7644, "iteration": 4975, "input_id": 5, "duration_ns": 3405250}
+{"stage": "game.iteration.end", "at_ns": 151006045404625, "pid": 7644, "iteration": 4975, "input_id": 5, "keys_consumed": 1}
+{"stage": "transport.queued", "at_ns": 151016457574875, "pid": 7644, "iteration": 5366, "input_id": null, "frame": 132, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.queued", "at_ns": 151028687204500, "pid": 7644, "iteration": 5834, "input_id": null, "frame": 133, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.queued", "at_ns": 151045959538500, "pid": 7644, "iteration": 6490, "input_id": null, "frame": 134, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.queued", "at_ns": 151084747987875, "pid": 7644, "iteration": 7946, "input_id": null, "frame": 135, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.queued", "at_ns": 151089363973333, "pid": 7644, "iteration": 8116, "input_id": null, "frame": 136, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.queued", "at_ns": 151093195569333, "pid": 7644, "iteration": 8264, "input_id": null, "frame": 137, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.queued", "at_ns": 151096205661291, "pid": 7644, "iteration": 8375, "input_id": null, "frame": 138, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.queued", "at_ns": 151099516673000, "pid": 7644, "iteration": 8501, "input_id": null, "frame": 139, "bytes": 8228, "pending_bytes": 8228}
+{"stage": "transport.key.parsed", "at_ns": 151104313343125, "pid": 7644, "iteration": 8680, "input_id": 6, "key": "right", "observed_age_ns": 1875}
+{"stage": "client.key.queued", "at_ns": 151104313366250, "pid": 7644, "iteration": 8680, "input_id": 6, "key": "right", "observed_age_ns": 25250}
+{"stage": "client.key.dequeued", "at_ns": 151104313377166, "pid": 7644, "iteration": 8680, "input_id": 6, "key": "right", "observed_age_ns": 36208}
+{"stage": "input.queue", "at_ns": 151104313378708, "pid": 7644, "iteration": 8680, "input_id": 6, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151104313387041, "pid": 7644, "iteration": 8680, "input_id": 6, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151104313389625, "pid": 7644, "iteration": 8680, "input_id": 6, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151104313391208, "pid": 7644, "iteration": 8680, "input_id": 6}
+{"stage": "input.keyboard.dispatched", "at_ns": 151104313434375, "pid": 7644, "iteration": 8680, "input_id": 6}
+{"stage": "game.update.begin", "at_ns": 151104313442416, "pid": 7644, "iteration": 8680, "input_id": 6, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.update.end", "at_ns": 151104314325250, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 889125, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.render.begin", "at_ns": 151104314327250, "pid": 7644, "iteration": 8680, "input_id": 6}
+{"stage": "presentation.begin", "at_ns": 151104314940583, "pid": 7644, "iteration": 8680, "input_id": 6, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151104314953500, "pid": 7644, "iteration": 8680, "input_id": 6, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 151104314967750, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 13041, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151104314968916, "pid": 7644, "iteration": 8680, "input_id": 6, "sprites": [{"id": "player", "x": 60, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151104318682041, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 3709042}
+{"stage": "console.runs", "at_ns": 151104320895833, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 2206583, "style_parse_ns": 37336, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151104320943333, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 37792, "style_parse_ns": 16917, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151104320983041, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 6012250}
+{"stage": "presentation.message", "at_ns": 151104321000458, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 15667}
+{"stage": "presentation.compare", "at_ns": 151104321009958, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 8833, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151104321071708, "pid": 7644, "iteration": 8680, "input_id": 6, "sha256": "d00a3e2286932c66d74ee9037d7aae1d4199f4de1860596d11103794a0141ff7"}
+{"stage": "transport.encode", "at_ns": 151104321102125, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 18792, "frame": 140, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151104321104541, "pid": 7644, "iteration": 8680, "input_id": 6, "frame": 140, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151104321105291, "pid": 7644, "iteration": 8680, "input_id": 6, "frame": 140}
+{"stage": "transport.key.parsed", "at_ns": 151104321133666, "pid": 7644, "iteration": 8680, "input_id": 7, "key": "left", "observed_age_ns": 959}
+{"stage": "transport.drain", "at_ns": 151104321146000, "pid": 7644, "iteration": 8680, "input_id": 6, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "client.key.queued", "at_ns": 151104321149875, "pid": 7644, "iteration": 8680, "input_id": 7, "key": "left", "observed_age_ns": 17209}
+{"stage": "input.queue", "at_ns": 151104321151208, "pid": 7644, "iteration": 8680, "input_id": 6, "queued_keys": 1, "oldest_age_ns": 18584}
+{"stage": "presentation.end", "at_ns": 151104321152666, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 6212125, "changed": true}
+{"stage": "game.render.end", "at_ns": 151104321154916, "pid": 7644, "iteration": 8680, "input_id": 6, "duration_ns": 6827708}
+{"stage": "game.iteration.end", "at_ns": 151104321155500, "pid": 7644, "iteration": 8680, "input_id": 6, "keys_consumed": 1}
+{"stage": "client.key.dequeued", "at_ns": 151104343052375, "pid": 7644, "iteration": 8681, "input_id": 7, "key": "left", "observed_age_ns": 21919292}
+{"stage": "input.queue", "at_ns": 151104343054500, "pid": 7644, "iteration": 8681, "input_id": 7, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151104343060750, "pid": 7644, "iteration": 8681, "input_id": 7, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151104343063458, "pid": 7644, "iteration": 8681, "input_id": 7, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151104343064416, "pid": 7644, "iteration": 8681, "input_id": 7}
+{"stage": "input.keyboard.dispatched", "at_ns": 151104343082625, "pid": 7644, "iteration": 8681, "input_id": 7}
+{"stage": "game.update.begin", "at_ns": 151104343204458, "pid": 7644, "iteration": 8681, "input_id": 7, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.update.end", "at_ns": 151104344662916, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 1578458, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.render.begin", "at_ns": 151104344710166, "pid": 7644, "iteration": 8681, "input_id": 7}
+{"stage": "presentation.begin", "at_ns": 151104345382583, "pid": 7644, "iteration": 8681, "input_id": 7, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151104345401833, "pid": 7644, "iteration": 8681, "input_id": 7, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 151104345423333, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 20208, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151104345425333, "pid": 7644, "iteration": 8681, "input_id": 7, "sprites": [{"id": "player", "x": 59, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151104349136750, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 3707292}
+{"stage": "console.runs", "at_ns": 151104354103791, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 4960291, "style_parse_ns": 64000, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151104354147916, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 36292, "style_parse_ns": 15998, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151104354181333, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 8754041}
+{"stage": "presentation.message", "at_ns": 151104354197916, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 14875}
+{"stage": "presentation.compare", "at_ns": 151104354204833, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 6250, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151104354264750, "pid": 7644, "iteration": 8681, "input_id": 7, "sha256": "69fb2cd43562f4633405b92d250a8266630c02459cfeed8670ed398904a6e4b3"}
+{"stage": "transport.encode", "at_ns": 151104354284333, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 14042, "frame": 141, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151104354286208, "pid": 7644, "iteration": 8681, "input_id": 7, "frame": 141, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151104354286791, "pid": 7644, "iteration": 8681, "input_id": 7, "frame": 141}
+{"stage": "transport.drain", "at_ns": 151104354306625, "pid": 7644, "iteration": 8681, "input_id": 7, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151104354310125, "pid": 7644, "iteration": 8681, "input_id": 7, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 151104354311041, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 8928666, "changed": true}
+{"stage": "game.render.end", "at_ns": 151104354313083, "pid": 7644, "iteration": 8681, "input_id": 7, "duration_ns": 9603042}
+{"stage": "game.iteration.end", "at_ns": 151104354313625, "pid": 7644, "iteration": 8681, "input_id": 7, "keys_consumed": 1}
+{"stage": "transport.key.parsed", "at_ns": 151104677063250, "pid": 7644, "iteration": 8690, "input_id": 8, "key": "right", "observed_age_ns": 1625}
+{"stage": "client.key.queued", "at_ns": 151104677081791, "pid": 7644, "iteration": 8690, "input_id": 8, "key": "right", "observed_age_ns": 20333}
+{"stage": "client.key.dequeued", "at_ns": 151104677408041, "pid": 7644, "iteration": 8690, "input_id": 8, "key": "right", "observed_age_ns": 346250}
+{"stage": "input.queue", "at_ns": 151104677412083, "pid": 7644, "iteration": 8690, "input_id": 8, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151104677417250, "pid": 7644, "iteration": 8690, "input_id": 8, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151104677421166, "pid": 7644, "iteration": 8690, "input_id": 8, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151104677422958, "pid": 7644, "iteration": 8690, "input_id": 8}
+{"stage": "input.keyboard.dispatched", "at_ns": 151104677441500, "pid": 7644, "iteration": 8690, "input_id": 8}
+{"stage": "game.update.begin", "at_ns": 151104677451000, "pid": 7644, "iteration": 8690, "input_id": 8, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.update.end", "at_ns": 151104678920958, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 1477083, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.render.begin", "at_ns": 151104678926333, "pid": 7644, "iteration": 8690, "input_id": 8}
+{"stage": "presentation.begin", "at_ns": 151104684620666, "pid": 7644, "iteration": 8690, "input_id": 8, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "transport.key.parsed", "at_ns": 151104684675458, "pid": 7644, "iteration": 8690, "input_id": 9, "key": "left", "observed_age_ns": 583}
+{"stage": "client.key.queued", "at_ns": 151104684685041, "pid": 7644, "iteration": 8690, "input_id": 9, "key": "left", "observed_age_ns": 10208}
+{"stage": "input.queue", "at_ns": 151104684686750, "pid": 7644, "iteration": 8690, "input_id": 8, "queued_keys": 1, "oldest_age_ns": 11917}
+{"stage": "presentation.sprites", "at_ns": 151104684710541, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 22542, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151104684712791, "pid": 7644, "iteration": 8690, "input_id": 8, "sprites": [{"id": "player", "x": 60, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151104686543541, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 1826917}
+{"stage": "console.runs", "at_ns": 151104687778791, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 1230708, "style_parse_ns": 22249, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151104687911041, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 106125, "style_parse_ns": 55666, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151104688015041, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 3299333}
+{"stage": "presentation.message", "at_ns": 151104688073916, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 55250}
+{"stage": "presentation.compare", "at_ns": 151104688098833, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 23042, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151104688228166, "pid": 7644, "iteration": 8690, "input_id": 8, "sha256": "d00a3e2286932c66d74ee9037d7aae1d4199f4de1860596d11103794a0141ff7"}
+{"stage": "transport.encode", "at_ns": 151104688277791, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 37708, "frame": 142, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151104688282708, "pid": 7644, "iteration": 8690, "input_id": 8, "frame": 142, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151104688284208, "pid": 7644, "iteration": 8690, "input_id": 8, "frame": 142}
+{"stage": "transport.drain", "at_ns": 151104688339416, "pid": 7644, "iteration": 8690, "input_id": 8, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151104688348250, "pid": 7644, "iteration": 8690, "input_id": 8, "queued_keys": 1, "oldest_age_ns": 3673167}
+{"stage": "presentation.end", "at_ns": 151104688351041, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 3730459, "changed": true}
+{"stage": "game.render.end", "at_ns": 151104688357291, "pid": 7644, "iteration": 8690, "input_id": 8, "duration_ns": 9431250}
+{"stage": "game.iteration.end", "at_ns": 151104688358625, "pid": 7644, "iteration": 8690, "input_id": 8, "keys_consumed": 1}
+{"stage": "client.key.dequeued", "at_ns": 151104708910916, "pid": 7644, "iteration": 8691, "input_id": 9, "key": "left", "observed_age_ns": 24235875}
+{"stage": "input.queue", "at_ns": 151104708914000, "pid": 7644, "iteration": 8691, "input_id": 9, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151104708917833, "pid": 7644, "iteration": 8691, "input_id": 9, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151104708920250, "pid": 7644, "iteration": 8691, "input_id": 9, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151104708920750, "pid": 7644, "iteration": 8691, "input_id": 9}
+{"stage": "input.keyboard.dispatched", "at_ns": 151104708932041, "pid": 7644, "iteration": 8691, "input_id": 9}
+{"stage": "game.update.begin", "at_ns": 151104708936958, "pid": 7644, "iteration": 8691, "input_id": 9, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.update.end", "at_ns": 151104711977375, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 3043792, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.render.begin", "at_ns": 151104711980458, "pid": 7644, "iteration": 8691, "input_id": 9}
+{"stage": "presentation.begin", "at_ns": 151104715099750, "pid": 7644, "iteration": 8691, "input_id": 9, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151104715116875, "pid": 7644, "iteration": 8691, "input_id": 9, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 151104715138166, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 20250, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151104715139416, "pid": 7644, "iteration": 8691, "input_id": 9, "sprites": [{"id": "player", "x": 59, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151104717322750, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 2180459}
+{"stage": "console.runs", "at_ns": 151104719289000, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 1962458, "style_parse_ns": 20539, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151104719340875, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 41000, "style_parse_ns": 19917, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151104719382583, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 4241125}
+{"stage": "presentation.message", "at_ns": 151104719400000, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 15667}
+{"stage": "presentation.compare", "at_ns": 151104719407458, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 6875, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151104719467958, "pid": 7644, "iteration": 8691, "input_id": 9, "sha256": "69fb2cd43562f4633405b92d250a8266630c02459cfeed8670ed398904a6e4b3"}
+{"stage": "transport.encode", "at_ns": 151104719486125, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 12834, "frame": 143, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151104719488083, "pid": 7644, "iteration": 8691, "input_id": 9, "frame": 143, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151104719488791, "pid": 7644, "iteration": 8691, "input_id": 9, "frame": 143}
+{"stage": "transport.drain", "at_ns": 151104719512708, "pid": 7644, "iteration": 8691, "input_id": 9, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151104719516041, "pid": 7644, "iteration": 8691, "input_id": 9, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 151104719516958, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 4417375, "changed": true}
+{"stage": "game.render.end", "at_ns": 151104719519125, "pid": 7644, "iteration": 8691, "input_id": 9, "duration_ns": 7538667}
+{"stage": "game.iteration.end", "at_ns": 151104719519708, "pid": 7644, "iteration": 8691, "input_id": 9, "keys_consumed": 1}
+{"stage": "transport.queued", "at_ns": 151107871617958, "pid": 7644, "iteration": 8810, "input_id": null, "frame": 144, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151111898542958, "pid": 7644, "iteration": 8962, "input_id": null, "frame": 145, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151115704935416, "pid": 7644, "iteration": 9103, "input_id": null, "frame": 146, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151117804798166, "pid": 7644, "iteration": 9183, "input_id": null, "frame": 147, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151120919667166, "pid": 7644, "iteration": 9295, "input_id": null, "frame": 148, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151131851744125, "pid": 7644, "iteration": 9706, "input_id": null, "frame": 149, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151140780950791, "pid": 7644, "iteration": 10041, "input_id": null, "frame": 150, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151152233108000, "pid": 7644, "iteration": 10468, "input_id": null, "frame": 151, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151156781217291, "pid": 7644, "iteration": 10639, "input_id": null, "frame": 152, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151160298433958, "pid": 7644, "iteration": 10770, "input_id": null, "frame": 153, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151163020076750, "pid": 7644, "iteration": 10856, "input_id": null, "frame": 154, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151173993920750, "pid": 7644, "iteration": 11270, "input_id": null, "frame": 155, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151180225365083, "pid": 7644, "iteration": 11502, "input_id": null, "frame": 156, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151182445678458, "pid": 7644, "iteration": 11585, "input_id": null, "frame": 157, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151189858481500, "pid": 7644, "iteration": 11860, "input_id": null, "frame": 158, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151191367363916, "pid": 7644, "iteration": 11914, "input_id": null, "frame": 159, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151207312167916, "pid": 7644, "iteration": 12516, "input_id": null, "frame": 160, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151219869873250, "pid": 7644, "iteration": 12992, "input_id": null, "frame": 161, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.key.parsed", "at_ns": 151227127493791, "pid": 7644, "iteration": 13268, "input_id": 10, "key": "right", "observed_age_ns": 1916}
+{"stage": "transport.key.parsed", "at_ns": 151227127503833, "pid": 7644, "iteration": 13268, "input_id": 11, "key": "left", "observed_age_ns": 708}
+{"stage": "transport.key.parsed", "at_ns": 151227127510333, "pid": 7644, "iteration": 13268, "input_id": 12, "key": "right", "observed_age_ns": 708}
+{"stage": "client.key.queued", "at_ns": 151227127534958, "pid": 7644, "iteration": 13268, "input_id": 10, "key": "right", "observed_age_ns": 43291}
+{"stage": "client.key.queued", "at_ns": 151227127536875, "pid": 7644, "iteration": 13268, "input_id": 11, "key": "left", "observed_age_ns": 33792}
+{"stage": "client.key.queued", "at_ns": 151227127538416, "pid": 7644, "iteration": 13268, "input_id": 12, "key": "right", "observed_age_ns": 28833}
+{"stage": "client.key.dequeued", "at_ns": 151227127551750, "pid": 7644, "iteration": 13268, "input_id": 10, "key": "right", "observed_age_ns": 60125}
+{"stage": "input.queue", "at_ns": 151227127553458, "pid": 7644, "iteration": 13268, "input_id": 10, "queued_keys": 2, "oldest_age_ns": 50375}
+{"stage": "input.source.returned", "at_ns": 151227127564375, "pid": 7644, "iteration": 13268, "input_id": 10, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151227127567583, "pid": 7644, "iteration": 13268, "input_id": 10, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151227127568666, "pid": 7644, "iteration": 13268, "input_id": 10}
+{"stage": "input.keyboard.dispatched", "at_ns": 151227127616708, "pid": 7644, "iteration": 13268, "input_id": 10}
+{"stage": "game.update.begin", "at_ns": 151227127626500, "pid": 7644, "iteration": 13268, "input_id": 10, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.update.end", "at_ns": 151227129732875, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 2113834, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.render.begin", "at_ns": 151227129737041, "pid": 7644, "iteration": 13268, "input_id": 10}
+{"stage": "presentation.begin", "at_ns": 151227131830500, "pid": 7644, "iteration": 13268, "input_id": 10, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151227131871583, "pid": 7644, "iteration": 13268, "input_id": 10, "queued_keys": 2, "oldest_age_ns": 4368292}
+{"stage": "presentation.sprites", "at_ns": 151227131928291, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 52833, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151227131932083, "pid": 7644, "iteration": 13268, "input_id": 10, "sprites": [{"id": "player", "x": 60, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151227135874458, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 3934416}
+{"stage": "console.runs", "at_ns": 151227136672333, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 794500, "style_parse_ns": 27873, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151227136717458, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 37584, "style_parse_ns": 16836, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151227136752208, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 4814250}
+{"stage": "presentation.message", "at_ns": 151227136776833, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 23042}
+{"stage": "presentation.compare", "at_ns": 151227136788333, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 10792, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151227136850375, "pid": 7644, "iteration": 13268, "input_id": 10, "sha256": "d00a3e2286932c66d74ee9037d7aae1d4199f4de1860596d11103794a0141ff7"}
+{"stage": "transport.encode", "at_ns": 151227136877750, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 17917, "frame": 162, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151227136880625, "pid": 7644, "iteration": 13268, "input_id": 10, "frame": 162, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151227136881333, "pid": 7644, "iteration": 13268, "input_id": 10, "frame": 162}
+{"stage": "transport.drain", "at_ns": 151227136907125, "pid": 7644, "iteration": 13268, "input_id": 10, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151227136911875, "pid": 7644, "iteration": 13268, "input_id": 10, "queued_keys": 2, "oldest_age_ns": 9408917}
+{"stage": "presentation.end", "at_ns": 151227136912916, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 5083834, "changed": true}
+{"stage": "game.render.end", "at_ns": 151227136915083, "pid": 7644, "iteration": 13268, "input_id": 10, "duration_ns": 7178125}
+{"stage": "game.iteration.end", "at_ns": 151227136915625, "pid": 7644, "iteration": 13268, "input_id": 10, "keys_consumed": 1}
+{"stage": "client.key.dequeued", "at_ns": 151227157893291, "pid": 7644, "iteration": 13269, "input_id": 11, "key": "left", "observed_age_ns": 30390292}
+{"stage": "input.queue", "at_ns": 151227157894458, "pid": 7644, "iteration": 13269, "input_id": 11, "queued_keys": 1, "oldest_age_ns": 30384958}
+{"stage": "input.source.returned", "at_ns": 151227157897416, "pid": 7644, "iteration": 13269, "input_id": 11, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151227157898958, "pid": 7644, "iteration": 13269, "input_id": 11, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151227157899458, "pid": 7644, "iteration": 13269, "input_id": 11}
+{"stage": "input.keyboard.dispatched", "at_ns": 151227157911041, "pid": 7644, "iteration": 13269, "input_id": 11}
+{"stage": "game.update.begin", "at_ns": 151227157914958, "pid": 7644, "iteration": 13269, "input_id": 11, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.update.end", "at_ns": 151227159308583, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 1395250, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.render.begin", "at_ns": 151227159315333, "pid": 7644, "iteration": 13269, "input_id": 11}
+{"stage": "presentation.begin", "at_ns": 151227161069875, "pid": 7644, "iteration": 13269, "input_id": 11, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151227161116791, "pid": 7644, "iteration": 13269, "input_id": 11, "queued_keys": 1, "oldest_age_ns": 33606875}
+{"stage": "presentation.sprites", "at_ns": 151227161174250, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 53542, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151227161178416, "pid": 7644, "iteration": 13269, "input_id": 11, "sprites": [{"id": "player", "x": 59, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151227163988208, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 2800625}
+{"stage": "console.runs", "at_ns": 151227165552708, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 1557750, "style_parse_ns": 52961, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151227165604250, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 39458, "style_parse_ns": 18496, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151227165644375, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 4459750}
+{"stage": "presentation.message", "at_ns": 151227165663166, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 17208}
+{"stage": "presentation.compare", "at_ns": 151227165673250, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 9375, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151227165735458, "pid": 7644, "iteration": 13269, "input_id": 11, "sha256": "69fb2cd43562f4633405b92d250a8266630c02459cfeed8670ed398904a6e4b3"}
+{"stage": "transport.encode", "at_ns": 151227165828666, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 85958, "frame": 163, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151227165836250, "pid": 7644, "iteration": 13269, "input_id": 11, "frame": 163, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151227165839125, "pid": 7644, "iteration": 13269, "input_id": 11, "frame": 163}
+{"stage": "transport.drain", "at_ns": 151227165903666, "pid": 7644, "iteration": 13269, "input_id": 11, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151227165913041, "pid": 7644, "iteration": 13269, "input_id": 11, "queued_keys": 1, "oldest_age_ns": 38403333}
+{"stage": "presentation.end", "at_ns": 151227165915500, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 4846791, "changed": true}
+{"stage": "game.render.end", "at_ns": 151227165923125, "pid": 7644, "iteration": 13269, "input_id": 11, "duration_ns": 6607916}
+{"stage": "game.iteration.end", "at_ns": 151227165924750, "pid": 7644, "iteration": 13269, "input_id": 11, "keys_consumed": 1}
+{"stage": "client.key.dequeued", "at_ns": 151227187196083, "pid": 7644, "iteration": 13270, "input_id": 12, "key": "right", "observed_age_ns": 59686333}
+{"stage": "input.queue", "at_ns": 151227187197750, "pid": 7644, "iteration": 13270, "input_id": 12, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151227187203625, "pid": 7644, "iteration": 13270, "input_id": 12, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151227187206416, "pid": 7644, "iteration": 13270, "input_id": 12, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151227187207333, "pid": 7644, "iteration": 13270, "input_id": 12}
+{"stage": "input.keyboard.dispatched", "at_ns": 151227187227166, "pid": 7644, "iteration": 13270, "input_id": 12}
+{"stage": "game.update.begin", "at_ns": 151227187251125, "pid": 7644, "iteration": 13270, "input_id": 12, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.update.end", "at_ns": 151227188706000, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 1476750, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.render.begin", "at_ns": 151227188708000, "pid": 7644, "iteration": 13270, "input_id": 12}
+{"stage": "presentation.begin", "at_ns": 151227189358958, "pid": 7644, "iteration": 13270, "input_id": 12, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151227189373708, "pid": 7644, "iteration": 13270, "input_id": 12, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 151227189388541, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 13834, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151227189389833, "pid": 7644, "iteration": 13270, "input_id": 12, "sprites": [{"id": "player", "x": 60, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151227193227458, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 3834833}
+{"stage": "console.runs", "at_ns": 151227194222625, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 990750, "style_parse_ns": 37584, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151227194275666, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 45250, "style_parse_ns": 24627, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151227194309833, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 4918125}
+{"stage": "presentation.message", "at_ns": 151227194326875, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 15333}
+{"stage": "presentation.compare", "at_ns": 151227194383541, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 15459, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151227194454041, "pid": 7644, "iteration": 13270, "input_id": 12, "sha256": "d00a3e2286932c66d74ee9037d7aae1d4199f4de1860596d11103794a0141ff7"}
+{"stage": "transport.encode", "at_ns": 151227194475291, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 15625, "frame": 164, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151227194478458, "pid": 7644, "iteration": 13270, "input_id": 12, "frame": 164, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151227194479166, "pid": 7644, "iteration": 13270, "input_id": 12, "frame": 164}
+{"stage": "transport.drain", "at_ns": 151227194505708, "pid": 7644, "iteration": 13270, "input_id": 12, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151227194508708, "pid": 7644, "iteration": 13270, "input_id": 12, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 151227194509500, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 5150709, "changed": true}
+{"stage": "game.render.end", "at_ns": 151227194512083, "pid": 7644, "iteration": 13270, "input_id": 12, "duration_ns": 5804125}
+{"stage": "game.iteration.end", "at_ns": 151227194512833, "pid": 7644, "iteration": 13270, "input_id": 12, "keys_consumed": 1}
+{"stage": "transport.key.parsed", "at_ns": 151227341155791, "pid": 7644, "iteration": 13276, "input_id": 13, "key": "left", "observed_age_ns": 750}
+{"stage": "client.key.queued", "at_ns": 151227341164875, "pid": 7644, "iteration": 13276, "input_id": 13, "key": "left", "observed_age_ns": 9875}
+{"stage": "client.key.dequeued", "at_ns": 151227341169583, "pid": 7644, "iteration": 13276, "input_id": 13, "key": "left", "observed_age_ns": 14583}
+{"stage": "input.queue", "at_ns": 151227341170250, "pid": 7644, "iteration": 13276, "input_id": 13, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151227341172458, "pid": 7644, "iteration": 13276, "input_id": 13, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151227341174041, "pid": 7644, "iteration": 13276, "input_id": 13, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151227341174625, "pid": 7644, "iteration": 13276, "input_id": 13}
+{"stage": "input.keyboard.dispatched", "at_ns": 151227341196166, "pid": 7644, "iteration": 13276, "input_id": 13}
+{"stage": "game.update.begin", "at_ns": 151227341200000, "pid": 7644, "iteration": 13276, "input_id": 13, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.update.end", "at_ns": 151227342398625, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 1200792, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.render.begin", "at_ns": 151227342403916, "pid": 7644, "iteration": 13276, "input_id": 13}
+{"stage": "presentation.begin", "at_ns": 151227343719291, "pid": 7644, "iteration": 13276, "input_id": 13, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151227343743458, "pid": 7644, "iteration": 13276, "input_id": 13, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 151227343764541, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 19583, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151227343766250, "pid": 7644, "iteration": 13276, "input_id": 13, "sprites": [{"id": "player", "x": 59, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151227346460041, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 2690042}
+{"stage": "console.runs", "at_ns": 151227347136916, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 674417, "style_parse_ns": 20457, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151227347177583, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 34834, "style_parse_ns": 15372, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151227347207375, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 3438458}
+{"stage": "presentation.message", "at_ns": 151227347224208, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 15417}
+{"stage": "presentation.compare", "at_ns": 151227347231958, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 7209, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151227347292250, "pid": 7644, "iteration": 13276, "input_id": 13, "sha256": "69fb2cd43562f4633405b92d250a8266630c02459cfeed8670ed398904a6e4b3"}
+{"stage": "transport.encode", "at_ns": 151227347311500, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 14083, "frame": 165, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151227347313208, "pid": 7644, "iteration": 13276, "input_id": 13, "frame": 165, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151227347313916, "pid": 7644, "iteration": 13276, "input_id": 13, "frame": 165}
+{"stage": "transport.drain", "at_ns": 151227347336500, "pid": 7644, "iteration": 13276, "input_id": 13, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151227347339458, "pid": 7644, "iteration": 13276, "input_id": 13, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 151227347340333, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 3621792, "changed": true}
+{"stage": "game.render.end", "at_ns": 151227347342416, "pid": 7644, "iteration": 13276, "input_id": 13, "duration_ns": 4938875}
+{"stage": "game.iteration.end", "at_ns": 151227347342875, "pid": 7644, "iteration": 13276, "input_id": 13, "keys_consumed": 1}
+{"stage": "transport.queued", "at_ns": 151227430127666, "pid": 7644, "iteration": 13279, "input_id": null, "frame": 166, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151233337815416, "pid": 7644, "iteration": 13501, "input_id": null, "frame": 167, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151236661950416, "pid": 7644, "iteration": 13622, "input_id": null, "frame": 168, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151248629291666, "pid": 7644, "iteration": 14056, "input_id": null, "frame": 169, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151259879296083, "pid": 7644, "iteration": 14485, "input_id": null, "frame": 170, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151269132462583, "pid": 7644, "iteration": 14837, "input_id": null, "frame": 171, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151274857631166, "pid": 7644, "iteration": 15054, "input_id": null, "frame": 172, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151284700126666, "pid": 7644, "iteration": 15422, "input_id": null, "frame": 173, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151288619288208, "pid": 7644, "iteration": 15562, "input_id": null, "frame": 174, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151295733475000, "pid": 7644, "iteration": 15829, "input_id": null, "frame": 175, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151299140130541, "pid": 7644, "iteration": 15956, "input_id": null, "frame": 176, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151305162175916, "pid": 7644, "iteration": 16182, "input_id": null, "frame": 177, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151307779133208, "pid": 7644, "iteration": 16282, "input_id": null, "frame": 178, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.key.parsed", "at_ns": 151309995794541, "pid": 7644, "iteration": 16365, "input_id": 14, "key": "right", "observed_age_ns": 1250}
+{"stage": "transport.key.parsed", "at_ns": 151309995799500, "pid": 7644, "iteration": 16365, "input_id": 15, "key": "left", "observed_age_ns": 333}
+{"stage": "client.key.queued", "at_ns": 151309995811875, "pid": 7644, "iteration": 16365, "input_id": 14, "key": "right", "observed_age_ns": 18709}
+{"stage": "client.key.queued", "at_ns": 151309995812666, "pid": 7644, "iteration": 16365, "input_id": 15, "key": "left", "observed_age_ns": 13500}
+{"stage": "client.key.dequeued", "at_ns": 151309995818958, "pid": 7644, "iteration": 16365, "input_id": 14, "key": "right", "observed_age_ns": 25834}
+{"stage": "input.queue", "at_ns": 151309995819833, "pid": 7644, "iteration": 16365, "input_id": 14, "queued_keys": 1, "oldest_age_ns": 20625}
+{"stage": "input.source.returned", "at_ns": 151309995825958, "pid": 7644, "iteration": 16365, "input_id": 14, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151309995827291, "pid": 7644, "iteration": 16365, "input_id": 14, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151309995827791, "pid": 7644, "iteration": 16365, "input_id": 14}
+{"stage": "input.keyboard.dispatched", "at_ns": 151309995858125, "pid": 7644, "iteration": 16365, "input_id": 14}
+{"stage": "game.update.begin", "at_ns": 151309995862333, "pid": 7644, "iteration": 16365, "input_id": 14, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.update.end", "at_ns": 151309996630333, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 771334, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.render.begin", "at_ns": 151309996631750, "pid": 7644, "iteration": 16365, "input_id": 14}
+{"stage": "presentation.begin", "at_ns": 151309997234625, "pid": 7644, "iteration": 16365, "input_id": 14, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151309997243750, "pid": 7644, "iteration": 16365, "input_id": 14, "queued_keys": 1, "oldest_age_ns": 1444500}
+{"stage": "presentation.sprites", "at_ns": 151309997256750, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 12125, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151309997257916, "pid": 7644, "iteration": 16365, "input_id": 14, "sprites": [{"id": "player", "x": 60, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151309998598333, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 1337750}
+{"stage": "console.runs", "at_ns": 151309999253916, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 654250, "style_parse_ns": 16209, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151309999392208, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 133167, "style_parse_ns": 48001, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151309999497208, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 2236917}
+{"stage": "presentation.message", "at_ns": 151309999552166, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 51500}
+{"stage": "presentation.compare", "at_ns": 151309999576708, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 22875, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151309999703875, "pid": 7644, "iteration": 16365, "input_id": 14, "sha256": "57a9b9f56501d6505a0dc606fd031763fc7407dae3112547cb6284601c2e8bcf"}
+{"stage": "transport.encode", "at_ns": 151309999753166, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 38542, "frame": 179, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151309999757333, "pid": 7644, "iteration": 16365, "input_id": 14, "frame": 179, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151309999758791, "pid": 7644, "iteration": 16365, "input_id": 14, "frame": 179}
+{"stage": "transport.drain", "at_ns": 151309999804708, "pid": 7644, "iteration": 16365, "input_id": 14, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151309999811666, "pid": 7644, "iteration": 16365, "input_id": 14, "queued_keys": 1, "oldest_age_ns": 4012250}
+{"stage": "presentation.end", "at_ns": 151309999814000, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 2579333, "changed": true}
+{"stage": "game.render.end", "at_ns": 151309999820166, "pid": 7644, "iteration": 16365, "input_id": 14, "duration_ns": 3188292}
+{"stage": "game.iteration.end", "at_ns": 151309999821333, "pid": 7644, "iteration": 16365, "input_id": 14, "keys_consumed": 1}
+{"stage": "client.key.dequeued", "at_ns": 151310020430250, "pid": 7644, "iteration": 16366, "input_id": 15, "key": "left", "observed_age_ns": 24630958}
+{"stage": "input.queue", "at_ns": 151310020431041, "pid": 7644, "iteration": 16366, "input_id": 15, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151310020433583, "pid": 7644, "iteration": 16366, "input_id": 15, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151310020435000, "pid": 7644, "iteration": 16366, "input_id": 15, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151310020435458, "pid": 7644, "iteration": 16366, "input_id": 15}
+{"stage": "input.keyboard.dispatched", "at_ns": 151310020446125, "pid": 7644, "iteration": 16366, "input_id": 15}
+{"stage": "game.update.begin", "at_ns": 151310020450125, "pid": 7644, "iteration": 16366, "input_id": 15, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.update.end", "at_ns": 151310021372666, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 925541, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.render.begin", "at_ns": 151310021374708, "pid": 7644, "iteration": 16366, "input_id": 15}
+{"stage": "presentation.begin", "at_ns": 151310022067666, "pid": 7644, "iteration": 16366, "input_id": 15, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151310022080791, "pid": 7644, "iteration": 16366, "input_id": 15, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 151310022113250, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 31208, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151310022115333, "pid": 7644, "iteration": 16366, "input_id": 15, "sprites": [{"id": "player", "x": 59, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151310024031250, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 1911792}
+{"stage": "console.runs", "at_ns": 151310025567791, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 1529292, "style_parse_ns": 51707, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151310025686666, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 98167, "style_parse_ns": 50294, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151310025772833, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 3655250}
+{"stage": "presentation.message", "at_ns": 151310025814458, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 38291}
+{"stage": "presentation.compare", "at_ns": 151310025836083, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 20042, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151310025961125, "pid": 7644, "iteration": 16366, "input_id": 15, "sha256": "dc83d59892593d9e7e8847e90ea98cb17a20014603f596ac785b64ffe5a78643"}
+{"stage": "transport.encode", "at_ns": 151310026005708, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 34667, "frame": 180, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151310026009541, "pid": 7644, "iteration": 16366, "input_id": 15, "frame": 180, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151310026011000, "pid": 7644, "iteration": 16366, "input_id": 15, "frame": 180}
+{"stage": "transport.drain", "at_ns": 151310026061000, "pid": 7644, "iteration": 16366, "input_id": 15, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151310026067833, "pid": 7644, "iteration": 16366, "input_id": 15, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 151310026070375, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 4002708, "changed": true}
+{"stage": "game.render.end", "at_ns": 151310026075666, "pid": 7644, "iteration": 16366, "input_id": 15, "duration_ns": 4700875}
+{"stage": "game.iteration.end", "at_ns": 151310026077000, "pid": 7644, "iteration": 16366, "input_id": 15, "keys_consumed": 1}
+{"stage": "transport.key.parsed", "at_ns": 151310186803000, "pid": 7644, "iteration": 16372, "input_id": 16, "key": "right", "observed_age_ns": 1584}
+{"stage": "transport.key.parsed", "at_ns": 151310186812708, "pid": 7644, "iteration": 16372, "input_id": 17, "key": "left", "observed_age_ns": 708}
+{"stage": "client.key.queued", "at_ns": 151310186828041, "pid": 7644, "iteration": 16372, "input_id": 16, "key": "right", "observed_age_ns": 26834}
+{"stage": "client.key.queued", "at_ns": 151310186829916, "pid": 7644, "iteration": 16372, "input_id": 17, "key": "left", "observed_age_ns": 17958}
+{"stage": "client.key.dequeued", "at_ns": 151310186840666, "pid": 7644, "iteration": 16372, "input_id": 16, "key": "right", "observed_age_ns": 39500}
+{"stage": "input.queue", "at_ns": 151310186842291, "pid": 7644, "iteration": 16372, "input_id": 16, "queued_keys": 1, "oldest_age_ns": 30375}
+{"stage": "input.source.returned", "at_ns": 151310186846833, "pid": 7644, "iteration": 16372, "input_id": 16, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151310186849375, "pid": 7644, "iteration": 16372, "input_id": 16, "key": "right", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151310186850250, "pid": 7644, "iteration": 16372, "input_id": 16}
+{"stage": "input.keyboard.dispatched", "at_ns": 151310186865958, "pid": 7644, "iteration": 16372, "input_id": 16}
+{"stage": "game.update.begin", "at_ns": 151310186873708, "pid": 7644, "iteration": 16372, "input_id": 16, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.update.end", "at_ns": 151310188451375, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 1583583, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.render.begin", "at_ns": 151310188454750, "pid": 7644, "iteration": 16372, "input_id": 16}
+{"stage": "presentation.begin", "at_ns": 151310190159333, "pid": 7644, "iteration": 16372, "input_id": 16, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151310190194541, "pid": 7644, "iteration": 16372, "input_id": 16, "queued_keys": 1, "oldest_age_ns": 3382375}
+{"stage": "presentation.sprites", "at_ns": 151310190238583, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 41083, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151310190241500, "pid": 7644, "iteration": 16372, "input_id": 16, "sprites": [{"id": "player", "x": 60, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151310192804916, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 2557750}
+{"stage": "console.runs", "at_ns": 151310193516458, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 708292, "style_parse_ns": 21668, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151310193558833, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 36000, "style_parse_ns": 15794, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151310193589958, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 3344250}
+{"stage": "presentation.message", "at_ns": 151310193606583, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 14917}
+{"stage": "presentation.compare", "at_ns": 151310193616125, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 8875, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151310193676791, "pid": 7644, "iteration": 16372, "input_id": 16, "sha256": "57a9b9f56501d6505a0dc606fd031763fc7407dae3112547cb6284601c2e8bcf"}
+{"stage": "transport.encode", "at_ns": 151310193696541, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 14042, "frame": 181, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151310193698416, "pid": 7644, "iteration": 16372, "input_id": 16, "frame": 181, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151310193699125, "pid": 7644, "iteration": 16372, "input_id": 16, "frame": 181}
+{"stage": "transport.drain", "at_ns": 151310193721333, "pid": 7644, "iteration": 16372, "input_id": 16, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151310193725166, "pid": 7644, "iteration": 16372, "input_id": 16, "queued_keys": 1, "oldest_age_ns": 6913333}
+{"stage": "presentation.end", "at_ns": 151310193726083, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 3568083, "changed": true}
+{"stage": "game.render.end", "at_ns": 151310193728291, "pid": 7644, "iteration": 16372, "input_id": 16, "duration_ns": 5273791}
+{"stage": "game.iteration.end", "at_ns": 151310193728833, "pid": 7644, "iteration": 16372, "input_id": 16, "keys_consumed": 1}
+{"stage": "client.key.dequeued", "at_ns": 151310217274708, "pid": 7644, "iteration": 16373, "input_id": 17, "key": "left", "observed_age_ns": 30462583}
+{"stage": "input.queue", "at_ns": 151310217276291, "pid": 7644, "iteration": 16373, "input_id": 17, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "input.source.returned", "at_ns": 151310217281041, "pid": 7644, "iteration": 16373, "input_id": 17, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource", "poll_ns": null}
+{"stage": "input.accepted", "at_ns": 151310217283291, "pid": 7644, "iteration": 16373, "input_id": 17, "key": "left", "source": "Ichiloto\\Engine\\IO\\InputSources\\RendererInputSource"}
+{"stage": "input.keyboard.dispatch", "at_ns": 151310217284208, "pid": 7644, "iteration": 16373, "input_id": 17}
+{"stage": "input.keyboard.dispatched", "at_ns": 151310217298916, "pid": 7644, "iteration": 16373, "input_id": 17}
+{"stage": "game.update.begin", "at_ns": 151310217306916, "pid": 7644, "iteration": 16373, "input_id": 17, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [9, 4]}
+{"stage": "game.update.end", "at_ns": 151310218676041, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 1374667, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene", "scene_state": "Ichiloto\\Engine\\Scenes\\Game\\States\\FieldState", "event_owns_input": false, "player": [8, 4]}
+{"stage": "game.render.begin", "at_ns": 151310218681291, "pid": 7644, "iteration": 16373, "input_id": 17}
+{"stage": "presentation.begin", "at_ns": 151310220419375, "pid": 7644, "iteration": 16373, "input_id": 17, "scene": "Ichiloto\\Engine\\Scenes\\Game\\GameScene"}
+{"stage": "input.queue", "at_ns": 151310220451875, "pid": 7644, "iteration": 16373, "input_id": 17, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.sprites", "at_ns": 151310220498250, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 43125, "count": 1}
+{"stage": "presentation.sprite.positions", "at_ns": 151310220501166, "pid": 7644, "iteration": 16373, "input_id": 17, "sprites": [{"id": "player", "x": 59, "y": 15}]}
+{"stage": "console.cells", "at_ns": 151310223364125, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 2857292}
+{"stage": "console.runs", "at_ns": 151310224036833, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 670250, "style_parse_ns": 21497, "unique_cells": 15, "runs": 38}
+{"stage": "console.runs", "at_ns": 151310224078625, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 35500, "style_parse_ns": 15501, "unique_cells": 26, "runs": 4}
+{"stage": "presentation.snapshot", "at_ns": 151310224108958, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 3603416}
+{"stage": "presentation.message", "at_ns": 151310224125416, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 14458}
+{"stage": "presentation.compare", "at_ns": 151310224132833, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 6875, "unchanged": false}
+{"stage": "presentation.content", "at_ns": 151310224194583, "pid": 7644, "iteration": 16373, "input_id": 17, "sha256": "dc83d59892593d9e7e8847e90ea98cb17a20014603f596ac785b64ffe5a78643"}
+{"stage": "transport.encode", "at_ns": 151310224213333, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 13625, "frame": 182, "bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151310224215041, "pid": 7644, "iteration": 16373, "input_id": 17, "frame": 182, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "presentation.frame.queued", "at_ns": 151310224215666, "pid": 7644, "iteration": 16373, "input_id": 17, "frame": 182}
+{"stage": "transport.drain", "at_ns": 151310224236541, "pid": 7644, "iteration": 16373, "input_id": 17, "written_bytes": 8227, "pending_bytes": 0}
+{"stage": "input.queue", "at_ns": 151310224239500, "pid": 7644, "iteration": 16373, "input_id": 17, "queued_keys": 0, "oldest_age_ns": null}
+{"stage": "presentation.end", "at_ns": 151310224240458, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 3822458, "changed": true}
+{"stage": "game.render.end", "at_ns": 151310224242666, "pid": 7644, "iteration": 16373, "input_id": 17, "duration_ns": 5561875}
+{"stage": "game.iteration.end", "at_ns": 151310224243333, "pid": 7644, "iteration": 16373, "input_id": 17, "keys_consumed": 1}
+{"stage": "transport.queued", "at_ns": 151311890023666, "pid": 7644, "iteration": 16433, "input_id": null, "frame": 183, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151315512802791, "pid": 7644, "iteration": 16566, "input_id": null, "frame": 184, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151321880795750, "pid": 7644, "iteration": 16801, "input_id": null, "frame": 185, "bytes": 8227, "pending_bytes": 8227}
+{"stage": "transport.queued", "at_ns": 151325700901500, "pid": 7644, "iteration": 16943, "input_id": null, "frame": 186, "bytes": 8227, "pending_bytes": 8227}

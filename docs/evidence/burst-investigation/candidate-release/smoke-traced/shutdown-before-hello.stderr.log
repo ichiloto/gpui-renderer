@@ -1,0 +1,3 @@
+{"diagnostic":"clock_anchor","stage":"start","clock":"CLOCK_UPTIME_RAW","pid":61082,"elapsed_before_ns":333,"host_ns":154737826963291,"elapsed_after_ns":583}
+{"diagnostic":"clock_anchor","stage":"shutdown","clock":"CLOCK_UPTIME_RAW","pid":61082,"elapsed_before_ns":96086250,"host_ns":154737923049000,"elapsed_after_ns":96086333}
+{"diagnostic":"summary","dropped_records":0}

@@ -14,15 +14,27 @@ Rust **1.98.1** is pinned in `rust-toolchain.toml`; commit and use `Cargo.lock`.
 cargo test --locked
 cargo fmt --check
 cargo clippy --all-targets --locked -- -D warnings
-cargo build --locked
-python3 scripts/native-smoke.py
+cargo build --release --locked
+python3 scripts/native-smoke.py --binary target/release/gpui-renderer
 ```
+
+Use `target/release/gpui-renderer` for ordinary gameplay, internally staged runtime
+bundles and performance validation. `cargo build --locked` produces an unoptimized
+`target/debug/gpui-renderer` for development/debugging; it is not the performance
+baseline. A matched Last Legend investigation found long foreground paint work in
+the debug build and substantially shorter frame handoff/draw intervals with the
+same source compiled in release mode. This is a build-profile comparison, not a
+scheduling or gameplay change; see [the measured investigation](docs/burst-investigation.md).
+Packagers should preserve the native bundle/resources and stage the optimized
+executable through their existing installation boundary, verifying its hash.
 
 The native smoke suite opens **sequential silent windows** on a graphical desktop.
 It tests both versions and IPC/lifecycle failures; it does not synthesize keyboard
 proof or assert visual pixels. Use the interactive fixture below for those checks.
 Optional `--binary PATH` selects an executable, and `--evidence-dir PATH` records
-per-case stdout, stderr and exit status.
+per-case stdout, stderr and exit status. `--trace` validates enabled diagnostic
+stderr separately from ordinary errors while retaining the same stdout assertions;
+the default smoke run explicitly disables tracing.
 
 Validated on macOS/Apple Silicon, with Xcode/SDK/Metal toolchain installed.
 Initial usable-area fitting is currently implemented on macOS. Other targets keep
@@ -226,11 +238,13 @@ setup. Direct macOS dependencies reuse the already locked cocoa/objc versions;
 no GPUI or registry source is patched.
 
 The logical size, initial native-size policy, actual viewport and paint transform
-are separate boundaries. Future preferred scale/size, explicit upscale or fullscreen
-configuration can change the window policy and transform policy without rewriting
-protocol snapshots. Such configuration is not implemented in this phase.
-An explicit fixed native-window policy could fit a preferred size and disable
-resizing while leaving camera scrolling intact; the current policy is resizable.
+are separate boundaries. Future configuration should give developers and players
+options for fixed-size, resizable and fullscreen presentation, preferred size and
+scaling. Fixed size is an optional policy, not a universal restriction. These
+choices should adjust gracefully to the available display while leaving large-map
+camera scrolling independent. Configuration can change the window and transform
+policies without rewriting protocol snapshots; it is not implemented in this
+phase. The current policy is resizable with uniform downscaling and a 1× cap.
 
 ## Opt-in input latency diagnostics
 
@@ -261,7 +275,7 @@ records and clock anchors use the same switch, as described below. PHP consumpti
 and actual GPU/display completion are not measured by this renderer.
 
 ```sh
-ICHILOTO_GPUI_TRACE=1 python3 scripts/inspect-fixture.py --geometry last-legend \
+ICHILOTO_GPUI_TRACE=1 python3 scripts/inspect-fixture.py --binary target/release/gpui-renderer --geometry last-legend \
   > /tmp/events.ndjson 2> /tmp/trace.ndjson
 python3 scripts/analyze-trace.py /tmp/trace.ndjson --events /tmp/events.ndjson
 # Select an inclusive ID interval or only events GPUI flags as held:
@@ -313,12 +327,29 @@ particular received snapshot through these stages:
 | --- | --- |
 | `received` | Complete bounded NDJSON line read, before parsing; emitted only when parsing identifies a frame |
 | `accepted` | Session/frame validation and asset preparation succeeded, before submitting the prepared update |
+| `submit_begin` / `submit_end` (or `submit_failed`) | Around the existing bounded blocking send; includes instantaneous queue count/capacity |
+| `dequeued` | Foreground receiver obtained the update; includes queue count/capacity |
+| `replace_begin` | Immediately before snapshot assignment |
 | `replaced` | GPUI app handler replaced the current prepared snapshot, before requesting repaint |
 | `render_callback` | Renderer callback entry for the current snapshot, before constructing elements |
+| `elements_built` | Root element subtree constructed, before returning it to GPUI |
+| `layout_request_begin/end` | Root's public Element request-layout method; excludes later layout computation |
+| `prepaint_begin/end` | Root's public Element prepaint method; layout computation can occur in the preceding gap |
+| `paint_begin/end` | Root's public Element CPU paint method; excludes subsequent native presentation |
 
 Receipt-to-acceptance includes parsing, validation and preparation. Acceptance-to-
 replacement includes the bounded reader queue and UI scheduling; startup also
-includes native window creation. A render callback is **not GPU completion or proof
+includes native window creation. Previous foreground rendering can delay the next
+update. The opt-in root observer delegates the same element ID, state types, bounds
+and arguments; disabled tracing uses the original unwrapped element.
+
+Queue counts are instantaneous observations, not an atomic history. `submit_end`
+may be recorded after the consumer dequeues/replaces the frame. Match sender
+begin/end to measure submission; use dequeue to locate foreground handling.
+Pair every chronological begin/end occurrence separately, since a frame can be
+rendered multiple times. Do not merge first/last stages across callbacks.
+
+A render callback or `paint_end` is **not GPU completion or proof
 of visible pixels**. GPUI can coalesce intermediate snapshots and repaint the same
 snapshot more than once. Interpret missing stages alongside protocol errors,
 shutdown/capture boundaries and dropped-record counts, not as automatic evidence
@@ -408,11 +439,11 @@ to drain output; an unavailable output channel can only report diagnostics to st
 
 ```sh
 # Existing v1 fixture; EOF leaves the native window open.
-python3 scripts/fixture.py | target/debug/gpui-renderer
+python3 scripts/fixture.py | target/release/gpui-renderer
 # V2 first visual frame; --frame second selects the changed style snapshot.
-python3 scripts/fixture.py --protocol 2 --frame first | target/debug/gpui-renderer
+python3 scripts/fixture.py --protocol 2 --frame first | target/release/gpui-renderer
 # Controlled single-window fixture, with protocol logs captured separately.
-python3 scripts/inspect-fixture.py > /tmp/events.ndjson 2> /tmp/renderer.log
+python3 scripts/inspect-fixture.py --binary target/release/gpui-renderer > /tmp/events.ndjson 2> /tmp/renderer.log
 ```
 
 For the controlled fixture, type commands into its launching terminal: `second`

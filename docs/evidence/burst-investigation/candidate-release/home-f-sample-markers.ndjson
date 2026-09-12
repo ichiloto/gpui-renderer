@@ -1,0 +1,5 @@
+{"stage": "armed", "host_ns": 154419668593125, "wall_ns": 1789196926934050000, "pid": 60569}
+{"stage": "sample_command_begin", "host_ns": 154429703278958, "wall_ns": 1789196936966949000, "pid": 60569}
+{"stage": "sample_collecting_banner", "host_ns": 154429830531916, "wall_ns": 1789196937094184000, "pid": 60569}
+{"stage": "sample_collection_completed_banner", "host_ns": 154434972713791, "wall_ns": 1789196942235797000, "pid": 60569}
+{"stage": "sample_command_end", "host_ns": 154435626654875, "wall_ns": 1789196942889677000, "pid": 60569}

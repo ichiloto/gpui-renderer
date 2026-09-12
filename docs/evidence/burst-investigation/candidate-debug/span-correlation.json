@@ -1,0 +1,6813 @@
+{
+  "spans": [
+    {
+      "sequence": 1,
+      "frame": 1,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 344745459,
+      "end_ns": 344753667,
+      "duration_ms": 0.008208
+    },
+    {
+      "sequence": 1,
+      "frame": 1,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 394996667,
+      "end_ns": 403121209,
+      "duration_ms": 8.124542
+    },
+    {
+      "sequence": 1,
+      "frame": 1,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 403184917,
+      "end_ns": 424354292,
+      "duration_ms": 21.169375
+    },
+    {
+      "sequence": 1,
+      "frame": 1,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 424354292,
+      "end_ns": 444768334,
+      "duration_ms": 20.414042
+    },
+    {
+      "sequence": 1,
+      "frame": 1,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 444768334,
+      "end_ns": 455336000,
+      "duration_ms": 10.567666
+    },
+    {
+      "sequence": 1,
+      "frame": 1,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 455371417,
+      "end_ns": 551537834,
+      "duration_ms": 96.166417
+    },
+    {
+      "sequence": 2,
+      "frame": 2,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 13158303792,
+      "end_ns": 13158315750,
+      "duration_ms": 0.011958
+    },
+    {
+      "sequence": 2,
+      "frame": 2,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 13172562500,
+      "end_ns": 13184419667,
+      "duration_ms": 11.857167
+    },
+    {
+      "sequence": 2,
+      "frame": 2,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 13184458959,
+      "end_ns": 13208253042,
+      "duration_ms": 23.794083
+    },
+    {
+      "sequence": 2,
+      "frame": 2,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 13208253042,
+      "end_ns": 13224677875,
+      "duration_ms": 16.424833
+    },
+    {
+      "sequence": 2,
+      "frame": 2,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 13224677875,
+      "end_ns": 13233844125,
+      "duration_ms": 9.16625
+    },
+    {
+      "sequence": 2,
+      "frame": 2,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 13233871792,
+      "end_ns": 13328538167,
+      "duration_ms": 94.666375
+    },
+    {
+      "sequence": 3,
+      "frame": 3,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 13485329459,
+      "end_ns": 13485338209,
+      "duration_ms": 0.00875
+    },
+    {
+      "sequence": 3,
+      "frame": 3,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 13489459209,
+      "end_ns": 13496382000,
+      "duration_ms": 6.922791
+    },
+    {
+      "sequence": 3,
+      "frame": 3,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 13496418375,
+      "end_ns": 13515682917,
+      "duration_ms": 19.264542
+    },
+    {
+      "sequence": 3,
+      "frame": 3,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 13515682917,
+      "end_ns": 13528538792,
+      "duration_ms": 12.855875
+    },
+    {
+      "sequence": 3,
+      "frame": 3,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 13528538792,
+      "end_ns": 13538560167,
+      "duration_ms": 10.021375
+    },
+    {
+      "sequence": 4,
+      "frame": 4,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 13540552834,
+      "end_ns": 13540561750,
+      "duration_ms": 0.008916
+    },
+    {
+      "sequence": 5,
+      "frame": 5,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 13609706459,
+      "end_ns": 13609709125,
+      "duration_ms": 0.002666
+    },
+    {
+      "sequence": 3,
+      "frame": 3,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 13538590542,
+      "end_ns": 13652604709,
+      "duration_ms": 114.014167
+    },
+    {
+      "sequence": 5,
+      "frame": 5,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 13656878500,
+      "end_ns": 13663371792,
+      "duration_ms": 6.493292
+    },
+    {
+      "sequence": 5,
+      "frame": 5,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 13663407334,
+      "end_ns": 13681322250,
+      "duration_ms": 17.914916
+    },
+    {
+      "sequence": 6,
+      "frame": 6,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 13683419959,
+      "end_ns": 13683427834,
+      "duration_ms": 0.007875
+    },
+    {
+      "sequence": 5,
+      "frame": 5,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 13681322250,
+      "end_ns": 13693023209,
+      "duration_ms": 11.700959
+    },
+    {
+      "sequence": 5,
+      "frame": 5,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 13693023209,
+      "end_ns": 13702398334,
+      "duration_ms": 9.375125
+    },
+    {
+      "sequence": 7,
+      "frame": 7,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 13755142667,
+      "end_ns": 13755145334,
+      "duration_ms": 0.002667
+    },
+    {
+      "sequence": 5,
+      "frame": 5,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 13702424209,
+      "end_ns": 13816007125,
+      "duration_ms": 113.582916
+    },
+    {
+      "sequence": 8,
+      "frame": 8,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 13823769334,
+      "end_ns": 13823783167,
+      "duration_ms": 0.013833
+    },
+    {
+      "sequence": 7,
+      "frame": 7,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 13819795959,
+      "end_ns": 13826387209,
+      "duration_ms": 6.59125
+    },
+    {
+      "sequence": 7,
+      "frame": 7,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 13826414292,
+      "end_ns": 13843842792,
+      "duration_ms": 17.4285
+    },
+    {
+      "sequence": 7,
+      "frame": 7,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 13843842792,
+      "end_ns": 13854484959,
+      "duration_ms": 10.642167
+    },
+    {
+      "sequence": 7,
+      "frame": 7,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 13854484959,
+      "end_ns": 13863818917,
+      "duration_ms": 9.333958
+    },
+    {
+      "sequence": 9,
+      "frame": 9,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 13894494375,
+      "end_ns": 13894496917,
+      "duration_ms": 0.002542
+    },
+    {
+      "sequence": 7,
+      "frame": 7,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 13863844084,
+      "end_ns": 13977992625,
+      "duration_ms": 114.148541
+    },
+    {
+      "sequence": 9,
+      "frame": 9,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 13981751750,
+      "end_ns": 13988130542,
+      "duration_ms": 6.378792
+    },
+    {
+      "sequence": 9,
+      "frame": 9,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 13988158209,
+      "end_ns": 14005840500,
+      "duration_ms": 17.682291
+    },
+    {
+      "sequence": 9,
+      "frame": 9,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 14005840500,
+      "end_ns": 14016967834,
+      "duration_ms": 11.127334
+    },
+    {
+      "sequence": 9,
+      "frame": 9,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 14016967834,
+      "end_ns": 14026309250,
+      "duration_ms": 9.341416
+    },
+    {
+      "sequence": 10,
+      "frame": 10,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14040726417,
+      "end_ns": 14040733959,
+      "duration_ms": 0.007542
+    },
+    {
+      "sequence": 11,
+      "frame": 11,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14111204834,
+      "end_ns": 14111207459,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 9,
+      "frame": 9,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 14026335125,
+      "end_ns": 14140322959,
+      "duration_ms": 113.987834
+    },
+    {
+      "sequence": 11,
+      "frame": 11,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 14144120542,
+      "end_ns": 14150499084,
+      "duration_ms": 6.378542
+    },
+    {
+      "sequence": 11,
+      "frame": 11,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 14150525709,
+      "end_ns": 14168387584,
+      "duration_ms": 17.861875
+    },
+    {
+      "sequence": 11,
+      "frame": 11,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 14168387584,
+      "end_ns": 14179487542,
+      "duration_ms": 11.099958
+    },
+    {
+      "sequence": 12,
+      "frame": 12,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14184990625,
+      "end_ns": 14185000125,
+      "duration_ms": 0.0095
+    },
+    {
+      "sequence": 11,
+      "frame": 11,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 14179487542,
+      "end_ns": 14189542834,
+      "duration_ms": 10.055292
+    },
+    {
+      "sequence": 13,
+      "frame": 13,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14258933459,
+      "end_ns": 14258936334,
+      "duration_ms": 0.002875
+    },
+    {
+      "sequence": 11,
+      "frame": 11,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 14189571875,
+      "end_ns": 14306431125,
+      "duration_ms": 116.85925
+    },
+    {
+      "sequence": 13,
+      "frame": 13,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 14310325542,
+      "end_ns": 14316723834,
+      "duration_ms": 6.398292
+    },
+    {
+      "sequence": 14,
+      "frame": 14,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14329091584,
+      "end_ns": 14329099292,
+      "duration_ms": 0.007708
+    },
+    {
+      "sequence": 13,
+      "frame": 13,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 14316752125,
+      "end_ns": 14334545417,
+      "duration_ms": 17.793292
+    },
+    {
+      "sequence": 13,
+      "frame": 13,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 14334545417,
+      "end_ns": 14345539042,
+      "duration_ms": 10.993625
+    },
+    {
+      "sequence": 13,
+      "frame": 13,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 14345539042,
+      "end_ns": 14354890625,
+      "duration_ms": 9.351583
+    },
+    {
+      "sequence": 13,
+      "frame": 13,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 14354914500,
+      "end_ns": 14469120917,
+      "duration_ms": 114.206417
+    },
+    {
+      "sequence": 15,
+      "frame": 15,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14470972667,
+      "end_ns": 14470975542,
+      "duration_ms": 0.002875
+    },
+    {
+      "sequence": 15,
+      "frame": 15,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 14472908500,
+      "end_ns": 14479306084,
+      "duration_ms": 6.397584
+    },
+    {
+      "sequence": 15,
+      "frame": 15,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 14479336042,
+      "end_ns": 14497078792,
+      "duration_ms": 17.74275
+    },
+    {
+      "sequence": 15,
+      "frame": 15,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 14497078792,
+      "end_ns": 14507820959,
+      "duration_ms": 10.742167
+    },
+    {
+      "sequence": 15,
+      "frame": 15,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 14507820959,
+      "end_ns": 14517326500,
+      "duration_ms": 9.505541
+    },
+    {
+      "sequence": 16,
+      "frame": 16,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14545124792,
+      "end_ns": 14545131750,
+      "duration_ms": 0.006958
+    },
+    {
+      "sequence": 17,
+      "frame": 17,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14617907209,
+      "end_ns": 14617909834,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 15,
+      "frame": 15,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 14517347959,
+      "end_ns": 14632797917,
+      "duration_ms": 115.449958
+    },
+    {
+      "sequence": 17,
+      "frame": 17,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 14636887500,
+      "end_ns": 14643693709,
+      "duration_ms": 6.806209
+    },
+    {
+      "sequence": 17,
+      "frame": 17,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 14643724334,
+      "end_ns": 14662278917,
+      "duration_ms": 18.554583
+    },
+    {
+      "sequence": 18,
+      "frame": 18,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14668267000,
+      "end_ns": 14668274459,
+      "duration_ms": 0.007459
+    },
+    {
+      "sequence": 17,
+      "frame": 17,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 14662278917,
+      "end_ns": 14673373875,
+      "duration_ms": 11.094958
+    },
+    {
+      "sequence": 17,
+      "frame": 17,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 14673373875,
+      "end_ns": 14682930667,
+      "duration_ms": 9.556792
+    },
+    {
+      "sequence": 19,
+      "frame": 19,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14741556417,
+      "end_ns": 14741559375,
+      "duration_ms": 0.002958
+    },
+    {
+      "sequence": 17,
+      "frame": 17,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 14682956417,
+      "end_ns": 14797733709,
+      "duration_ms": 114.777292
+    },
+    {
+      "sequence": 19,
+      "frame": 19,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 14801452959,
+      "end_ns": 14807853959,
+      "duration_ms": 6.401
+    },
+    {
+      "sequence": 20,
+      "frame": 20,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14812070459,
+      "end_ns": 14812082667,
+      "duration_ms": 0.012208
+    },
+    {
+      "sequence": 19,
+      "frame": 19,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 14807901209,
+      "end_ns": 14825783375,
+      "duration_ms": 17.882166
+    },
+    {
+      "sequence": 19,
+      "frame": 19,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 14825783375,
+      "end_ns": 14836899750,
+      "duration_ms": 11.116375
+    },
+    {
+      "sequence": 19,
+      "frame": 19,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 14836899750,
+      "end_ns": 14846288167,
+      "duration_ms": 9.388417
+    },
+    {
+      "sequence": 21,
+      "frame": 21,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 14884755375,
+      "end_ns": 14884758042,
+      "duration_ms": 0.002667
+    },
+    {
+      "sequence": 19,
+      "frame": 19,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 14846313375,
+      "end_ns": 14961264584,
+      "duration_ms": 114.951209
+    },
+    {
+      "sequence": 21,
+      "frame": 21,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 14965019542,
+      "end_ns": 14971373709,
+      "duration_ms": 6.354167
+    },
+    {
+      "sequence": 21,
+      "frame": 21,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 14971400334,
+      "end_ns": 14989062459,
+      "duration_ms": 17.662125
+    },
+    {
+      "sequence": 21,
+      "frame": 21,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 14989062459,
+      "end_ns": 15000173709,
+      "duration_ms": 11.11125
+    },
+    {
+      "sequence": 21,
+      "frame": 21,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 15000173709,
+      "end_ns": 15009591959,
+      "duration_ms": 9.41825
+    },
+    {
+      "sequence": 22,
+      "frame": 22,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15027768042,
+      "end_ns": 15027778084,
+      "duration_ms": 0.010042
+    },
+    {
+      "sequence": 23,
+      "frame": 23,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15101303459,
+      "end_ns": 15101306209,
+      "duration_ms": 0.00275
+    },
+    {
+      "sequence": 21,
+      "frame": 21,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 15009616542,
+      "end_ns": 15126446375,
+      "duration_ms": 116.829833
+    },
+    {
+      "sequence": 23,
+      "frame": 23,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 15130161792,
+      "end_ns": 15136521334,
+      "duration_ms": 6.359542
+    },
+    {
+      "sequence": 23,
+      "frame": 23,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 15136551417,
+      "end_ns": 15154311084,
+      "duration_ms": 17.759667
+    },
+    {
+      "sequence": 23,
+      "frame": 23,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 15154311084,
+      "end_ns": 15165476917,
+      "duration_ms": 11.165833
+    },
+    {
+      "sequence": 24,
+      "frame": 24,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15174718917,
+      "end_ns": 15174728292,
+      "duration_ms": 0.009375
+    },
+    {
+      "sequence": 23,
+      "frame": 23,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 15165476917,
+      "end_ns": 15174965500,
+      "duration_ms": 9.488583
+    },
+    {
+      "sequence": 23,
+      "frame": 23,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 15174991500,
+      "end_ns": 15289994875,
+      "duration_ms": 115.003375
+    },
+    {
+      "sequence": 24,
+      "frame": 24,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 15294019500,
+      "end_ns": 15300402375,
+      "duration_ms": 6.382875
+    },
+    {
+      "sequence": 24,
+      "frame": 24,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 15300429459,
+      "end_ns": 15318170750,
+      "duration_ms": 17.741291
+    },
+    {
+      "sequence": 25,
+      "frame": 25,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15318751792,
+      "end_ns": 15318759417,
+      "duration_ms": 0.007625
+    },
+    {
+      "sequence": 24,
+      "frame": 24,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 15318170750,
+      "end_ns": 15329637417,
+      "duration_ms": 11.466667
+    },
+    {
+      "sequence": 24,
+      "frame": 24,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 15329637417,
+      "end_ns": 15338909000,
+      "duration_ms": 9.271583
+    },
+    {
+      "sequence": 26,
+      "frame": 26,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15392398584,
+      "end_ns": 15392401667,
+      "duration_ms": 0.003083
+    },
+    {
+      "sequence": 24,
+      "frame": 24,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 15338933959,
+      "end_ns": 15454427042,
+      "duration_ms": 115.493083
+    },
+    {
+      "sequence": 27,
+      "frame": 27,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15462446125,
+      "end_ns": 15462454792,
+      "duration_ms": 0.008667
+    },
+    {
+      "sequence": 26,
+      "frame": 26,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 15458279000,
+      "end_ns": 15464873292,
+      "duration_ms": 6.594292
+    },
+    {
+      "sequence": 26,
+      "frame": 26,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 15464896000,
+      "end_ns": 15482566542,
+      "duration_ms": 17.670542
+    },
+    {
+      "sequence": 26,
+      "frame": 26,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 15482566542,
+      "end_ns": 15494661667,
+      "duration_ms": 12.095125
+    },
+    {
+      "sequence": 26,
+      "frame": 26,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 15494661667,
+      "end_ns": 15503983709,
+      "duration_ms": 9.322042
+    },
+    {
+      "sequence": 28,
+      "frame": 28,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15535667250,
+      "end_ns": 15535682334,
+      "duration_ms": 0.015084
+    },
+    {
+      "sequence": 26,
+      "frame": 26,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 15504004500,
+      "end_ns": 15619681750,
+      "duration_ms": 115.67725
+    },
+    {
+      "sequence": 29,
+      "frame": 29,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15609066542,
+      "end_ns": 15623401625,
+      "duration_ms": 14.335083
+    },
+    {
+      "sequence": 29,
+      "frame": 29,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 15623444334,
+      "end_ns": 15629979750,
+      "duration_ms": 6.535416
+    },
+    {
+      "sequence": 29,
+      "frame": 29,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 15630020417,
+      "end_ns": 15647679917,
+      "duration_ms": 17.6595
+    },
+    {
+      "sequence": 29,
+      "frame": 29,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 15647679917,
+      "end_ns": 15659384875,
+      "duration_ms": 11.704958
+    },
+    {
+      "sequence": 29,
+      "frame": 29,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 15659384875,
+      "end_ns": 15669004000,
+      "duration_ms": 9.619125
+    },
+    {
+      "sequence": 30,
+      "frame": 30,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15682459000,
+      "end_ns": 15682464500,
+      "duration_ms": 0.0055
+    },
+    {
+      "sequence": 31,
+      "frame": 31,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15753481834,
+      "end_ns": 15753484459,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 29,
+      "frame": 29,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 15669028584,
+      "end_ns": 15785465917,
+      "duration_ms": 116.437333
+    },
+    {
+      "sequence": 31,
+      "frame": 31,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 15810678709,
+      "end_ns": 15817167292,
+      "duration_ms": 6.488583
+    },
+    {
+      "sequence": 32,
+      "frame": 32,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15827268500,
+      "end_ns": 15827275500,
+      "duration_ms": 0.007
+    },
+    {
+      "sequence": 31,
+      "frame": 31,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 15817200084,
+      "end_ns": 15835448625,
+      "duration_ms": 18.248541
+    },
+    {
+      "sequence": 31,
+      "frame": 31,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 15835448625,
+      "end_ns": 15846765375,
+      "duration_ms": 11.31675
+    },
+    {
+      "sequence": 31,
+      "frame": 31,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 15846765375,
+      "end_ns": 15856417625,
+      "duration_ms": 9.65225
+    },
+    {
+      "sequence": 33,
+      "frame": 33,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 15900918250,
+      "end_ns": 15900920875,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 31,
+      "frame": 31,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 15856443209,
+      "end_ns": 15973842875,
+      "duration_ms": 117.399666
+    },
+    {
+      "sequence": 33,
+      "frame": 33,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 15977704167,
+      "end_ns": 15984112875,
+      "duration_ms": 6.408708
+    },
+    {
+      "sequence": 33,
+      "frame": 33,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 15984141500,
+      "end_ns": 16002012375,
+      "duration_ms": 17.870875
+    },
+    {
+      "sequence": 33,
+      "frame": 33,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 16002012375,
+      "end_ns": 16013343875,
+      "duration_ms": 11.3315
+    },
+    {
+      "sequence": 33,
+      "frame": 33,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 16013343875,
+      "end_ns": 16022795917,
+      "duration_ms": 9.452042
+    },
+    {
+      "sequence": 34,
+      "frame": 34,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16044066625,
+      "end_ns": 16044074292,
+      "duration_ms": 0.007667
+    },
+    {
+      "sequence": 35,
+      "frame": 35,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16116830000,
+      "end_ns": 16116832750,
+      "duration_ms": 0.00275
+    },
+    {
+      "sequence": 33,
+      "frame": 33,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 16022820167,
+      "end_ns": 16139740250,
+      "duration_ms": 116.920083
+    },
+    {
+      "sequence": 35,
+      "frame": 35,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 16143660625,
+      "end_ns": 16150078834,
+      "duration_ms": 6.418209
+    },
+    {
+      "sequence": 35,
+      "frame": 35,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 16150106584,
+      "end_ns": 16168184125,
+      "duration_ms": 18.077541
+    },
+    {
+      "sequence": 35,
+      "frame": 35,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 16168184125,
+      "end_ns": 16179763292,
+      "duration_ms": 11.579167
+    },
+    {
+      "sequence": 36,
+      "frame": 36,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16186901000,
+      "end_ns": 16186908500,
+      "duration_ms": 0.0075
+    },
+    {
+      "sequence": 35,
+      "frame": 35,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 16179763292,
+      "end_ns": 16189284375,
+      "duration_ms": 9.521083
+    },
+    {
+      "sequence": 37,
+      "frame": 37,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16260662709,
+      "end_ns": 16260665334,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 35,
+      "frame": 35,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 16189303709,
+      "end_ns": 16306688834,
+      "duration_ms": 117.385125
+    },
+    {
+      "sequence": 37,
+      "frame": 37,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 16310713292,
+      "end_ns": 16317122167,
+      "duration_ms": 6.408875
+    },
+    {
+      "sequence": 38,
+      "frame": 38,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16334012792,
+      "end_ns": 16334019625,
+      "duration_ms": 0.006833
+    },
+    {
+      "sequence": 37,
+      "frame": 37,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 16317149709,
+      "end_ns": 16335102125,
+      "duration_ms": 17.952416
+    },
+    {
+      "sequence": 37,
+      "frame": 37,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 16335102125,
+      "end_ns": 16346329709,
+      "duration_ms": 11.227584
+    },
+    {
+      "sequence": 37,
+      "frame": 37,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 16346329709,
+      "end_ns": 16355682584,
+      "duration_ms": 9.352875
+    },
+    {
+      "sequence": 37,
+      "frame": 37,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 16355705834,
+      "end_ns": 16472929292,
+      "duration_ms": 117.223458
+    },
+    {
+      "sequence": 39,
+      "frame": 39,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16477892625,
+      "end_ns": 16477897792,
+      "duration_ms": 0.005167
+    },
+    {
+      "sequence": 38,
+      "frame": 38,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 16476949042,
+      "end_ns": 16483424667,
+      "duration_ms": 6.475625
+    },
+    {
+      "sequence": 38,
+      "frame": 38,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 16483448875,
+      "end_ns": 16501602250,
+      "duration_ms": 18.153375
+    },
+    {
+      "sequence": 38,
+      "frame": 38,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 16501602250,
+      "end_ns": 16513010417,
+      "duration_ms": 11.408167
+    },
+    {
+      "sequence": 38,
+      "frame": 38,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 16513010417,
+      "end_ns": 16522286959,
+      "duration_ms": 9.276542
+    },
+    {
+      "sequence": 40,
+      "frame": 40,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16551380709,
+      "end_ns": 16551383459,
+      "duration_ms": 0.00275
+    },
+    {
+      "sequence": 38,
+      "frame": 38,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 16522308209,
+      "end_ns": 16639639000,
+      "duration_ms": 117.330791
+    },
+    {
+      "sequence": 41,
+      "frame": 41,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16620866750,
+      "end_ns": 16643590834,
+      "duration_ms": 22.724084
+    },
+    {
+      "sequence": 41,
+      "frame": 41,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 16643637834,
+      "end_ns": 16650087042,
+      "duration_ms": 6.449208
+    },
+    {
+      "sequence": 41,
+      "frame": 41,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 16650114667,
+      "end_ns": 16667945459,
+      "duration_ms": 17.830792
+    },
+    {
+      "sequence": 41,
+      "frame": 41,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 16667945459,
+      "end_ns": 16679683084,
+      "duration_ms": 11.737625
+    },
+    {
+      "sequence": 41,
+      "frame": 41,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 16679683084,
+      "end_ns": 16688923209,
+      "duration_ms": 9.240125
+    },
+    {
+      "sequence": 42,
+      "frame": 42,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16694698334,
+      "end_ns": 16694712959,
+      "duration_ms": 0.014625
+    },
+    {
+      "sequence": 43,
+      "frame": 43,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16767477584,
+      "end_ns": 16767480375,
+      "duration_ms": 0.002791
+    },
+    {
+      "sequence": 41,
+      "frame": 41,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 16688943167,
+      "end_ns": 16806695417,
+      "duration_ms": 117.75225
+    },
+    {
+      "sequence": 43,
+      "frame": 43,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 16810767084,
+      "end_ns": 16817332459,
+      "duration_ms": 6.565375
+    },
+    {
+      "sequence": 43,
+      "frame": 43,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 16817363667,
+      "end_ns": 16835262834,
+      "duration_ms": 17.899167
+    },
+    {
+      "sequence": 44,
+      "frame": 44,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16838100417,
+      "end_ns": 16838108875,
+      "duration_ms": 0.008458
+    },
+    {
+      "sequence": 43,
+      "frame": 43,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 16835262834,
+      "end_ns": 16846823000,
+      "duration_ms": 11.560166
+    },
+    {
+      "sequence": 43,
+      "frame": 43,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 16846823000,
+      "end_ns": 16856121125,
+      "duration_ms": 9.298125
+    },
+    {
+      "sequence": 43,
+      "frame": 43,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 16856143417,
+      "end_ns": 16974041042,
+      "duration_ms": 117.897625
+    },
+    {
+      "sequence": 44,
+      "frame": 44,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 16978129125,
+      "end_ns": 16984711417,
+      "duration_ms": 6.582292
+    },
+    {
+      "sequence": 45,
+      "frame": 45,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 16985673500,
+      "end_ns": 16985681209,
+      "duration_ms": 0.007709
+    },
+    {
+      "sequence": 44,
+      "frame": 44,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 16984738584,
+      "end_ns": 17002550084,
+      "duration_ms": 17.8115
+    },
+    {
+      "sequence": 44,
+      "frame": 44,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 17002550084,
+      "end_ns": 17014068959,
+      "duration_ms": 11.518875
+    },
+    {
+      "sequence": 44,
+      "frame": 44,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 17014068959,
+      "end_ns": 17023349834,
+      "duration_ms": 9.280875
+    },
+    {
+      "sequence": 46,
+      "frame": 46,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 17058562042,
+      "end_ns": 17058564667,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 44,
+      "frame": 44,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 17023369834,
+      "end_ns": 17141414750,
+      "duration_ms": 118.044916
+    },
+    {
+      "sequence": 47,
+      "frame": 47,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 17129516084,
+      "end_ns": 17145370959,
+      "duration_ms": 15.854875
+    },
+    {
+      "sequence": 47,
+      "frame": 47,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 17145418542,
+      "end_ns": 17151923542,
+      "duration_ms": 6.505
+    },
+    {
+      "sequence": 47,
+      "frame": 47,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 17151952875,
+      "end_ns": 17169764375,
+      "duration_ms": 17.8115
+    },
+    {
+      "sequence": 47,
+      "frame": 47,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 17169764375,
+      "end_ns": 17181360000,
+      "duration_ms": 11.595625
+    },
+    {
+      "sequence": 47,
+      "frame": 47,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 17181360000,
+      "end_ns": 17190696167,
+      "duration_ms": 9.336167
+    },
+    {
+      "sequence": 48,
+      "frame": 48,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 17271515500,
+      "end_ns": 17271522167,
+      "duration_ms": 0.006667
+    },
+    {
+      "sequence": 47,
+      "frame": 47,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 17190716084,
+      "end_ns": 17308871125,
+      "duration_ms": 118.155041
+    },
+    {
+      "sequence": 48,
+      "frame": 48,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 17312843000,
+      "end_ns": 17319331334,
+      "duration_ms": 6.488334
+    },
+    {
+      "sequence": 48,
+      "frame": 48,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 17319358250,
+      "end_ns": 17337199084,
+      "duration_ms": 17.840834
+    },
+    {
+      "sequence": 49,
+      "frame": 49,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 17345275250,
+      "end_ns": 17345281959,
+      "duration_ms": 0.006709
+    },
+    {
+      "sequence": 48,
+      "frame": 48,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 17337199084,
+      "end_ns": 17348850542,
+      "duration_ms": 11.651458
+    },
+    {
+      "sequence": 48,
+      "frame": 48,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 17348850542,
+      "end_ns": 17358208417,
+      "duration_ms": 9.357875
+    },
+    {
+      "sequence": 50,
+      "frame": 50,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 17418475750,
+      "end_ns": 17418478417,
+      "duration_ms": 0.002667
+    },
+    {
+      "sequence": 48,
+      "frame": 48,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 17358228917,
+      "end_ns": 17476956334,
+      "duration_ms": 118.727417
+    },
+    {
+      "sequence": 50,
+      "frame": 50,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 17480821792,
+      "end_ns": 17487434542,
+      "duration_ms": 6.61275
+    },
+    {
+      "sequence": 51,
+      "frame": 51,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 17488425167,
+      "end_ns": 17488432625,
+      "duration_ms": 0.007458
+    },
+    {
+      "sequence": 50,
+      "frame": 50,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 17487463292,
+      "end_ns": 17505331500,
+      "duration_ms": 17.868208
+    },
+    {
+      "sequence": 50,
+      "frame": 50,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 17505331500,
+      "end_ns": 17516661500,
+      "duration_ms": 11.33
+    },
+    {
+      "sequence": 50,
+      "frame": 50,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 17516661500,
+      "end_ns": 17526016584,
+      "duration_ms": 9.355084
+    },
+    {
+      "sequence": 50,
+      "frame": 50,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 17526037375,
+      "end_ns": 17644834834,
+      "duration_ms": 118.797459
+    },
+    {
+      "sequence": 51,
+      "frame": 51,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 17648605584,
+      "end_ns": 17655147584,
+      "duration_ms": 6.542
+    },
+    {
+      "sequence": 51,
+      "frame": 51,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 17655176542,
+      "end_ns": 17673010125,
+      "duration_ms": 17.833583
+    },
+    {
+      "sequence": 51,
+      "frame": 51,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 17673010125,
+      "end_ns": 17684535959,
+      "duration_ms": 11.525834
+    },
+    {
+      "sequence": 51,
+      "frame": 51,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 17684535959,
+      "end_ns": 17693956792,
+      "duration_ms": 9.420833
+    },
+    {
+      "sequence": 51,
+      "frame": 51,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 17693984459,
+      "end_ns": 17812694459,
+      "duration_ms": 118.71
+    },
+    {
+      "sequence": 52,
+      "frame": 52,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 33562800709,
+      "end_ns": 33562810959,
+      "duration_ms": 0.01025
+    },
+    {
+      "sequence": 52,
+      "frame": 52,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 33573242917,
+      "end_ns": 33580964417,
+      "duration_ms": 7.7215
+    },
+    {
+      "sequence": 53,
+      "frame": 53,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 33587113875,
+      "end_ns": 33587121959,
+      "duration_ms": 0.008084
+    },
+    {
+      "sequence": 52,
+      "frame": 52,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 33581001125,
+      "end_ns": 33600083875,
+      "duration_ms": 19.08275
+    },
+    {
+      "sequence": 52,
+      "frame": 52,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 33600083875,
+      "end_ns": 33611372500,
+      "duration_ms": 11.288625
+    },
+    {
+      "sequence": 54,
+      "frame": 54,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 33612013959,
+      "end_ns": 33612016834,
+      "duration_ms": 0.002875
+    },
+    {
+      "sequence": 52,
+      "frame": 52,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 33611372500,
+      "end_ns": 33620323667,
+      "duration_ms": 8.951167
+    },
+    {
+      "sequence": 52,
+      "frame": 52,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 33620343375,
+      "end_ns": 33706075209,
+      "duration_ms": 85.731834
+    },
+    {
+      "sequence": 55,
+      "frame": 55,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 33685369709,
+      "end_ns": 33709939417,
+      "duration_ms": 24.569708
+    },
+    {
+      "sequence": 55,
+      "frame": 55,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 33709986292,
+      "end_ns": 33716407375,
+      "duration_ms": 6.421083
+    },
+    {
+      "sequence": 55,
+      "frame": 55,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 33716435209,
+      "end_ns": 33734214375,
+      "duration_ms": 17.779166
+    },
+    {
+      "sequence": 55,
+      "frame": 55,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 33734214375,
+      "end_ns": 33746164875,
+      "duration_ms": 11.9505
+    },
+    {
+      "sequence": 55,
+      "frame": 55,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 33746164875,
+      "end_ns": 33755472875,
+      "duration_ms": 9.308
+    },
+    {
+      "sequence": 56,
+      "frame": 56,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 33759596875,
+      "end_ns": 33759604000,
+      "duration_ms": 0.007125
+    },
+    {
+      "sequence": 57,
+      "frame": 57,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 33829487917,
+      "end_ns": 33829490834,
+      "duration_ms": 0.002917
+    },
+    {
+      "sequence": 55,
+      "frame": 55,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 33755493667,
+      "end_ns": 33869222375,
+      "duration_ms": 113.728708
+    },
+    {
+      "sequence": 57,
+      "frame": 57,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 33873045334,
+      "end_ns": 33879685167,
+      "duration_ms": 6.639833
+    },
+    {
+      "sequence": 57,
+      "frame": 57,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 33879717042,
+      "end_ns": 33897257334,
+      "duration_ms": 17.540292
+    },
+    {
+      "sequence": 58,
+      "frame": 58,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 33902508417,
+      "end_ns": 33902516792,
+      "duration_ms": 0.008375
+    },
+    {
+      "sequence": 57,
+      "frame": 57,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 33897257334,
+      "end_ns": 33909184000,
+      "duration_ms": 11.926666
+    },
+    {
+      "sequence": 57,
+      "frame": 57,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 33909184000,
+      "end_ns": 33918488250,
+      "duration_ms": 9.30425
+    },
+    {
+      "sequence": 59,
+      "frame": 59,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 33976161875,
+      "end_ns": 33976164500,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 57,
+      "frame": 57,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 33918509209,
+      "end_ns": 34032354500,
+      "duration_ms": 113.845291
+    },
+    {
+      "sequence": 59,
+      "frame": 59,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 34036150875,
+      "end_ns": 34042691542,
+      "duration_ms": 6.540667
+    },
+    {
+      "sequence": 60,
+      "frame": 60,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34045440000,
+      "end_ns": 34045448125,
+      "duration_ms": 0.008125
+    },
+    {
+      "sequence": 59,
+      "frame": 59,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 34042718792,
+      "end_ns": 34060334125,
+      "duration_ms": 17.615333
+    },
+    {
+      "sequence": 59,
+      "frame": 59,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 34060334125,
+      "end_ns": 34071194084,
+      "duration_ms": 10.859959
+    },
+    {
+      "sequence": 59,
+      "frame": 59,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 34071194084,
+      "end_ns": 34080651167,
+      "duration_ms": 9.457083
+    },
+    {
+      "sequence": 61,
+      "frame": 61,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34118620084,
+      "end_ns": 34118623000,
+      "duration_ms": 0.002916
+    },
+    {
+      "sequence": 59,
+      "frame": 59,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 34080681875,
+      "end_ns": 34195216167,
+      "duration_ms": 114.534292
+    },
+    {
+      "sequence": 61,
+      "frame": 61,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 34199299792,
+      "end_ns": 34206090917,
+      "duration_ms": 6.791125
+    },
+    {
+      "sequence": 61,
+      "frame": 61,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 34206119542,
+      "end_ns": 34224810500,
+      "duration_ms": 18.690958
+    },
+    {
+      "sequence": 61,
+      "frame": 61,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 34224810500,
+      "end_ns": 34236506875,
+      "duration_ms": 11.696375
+    },
+    {
+      "sequence": 61,
+      "frame": 61,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 34236506875,
+      "end_ns": 34246019875,
+      "duration_ms": 9.513
+    },
+    {
+      "sequence": 62,
+      "frame": 62,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34259542209,
+      "end_ns": 34259549709,
+      "duration_ms": 0.0075
+    },
+    {
+      "sequence": 63,
+      "frame": 63,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34328760584,
+      "end_ns": 34328763417,
+      "duration_ms": 0.002833
+    },
+    {
+      "sequence": 61,
+      "frame": 61,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 34246046084,
+      "end_ns": 34360018000,
+      "duration_ms": 113.971916
+    },
+    {
+      "sequence": 63,
+      "frame": 63,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 34364070209,
+      "end_ns": 34370920209,
+      "duration_ms": 6.85
+    },
+    {
+      "sequence": 63,
+      "frame": 63,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 34370946709,
+      "end_ns": 34388863167,
+      "duration_ms": 17.916458
+    },
+    {
+      "sequence": 63,
+      "frame": 63,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 34388863167,
+      "end_ns": 34400399959,
+      "duration_ms": 11.536792
+    },
+    {
+      "sequence": 64,
+      "frame": 64,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34401362459,
+      "end_ns": 34401369459,
+      "duration_ms": 0.007
+    },
+    {
+      "sequence": 63,
+      "frame": 63,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 34400399959,
+      "end_ns": 34409971542,
+      "duration_ms": 9.571583
+    },
+    {
+      "sequence": 65,
+      "frame": 65,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34474800709,
+      "end_ns": 34474803709,
+      "duration_ms": 0.003
+    },
+    {
+      "sequence": 63,
+      "frame": 63,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 34409997042,
+      "end_ns": 34524442334,
+      "duration_ms": 114.445292
+    },
+    {
+      "sequence": 65,
+      "frame": 65,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 34530811875,
+      "end_ns": 34537219042,
+      "duration_ms": 6.407167
+    },
+    {
+      "sequence": 66,
+      "frame": 66,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34544841875,
+      "end_ns": 34544849667,
+      "duration_ms": 0.007792
+    },
+    {
+      "sequence": 65,
+      "frame": 65,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 34537246667,
+      "end_ns": 34555057875,
+      "duration_ms": 17.811208
+    },
+    {
+      "sequence": 65,
+      "frame": 65,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 34555057875,
+      "end_ns": 34566068125,
+      "duration_ms": 11.01025
+    },
+    {
+      "sequence": 65,
+      "frame": 65,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 34566068125,
+      "end_ns": 34575519084,
+      "duration_ms": 9.450959
+    },
+    {
+      "sequence": 67,
+      "frame": 67,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34617940334,
+      "end_ns": 34617943000,
+      "duration_ms": 0.002666
+    },
+    {
+      "sequence": 65,
+      "frame": 65,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 34575548417,
+      "end_ns": 34690124417,
+      "duration_ms": 114.576
+    },
+    {
+      "sequence": 67,
+      "frame": 67,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 34694087834,
+      "end_ns": 34700502500,
+      "duration_ms": 6.414666
+    },
+    {
+      "sequence": 67,
+      "frame": 67,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 34700529459,
+      "end_ns": 34718292667,
+      "duration_ms": 17.763208
+    },
+    {
+      "sequence": 67,
+      "frame": 67,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 34718292667,
+      "end_ns": 34729546625,
+      "duration_ms": 11.253958
+    },
+    {
+      "sequence": 67,
+      "frame": 67,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 34729546625,
+      "end_ns": 34739031542,
+      "duration_ms": 9.484917
+    },
+    {
+      "sequence": 68,
+      "frame": 68,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34761464250,
+      "end_ns": 34761471459,
+      "duration_ms": 0.007209
+    },
+    {
+      "sequence": 69,
+      "frame": 69,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34834612750,
+      "end_ns": 34834615750,
+      "duration_ms": 0.003
+    },
+    {
+      "sequence": 67,
+      "frame": 67,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 34739056750,
+      "end_ns": 34853672834,
+      "duration_ms": 114.616084
+    },
+    {
+      "sequence": 69,
+      "frame": 69,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 34857546292,
+      "end_ns": 34864097209,
+      "duration_ms": 6.550917
+    },
+    {
+      "sequence": 69,
+      "frame": 69,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 34864138375,
+      "end_ns": 34882155417,
+      "duration_ms": 18.017042
+    },
+    {
+      "sequence": 69,
+      "frame": 69,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 34882155417,
+      "end_ns": 34893822167,
+      "duration_ms": 11.66675
+    },
+    {
+      "sequence": 69,
+      "frame": 69,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 34893822167,
+      "end_ns": 34903277250,
+      "duration_ms": 9.455083
+    },
+    {
+      "sequence": 70,
+      "frame": 70,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34903673834,
+      "end_ns": 34903681209,
+      "duration_ms": 0.007375
+    },
+    {
+      "sequence": 71,
+      "frame": 71,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 34977234959,
+      "end_ns": 34977238250,
+      "duration_ms": 0.003291
+    },
+    {
+      "sequence": 69,
+      "frame": 69,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 34903300667,
+      "end_ns": 35018067167,
+      "duration_ms": 114.7665
+    },
+    {
+      "sequence": 71,
+      "frame": 71,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 35021887000,
+      "end_ns": 35028462042,
+      "duration_ms": 6.575042
+    },
+    {
+      "sequence": 71,
+      "frame": 71,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 35028490917,
+      "end_ns": 35046238625,
+      "duration_ms": 17.747708
+    },
+    {
+      "sequence": 72,
+      "frame": 72,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35050523917,
+      "end_ns": 35050530875,
+      "duration_ms": 0.006958
+    },
+    {
+      "sequence": 71,
+      "frame": 71,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 35046238625,
+      "end_ns": 35057258042,
+      "duration_ms": 11.019417
+    },
+    {
+      "sequence": 71,
+      "frame": 71,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 35057258042,
+      "end_ns": 35066766709,
+      "duration_ms": 9.508667
+    },
+    {
+      "sequence": 73,
+      "frame": 73,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35119919209,
+      "end_ns": 35119921875,
+      "duration_ms": 0.002666
+    },
+    {
+      "sequence": 71,
+      "frame": 71,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 35066790959,
+      "end_ns": 35182037584,
+      "duration_ms": 115.246625
+    },
+    {
+      "sequence": 73,
+      "frame": 73,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 35185887334,
+      "end_ns": 35192474667,
+      "duration_ms": 6.587333
+    },
+    {
+      "sequence": 74,
+      "frame": 74,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35193437250,
+      "end_ns": 35193444375,
+      "duration_ms": 0.007125
+    },
+    {
+      "sequence": 73,
+      "frame": 73,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 35192502459,
+      "end_ns": 35210259042,
+      "duration_ms": 17.756583
+    },
+    {
+      "sequence": 73,
+      "frame": 73,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 35210259042,
+      "end_ns": 35221213334,
+      "duration_ms": 10.954292
+    },
+    {
+      "sequence": 73,
+      "frame": 73,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 35221213334,
+      "end_ns": 35230608875,
+      "duration_ms": 9.395541
+    },
+    {
+      "sequence": 75,
+      "frame": 75,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35262676917,
+      "end_ns": 35262679625,
+      "duration_ms": 0.002708
+    },
+    {
+      "sequence": 73,
+      "frame": 73,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 35230635542,
+      "end_ns": 35346092042,
+      "duration_ms": 115.4565
+    },
+    {
+      "sequence": 76,
+      "frame": 76,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35335780084,
+      "end_ns": 35349908000,
+      "duration_ms": 14.127916
+    },
+    {
+      "sequence": 76,
+      "frame": 76,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 35349950042,
+      "end_ns": 35356357542,
+      "duration_ms": 6.4075
+    },
+    {
+      "sequence": 76,
+      "frame": 76,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 35356386542,
+      "end_ns": 35374205584,
+      "duration_ms": 17.819042
+    },
+    {
+      "sequence": 76,
+      "frame": 76,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 35374205584,
+      "end_ns": 35385840625,
+      "duration_ms": 11.635041
+    },
+    {
+      "sequence": 76,
+      "frame": 76,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 35385840625,
+      "end_ns": 35395293792,
+      "duration_ms": 9.453167
+    },
+    {
+      "sequence": 77,
+      "frame": 77,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35479456417,
+      "end_ns": 35479463959,
+      "duration_ms": 0.007542
+    },
+    {
+      "sequence": 76,
+      "frame": 76,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 35395318167,
+      "end_ns": 35511072125,
+      "duration_ms": 115.753958
+    },
+    {
+      "sequence": 77,
+      "frame": 77,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 35514931125,
+      "end_ns": 35521323959,
+      "duration_ms": 6.392834
+    },
+    {
+      "sequence": 77,
+      "frame": 77,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 35521351334,
+      "end_ns": 35539160292,
+      "duration_ms": 17.808958
+    },
+    {
+      "sequence": 77,
+      "frame": 77,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 35539160292,
+      "end_ns": 35550399917,
+      "duration_ms": 11.239625
+    },
+    {
+      "sequence": 78,
+      "frame": 78,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35553324792,
+      "end_ns": 35553332000,
+      "duration_ms": 0.007208
+    },
+    {
+      "sequence": 77,
+      "frame": 77,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 35550399917,
+      "end_ns": 35559997750,
+      "duration_ms": 9.597833
+    },
+    {
+      "sequence": 79,
+      "frame": 79,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35627029917,
+      "end_ns": 35627033000,
+      "duration_ms": 0.003083
+    },
+    {
+      "sequence": 77,
+      "frame": 77,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 35560022209,
+      "end_ns": 35675730625,
+      "duration_ms": 115.708416
+    },
+    {
+      "sequence": 79,
+      "frame": 79,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 35679692334,
+      "end_ns": 35686095459,
+      "duration_ms": 6.403125
+    },
+    {
+      "sequence": 80,
+      "frame": 80,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35696198084,
+      "end_ns": 35696205792,
+      "duration_ms": 0.007708
+    },
+    {
+      "sequence": 79,
+      "frame": 79,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 35686135167,
+      "end_ns": 35704097875,
+      "duration_ms": 17.962708
+    },
+    {
+      "sequence": 79,
+      "frame": 79,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 35704097875,
+      "end_ns": 35715518959,
+      "duration_ms": 11.421084
+    },
+    {
+      "sequence": 79,
+      "frame": 79,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 35715518959,
+      "end_ns": 35724956250,
+      "duration_ms": 9.437291
+    },
+    {
+      "sequence": 79,
+      "frame": 79,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 35724976959,
+      "end_ns": 35840969125,
+      "duration_ms": 115.992166
+    },
+    {
+      "sequence": 81,
+      "frame": 81,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35843891084,
+      "end_ns": 35843894042,
+      "duration_ms": 0.002958
+    },
+    {
+      "sequence": 81,
+      "frame": 81,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 35845028125,
+      "end_ns": 35851437042,
+      "duration_ms": 6.408917
+    },
+    {
+      "sequence": 81,
+      "frame": 81,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 35851465042,
+      "end_ns": 35869193125,
+      "duration_ms": 17.728083
+    },
+    {
+      "sequence": 81,
+      "frame": 81,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 35869193125,
+      "end_ns": 35880615709,
+      "duration_ms": 11.422584
+    },
+    {
+      "sequence": 81,
+      "frame": 81,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 35880615709,
+      "end_ns": 35890076417,
+      "duration_ms": 9.460708
+    },
+    {
+      "sequence": 82,
+      "frame": 82,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35911957375,
+      "end_ns": 35911964792,
+      "duration_ms": 0.007417
+    },
+    {
+      "sequence": 83,
+      "frame": 83,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 35985545459,
+      "end_ns": 35985548209,
+      "duration_ms": 0.00275
+    },
+    {
+      "sequence": 81,
+      "frame": 81,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 35890101417,
+      "end_ns": 36006421584,
+      "duration_ms": 116.320167
+    },
+    {
+      "sequence": 83,
+      "frame": 83,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 36010592584,
+      "end_ns": 36017025792,
+      "duration_ms": 6.433208
+    },
+    {
+      "sequence": 83,
+      "frame": 83,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 36017053959,
+      "end_ns": 36034900792,
+      "duration_ms": 17.846833
+    },
+    {
+      "sequence": 83,
+      "frame": 83,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 36034900792,
+      "end_ns": 36046618125,
+      "duration_ms": 11.717333
+    },
+    {
+      "sequence": 83,
+      "frame": 83,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 36046618125,
+      "end_ns": 36055994709,
+      "duration_ms": 9.376584
+    },
+    {
+      "sequence": 84,
+      "frame": 84,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36059193959,
+      "end_ns": 36059202042,
+      "duration_ms": 0.008083
+    },
+    {
+      "sequence": 85,
+      "frame": 85,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36128948459,
+      "end_ns": 36128951084,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 83,
+      "frame": 83,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 36056029542,
+      "end_ns": 36172605375,
+      "duration_ms": 116.575833
+    },
+    {
+      "sequence": 85,
+      "frame": 85,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 36176752167,
+      "end_ns": 36183242625,
+      "duration_ms": 6.490458
+    },
+    {
+      "sequence": 85,
+      "frame": 85,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 36183270667,
+      "end_ns": 36201049042,
+      "duration_ms": 17.778375
+    },
+    {
+      "sequence": 85,
+      "frame": 85,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 36201049042,
+      "end_ns": 36212770000,
+      "duration_ms": 11.720958
+    },
+    {
+      "sequence": 85,
+      "frame": 85,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 36212770000,
+      "end_ns": 36222068334,
+      "duration_ms": 9.298334
+    },
+    {
+      "sequence": 86,
+      "frame": 86,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36272845750,
+      "end_ns": 36272852334,
+      "duration_ms": 0.006584
+    },
+    {
+      "sequence": 85,
+      "frame": 85,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 36222089959,
+      "end_ns": 36338960750,
+      "duration_ms": 116.870791
+    },
+    {
+      "sequence": 87,
+      "frame": 87,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36345947917,
+      "end_ns": 36345954667,
+      "duration_ms": 0.00675
+    },
+    {
+      "sequence": 86,
+      "frame": 86,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 36343071459,
+      "end_ns": 36349605375,
+      "duration_ms": 6.533916
+    },
+    {
+      "sequence": 86,
+      "frame": 86,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 36349633375,
+      "end_ns": 36367446167,
+      "duration_ms": 17.812792
+    },
+    {
+      "sequence": 86,
+      "frame": 86,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 36367446167,
+      "end_ns": 36379490084,
+      "duration_ms": 12.043917
+    },
+    {
+      "sequence": 86,
+      "frame": 86,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 36379490084,
+      "end_ns": 36388774792,
+      "duration_ms": 9.284708
+    },
+    {
+      "sequence": 88,
+      "frame": 88,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36418526875,
+      "end_ns": 36418529459,
+      "duration_ms": 0.002584
+    },
+    {
+      "sequence": 86,
+      "frame": 86,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 36388797834,
+      "end_ns": 36505802834,
+      "duration_ms": 117.005
+    },
+    {
+      "sequence": 88,
+      "frame": 88,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 36509780167,
+      "end_ns": 36516252334,
+      "duration_ms": 6.472167
+    },
+    {
+      "sequence": 88,
+      "frame": 88,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 36516286209,
+      "end_ns": 36534024250,
+      "duration_ms": 17.738041
+    },
+    {
+      "sequence": 88,
+      "frame": 88,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 36534024250,
+      "end_ns": 36545859709,
+      "duration_ms": 11.835459
+    },
+    {
+      "sequence": 88,
+      "frame": 88,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 36545859709,
+      "end_ns": 36555174000,
+      "duration_ms": 9.314291
+    },
+    {
+      "sequence": 89,
+      "frame": 89,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36561373292,
+      "end_ns": 36561383500,
+      "duration_ms": 0.010208
+    },
+    {
+      "sequence": 90,
+      "frame": 90,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36630528292,
+      "end_ns": 36630530959,
+      "duration_ms": 0.002667
+    },
+    {
+      "sequence": 88,
+      "frame": 88,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 36555195000,
+      "end_ns": 36672295292,
+      "duration_ms": 117.100292
+    },
+    {
+      "sequence": 90,
+      "frame": 90,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 36676276500,
+      "end_ns": 36682840542,
+      "duration_ms": 6.564042
+    },
+    {
+      "sequence": 90,
+      "frame": 90,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 36682869917,
+      "end_ns": 36700610625,
+      "duration_ms": 17.740708
+    },
+    {
+      "sequence": 91,
+      "frame": 91,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36704000500,
+      "end_ns": 36704008000,
+      "duration_ms": 0.0075
+    },
+    {
+      "sequence": 90,
+      "frame": 90,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 36700610625,
+      "end_ns": 36712542125,
+      "duration_ms": 11.9315
+    },
+    {
+      "sequence": 90,
+      "frame": 90,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 36712542125,
+      "end_ns": 36721862084,
+      "duration_ms": 9.319959
+    },
+    {
+      "sequence": 92,
+      "frame": 92,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36777629334,
+      "end_ns": 36777637250,
+      "duration_ms": 0.007916
+    },
+    {
+      "sequence": 90,
+      "frame": 90,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 36721883334,
+      "end_ns": 36839702000,
+      "duration_ms": 117.818666
+    },
+    {
+      "sequence": 92,
+      "frame": 92,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 36843863584,
+      "end_ns": 36850407875,
+      "duration_ms": 6.544291
+    },
+    {
+      "sequence": 92,
+      "frame": 92,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 36850436959,
+      "end_ns": 36868149084,
+      "duration_ms": 17.712125
+    },
+    {
+      "sequence": 92,
+      "frame": 92,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 36868149084,
+      "end_ns": 36880122667,
+      "duration_ms": 11.973583
+    },
+    {
+      "sequence": 92,
+      "frame": 92,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 36880122667,
+      "end_ns": 36889467667,
+      "duration_ms": 9.345
+    },
+    {
+      "sequence": 93,
+      "frame": 93,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36921817875,
+      "end_ns": 36921825084,
+      "duration_ms": 0.007209
+    },
+    {
+      "sequence": 94,
+      "frame": 94,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 36995539542,
+      "end_ns": 36995542209,
+      "duration_ms": 0.002667
+    },
+    {
+      "sequence": 92,
+      "frame": 92,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 36889495875,
+      "end_ns": 37007429167,
+      "duration_ms": 117.933292
+    },
+    {
+      "sequence": 94,
+      "frame": 94,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 37011594250,
+      "end_ns": 37018104209,
+      "duration_ms": 6.509959
+    },
+    {
+      "sequence": 94,
+      "frame": 94,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 37018132709,
+      "end_ns": 37035986667,
+      "duration_ms": 17.853958
+    },
+    {
+      "sequence": 94,
+      "frame": 94,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 37035986667,
+      "end_ns": 37047834292,
+      "duration_ms": 11.847625
+    },
+    {
+      "sequence": 94,
+      "frame": 94,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 37047834292,
+      "end_ns": 37057192959,
+      "duration_ms": 9.358667
+    },
+    {
+      "sequence": 95,
+      "frame": 95,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 37138455625,
+      "end_ns": 37138462584,
+      "duration_ms": 0.006959
+    },
+    {
+      "sequence": 94,
+      "frame": 94,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 37057214042,
+      "end_ns": 37175125000,
+      "duration_ms": 117.910958
+    },
+    {
+      "sequence": 95,
+      "frame": 95,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 37179261584,
+      "end_ns": 37185758625,
+      "duration_ms": 6.497041
+    },
+    {
+      "sequence": 95,
+      "frame": 95,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 37185787875,
+      "end_ns": 37203736209,
+      "duration_ms": 17.948334
+    },
+    {
+      "sequence": 95,
+      "frame": 95,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 37203736209,
+      "end_ns": 37215392500,
+      "duration_ms": 11.656291
+    },
+    {
+      "sequence": 95,
+      "frame": 95,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 37215392500,
+      "end_ns": 37224729417,
+      "duration_ms": 9.336917
+    },
+    {
+      "sequence": 96,
+      "frame": 96,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 37285547625,
+      "end_ns": 37285554834,
+      "duration_ms": 0.007209
+    },
+    {
+      "sequence": 95,
+      "frame": 95,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 37224749417,
+      "end_ns": 37342937417,
+      "duration_ms": 118.188
+    },
+    {
+      "sequence": 96,
+      "frame": 96,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 37346890500,
+      "end_ns": 37353394917,
+      "duration_ms": 6.504417
+    },
+    {
+      "sequence": 97,
+      "frame": 97,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 37355387459,
+      "end_ns": 37355394834,
+      "duration_ms": 0.007375
+    },
+    {
+      "sequence": 96,
+      "frame": 96,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 37353422709,
+      "end_ns": 37371282709,
+      "duration_ms": 17.86
+    },
+    {
+      "sequence": 96,
+      "frame": 96,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 37371282709,
+      "end_ns": 37382966167,
+      "duration_ms": 11.683458
+    },
+    {
+      "sequence": 96,
+      "frame": 96,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 37382966167,
+      "end_ns": 37392316792,
+      "duration_ms": 9.350625
+    },
+    {
+      "sequence": 98,
+      "frame": 98,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 37429217417,
+      "end_ns": 37429220250,
+      "duration_ms": 0.002833
+    },
+    {
+      "sequence": 96,
+      "frame": 96,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 37392343000,
+      "end_ns": 37510859417,
+      "duration_ms": 118.516417
+    },
+    {
+      "sequence": 99,
+      "frame": 99,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 37502363459,
+      "end_ns": 37514702667,
+      "duration_ms": 12.339208
+    },
+    {
+      "sequence": 99,
+      "frame": 99,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 37514740834,
+      "end_ns": 37521172834,
+      "duration_ms": 6.432
+    },
+    {
+      "sequence": 99,
+      "frame": 99,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 37521199584,
+      "end_ns": 37539050417,
+      "duration_ms": 17.850833
+    },
+    {
+      "sequence": 99,
+      "frame": 99,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 37539050417,
+      "end_ns": 37550529250,
+      "duration_ms": 11.478833
+    },
+    {
+      "sequence": 99,
+      "frame": 99,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 37550529250,
+      "end_ns": 37559988167,
+      "duration_ms": 9.458917
+    },
+    {
+      "sequence": 100,
+      "frame": 100,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 37572271000,
+      "end_ns": 37572277792,
+      "duration_ms": 0.006792
+    },
+    {
+      "sequence": 99,
+      "frame": 99,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 37560013667,
+      "end_ns": 37678889459,
+      "duration_ms": 118.875792
+    },
+    {
+      "sequence": 100,
+      "frame": 100,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 37682919417,
+      "end_ns": 37689332917,
+      "duration_ms": 6.4135
+    },
+    {
+      "sequence": 100,
+      "frame": 100,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 37689360250,
+      "end_ns": 37707309417,
+      "duration_ms": 17.949167
+    },
+    {
+      "sequence": 100,
+      "frame": 100,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 37707309417,
+      "end_ns": 37718644375,
+      "duration_ms": 11.334958
+    },
+    {
+      "sequence": 100,
+      "frame": 100,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 37718644375,
+      "end_ns": 37728257375,
+      "duration_ms": 9.613
+    },
+    {
+      "sequence": 100,
+      "frame": 100,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 37728286667,
+      "end_ns": 37847028667,
+      "duration_ms": 118.742
+    },
+    {
+      "sequence": 101,
+      "frame": 101,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 42735092709,
+      "end_ns": 42735103042,
+      "duration_ms": 0.010333
+    },
+    {
+      "sequence": 101,
+      "frame": 101,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 42747673792,
+      "end_ns": 42756791959,
+      "duration_ms": 9.118167
+    },
+    {
+      "sequence": 102,
+      "frame": 102,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 42757464834,
+      "end_ns": 42757472792,
+      "duration_ms": 0.007958
+    },
+    {
+      "sequence": 101,
+      "frame": 101,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 42756828375,
+      "end_ns": 42776811084,
+      "duration_ms": 19.982709
+    },
+    {
+      "sequence": 103,
+      "frame": 103,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 42782778167,
+      "end_ns": 42782780959,
+      "duration_ms": 0.002792
+    },
+    {
+      "sequence": 101,
+      "frame": 101,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 42776811084,
+      "end_ns": 42787639542,
+      "duration_ms": 10.828458
+    },
+    {
+      "sequence": 101,
+      "frame": 101,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 42787639542,
+      "end_ns": 42796745250,
+      "duration_ms": 9.105708
+    },
+    {
+      "sequence": 101,
+      "frame": 101,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 42796772084,
+      "end_ns": 42883158917,
+      "duration_ms": 86.386833
+    },
+    {
+      "sequence": 104,
+      "frame": 104,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 42807191209,
+      "end_ns": 42886762417,
+      "duration_ms": 79.571208
+    },
+    {
+      "sequence": 105,
+      "frame": 105,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 42887583375,
+      "end_ns": 42887587209,
+      "duration_ms": 0.003834
+    },
+    {
+      "sequence": 104,
+      "frame": 104,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 42886808917,
+      "end_ns": 42893244417,
+      "duration_ms": 6.4355
+    },
+    {
+      "sequence": 104,
+      "frame": 104,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 42893270584,
+      "end_ns": 42911130709,
+      "duration_ms": 17.860125
+    },
+    {
+      "sequence": 104,
+      "frame": 104,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 42911130709,
+      "end_ns": 42922540959,
+      "duration_ms": 11.41025
+    },
+    {
+      "sequence": 104,
+      "frame": 104,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 42922540959,
+      "end_ns": 42932079417,
+      "duration_ms": 9.538458
+    },
+    {
+      "sequence": 106,
+      "frame": 106,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 42950348167,
+      "end_ns": 42950350875,
+      "duration_ms": 0.002708
+    },
+    {
+      "sequence": 104,
+      "frame": 104,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 42932109750,
+      "end_ns": 43045775834,
+      "duration_ms": 113.666084
+    },
+    {
+      "sequence": 107,
+      "frame": 107,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 43021264000,
+      "end_ns": 43049759834,
+      "duration_ms": 28.495834
+    },
+    {
+      "sequence": 107,
+      "frame": 107,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 43049801792,
+      "end_ns": 43056208042,
+      "duration_ms": 6.40625
+    },
+    {
+      "sequence": 107,
+      "frame": 107,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 43056234125,
+      "end_ns": 43073959459,
+      "duration_ms": 17.725334
+    },
+    {
+      "sequence": 107,
+      "frame": 107,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 43073959459,
+      "end_ns": 43085486000,
+      "duration_ms": 11.526541
+    },
+    {
+      "sequence": 108,
+      "frame": 108,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 43093356500,
+      "end_ns": 43093364209,
+      "duration_ms": 0.007709
+    },
+    {
+      "sequence": 107,
+      "frame": 107,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 43085486000,
+      "end_ns": 43094969250,
+      "duration_ms": 9.48325
+    },
+    {
+      "sequence": 109,
+      "frame": 109,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 43165187917,
+      "end_ns": 43165190792,
+      "duration_ms": 0.002875
+    },
+    {
+      "sequence": 107,
+      "frame": 107,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 43094989959,
+      "end_ns": 43208591750,
+      "duration_ms": 113.601791
+    },
+    {
+      "sequence": 109,
+      "frame": 109,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 43212452125,
+      "end_ns": 43218936584,
+      "duration_ms": 6.484459
+    },
+    {
+      "sequence": 109,
+      "frame": 109,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 43218973084,
+      "end_ns": 43236754292,
+      "duration_ms": 17.781208
+    },
+    {
+      "sequence": 109,
+      "frame": 109,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 43236754292,
+      "end_ns": 43247492250,
+      "duration_ms": 10.737958
+    },
+    {
+      "sequence": 109,
+      "frame": 109,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 43247492250,
+      "end_ns": 43257172625,
+      "duration_ms": 9.680375
+    },
+    {
+      "sequence": 109,
+      "frame": 109,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 43257200250,
+      "end_ns": 43370883167,
+      "duration_ms": 113.682917
+    },
+    {
+      "sequence": 110,
+      "frame": 110,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52214185084,
+      "end_ns": 52214197417,
+      "duration_ms": 0.012333
+    },
+    {
+      "sequence": 110,
+      "frame": 110,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 52222533542,
+      "end_ns": 52234155292,
+      "duration_ms": 11.62175
+    },
+    {
+      "sequence": 111,
+      "frame": 111,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52242134167,
+      "end_ns": 52242142625,
+      "duration_ms": 0.008458
+    },
+    {
+      "sequence": 110,
+      "frame": 110,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 52234206000,
+      "end_ns": 52257088792,
+      "duration_ms": 22.882792
+    },
+    {
+      "sequence": 110,
+      "frame": 110,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 52257088792,
+      "end_ns": 52270328875,
+      "duration_ms": 13.240083
+    },
+    {
+      "sequence": 112,
+      "frame": 112,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52272171834,
+      "end_ns": 52272178584,
+      "duration_ms": 0.00675
+    },
+    {
+      "sequence": 110,
+      "frame": 110,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 52270328875,
+      "end_ns": 52280905750,
+      "duration_ms": 10.576875
+    },
+    {
+      "sequence": 110,
+      "frame": 110,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 52280944209,
+      "end_ns": 52374765584,
+      "duration_ms": 93.821375
+    },
+    {
+      "sequence": 113,
+      "frame": 113,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52320794625,
+      "end_ns": 52378920000,
+      "duration_ms": 58.125375
+    },
+    {
+      "sequence": 113,
+      "frame": 113,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 52378965709,
+      "end_ns": 52385901209,
+      "duration_ms": 6.9355
+    },
+    {
+      "sequence": 114,
+      "frame": 114,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52394716084,
+      "end_ns": 52394739334,
+      "duration_ms": 0.02325
+    },
+    {
+      "sequence": 113,
+      "frame": 113,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 52385956167,
+      "end_ns": 52404995709,
+      "duration_ms": 19.039542
+    },
+    {
+      "sequence": 113,
+      "frame": 113,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 52404995709,
+      "end_ns": 52418458709,
+      "duration_ms": 13.463
+    },
+    {
+      "sequence": 113,
+      "frame": 113,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 52418458709,
+      "end_ns": 52430140917,
+      "duration_ms": 11.682208
+    },
+    {
+      "sequence": 115,
+      "frame": 115,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52543385584,
+      "end_ns": 52543388292,
+      "duration_ms": 0.002708
+    },
+    {
+      "sequence": 113,
+      "frame": 113,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 52430185000,
+      "end_ns": 52554729917,
+      "duration_ms": 124.544917
+    },
+    {
+      "sequence": 115,
+      "frame": 115,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 52558858834,
+      "end_ns": 52565429334,
+      "duration_ms": 6.5705
+    },
+    {
+      "sequence": 115,
+      "frame": 115,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 52565458709,
+      "end_ns": 52584100250,
+      "duration_ms": 18.641541
+    },
+    {
+      "sequence": 116,
+      "frame": 116,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52594276875,
+      "end_ns": 52594294917,
+      "duration_ms": 0.018042
+    },
+    {
+      "sequence": 115,
+      "frame": 115,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 52584100250,
+      "end_ns": 52596796709,
+      "duration_ms": 12.696459
+    },
+    {
+      "sequence": 115,
+      "frame": 115,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 52596796709,
+      "end_ns": 52606928834,
+      "duration_ms": 10.132125
+    },
+    {
+      "sequence": 117,
+      "frame": 117,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52662296000,
+      "end_ns": 52662298792,
+      "duration_ms": 0.002792
+    },
+    {
+      "sequence": 115,
+      "frame": 115,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 52606964959,
+      "end_ns": 52727032542,
+      "duration_ms": 120.067583
+    },
+    {
+      "sequence": 118,
+      "frame": 118,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52734516209,
+      "end_ns": 52734524250,
+      "duration_ms": 0.008041
+    },
+    {
+      "sequence": 117,
+      "frame": 117,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 52731279292,
+      "end_ns": 52738164834,
+      "duration_ms": 6.885542
+    },
+    {
+      "sequence": 117,
+      "frame": 117,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 52738199917,
+      "end_ns": 52757791167,
+      "duration_ms": 19.59125
+    },
+    {
+      "sequence": 117,
+      "frame": 117,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 52757791167,
+      "end_ns": 52770445917,
+      "duration_ms": 12.65475
+    },
+    {
+      "sequence": 117,
+      "frame": 117,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 52770445917,
+      "end_ns": 52781318834,
+      "duration_ms": 10.872917
+    },
+    {
+      "sequence": 119,
+      "frame": 119,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52785065084,
+      "end_ns": 52785067875,
+      "duration_ms": 0.002791
+    },
+    {
+      "sequence": 117,
+      "frame": 117,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 52781358250,
+      "end_ns": 52907009959,
+      "duration_ms": 125.651709
+    },
+    {
+      "sequence": 120,
+      "frame": 120,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52859252959,
+      "end_ns": 52915043084,
+      "duration_ms": 55.790125
+    },
+    {
+      "sequence": 119,
+      "frame": 119,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 52911982917,
+      "end_ns": 52921363667,
+      "duration_ms": 9.38075
+    },
+    {
+      "sequence": 119,
+      "frame": 119,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 52921407209,
+      "end_ns": 52941677000,
+      "duration_ms": 20.269791
+    },
+    {
+      "sequence": 121,
+      "frame": 121,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 52946129709,
+      "end_ns": 52946133292,
+      "duration_ms": 0.003583
+    },
+    {
+      "sequence": 119,
+      "frame": 119,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 52941677000,
+      "end_ns": 52955263917,
+      "duration_ms": 13.586917
+    },
+    {
+      "sequence": 119,
+      "frame": 119,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 52955263917,
+      "end_ns": 52966583417,
+      "duration_ms": 11.3195
+    },
+    {
+      "sequence": 119,
+      "frame": 119,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 52966627292,
+      "end_ns": 53088784834,
+      "duration_ms": 122.157542
+    },
+    {
+      "sequence": 122,
+      "frame": 122,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53066535084,
+      "end_ns": 53092848709,
+      "duration_ms": 26.313625
+    },
+    {
+      "sequence": 122,
+      "frame": 122,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 53092919292,
+      "end_ns": 53099343209,
+      "duration_ms": 6.423917
+    },
+    {
+      "sequence": 122,
+      "frame": 122,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 53099370334,
+      "end_ns": 53117819625,
+      "duration_ms": 18.449291
+    },
+    {
+      "sequence": 122,
+      "frame": 122,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 53117819625,
+      "end_ns": 53129278750,
+      "duration_ms": 11.459125
+    },
+    {
+      "sequence": 122,
+      "frame": 122,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 53129278750,
+      "end_ns": 53138744375,
+      "duration_ms": 9.465625
+    },
+    {
+      "sequence": 123,
+      "frame": 123,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53139959667,
+      "end_ns": 53139975042,
+      "duration_ms": 0.015375
+    },
+    {
+      "sequence": 122,
+      "frame": 122,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 53138771875,
+      "end_ns": 53254502042,
+      "duration_ms": 115.730167
+    },
+    {
+      "sequence": 123,
+      "frame": 123,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 53258687250,
+      "end_ns": 53265193250,
+      "duration_ms": 6.506
+    },
+    {
+      "sequence": 123,
+      "frame": 123,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 53265223042,
+      "end_ns": 53283263875,
+      "duration_ms": 18.040833
+    },
+    {
+      "sequence": 124,
+      "frame": 124,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53283932917,
+      "end_ns": 53283940750,
+      "duration_ms": 0.007833
+    },
+    {
+      "sequence": 123,
+      "frame": 123,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 53283263875,
+      "end_ns": 53295123250,
+      "duration_ms": 11.859375
+    },
+    {
+      "sequence": 123,
+      "frame": 123,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 53295123250,
+      "end_ns": 53304626084,
+      "duration_ms": 9.502834
+    },
+    {
+      "sequence": 125,
+      "frame": 125,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53352267917,
+      "end_ns": 53352270542,
+      "duration_ms": 0.002625
+    },
+    {
+      "sequence": 123,
+      "frame": 123,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 53304653250,
+      "end_ns": 53420176250,
+      "duration_ms": 115.523
+    },
+    {
+      "sequence": 126,
+      "frame": 126,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53427966709,
+      "end_ns": 53427968667,
+      "duration_ms": 0.001958
+    },
+    {
+      "sequence": 126,
+      "frame": 126,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 53428063084,
+      "end_ns": 53434948709,
+      "duration_ms": 6.885625
+    },
+    {
+      "sequence": 126,
+      "frame": 126,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 53435014500,
+      "end_ns": 53454177709,
+      "duration_ms": 19.163209
+    },
+    {
+      "sequence": 126,
+      "frame": 126,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 53454177709,
+      "end_ns": 53466951000,
+      "duration_ms": 12.773291
+    },
+    {
+      "sequence": 126,
+      "frame": 126,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 53466951000,
+      "end_ns": 53477319292,
+      "duration_ms": 10.368292
+    },
+    {
+      "sequence": 127,
+      "frame": 127,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53552282459,
+      "end_ns": 53552293667,
+      "duration_ms": 0.011208
+    },
+    {
+      "sequence": 128,
+      "frame": 128,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53604510750,
+      "end_ns": 53604514084,
+      "duration_ms": 0.003334
+    },
+    {
+      "sequence": 126,
+      "frame": 126,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 53477350125,
+      "end_ns": 53604682959,
+      "duration_ms": 127.332834
+    },
+    {
+      "sequence": 128,
+      "frame": 128,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 53609856042,
+      "end_ns": 53616377459,
+      "duration_ms": 6.521417
+    },
+    {
+      "sequence": 128,
+      "frame": 128,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 53616407375,
+      "end_ns": 53635070042,
+      "duration_ms": 18.662667
+    },
+    {
+      "sequence": 128,
+      "frame": 128,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 53635070042,
+      "end_ns": 53647793417,
+      "duration_ms": 12.723375
+    },
+    {
+      "sequence": 129,
+      "frame": 129,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53656412584,
+      "end_ns": 53656420042,
+      "duration_ms": 0.007458
+    },
+    {
+      "sequence": 128,
+      "frame": 128,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 53647793417,
+      "end_ns": 53658975292,
+      "duration_ms": 11.181875
+    },
+    {
+      "sequence": 130,
+      "frame": 130,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 53718837417,
+      "end_ns": 53718840084,
+      "duration_ms": 0.002667
+    },
+    {
+      "sequence": 128,
+      "frame": 128,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 53659009834,
+      "end_ns": 53783261959,
+      "duration_ms": 124.252125
+    },
+    {
+      "sequence": 130,
+      "frame": 130,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 53787217209,
+      "end_ns": 53793943334,
+      "duration_ms": 6.726125
+    },
+    {
+      "sequence": 130,
+      "frame": 130,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 53793982834,
+      "end_ns": 53811909917,
+      "duration_ms": 17.927083
+    },
+    {
+      "sequence": 130,
+      "frame": 130,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 53811909917,
+      "end_ns": 53822748834,
+      "duration_ms": 10.838917
+    },
+    {
+      "sequence": 130,
+      "frame": 130,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 53822748834,
+      "end_ns": 53832410500,
+      "duration_ms": 9.661666
+    },
+    {
+      "sequence": 130,
+      "frame": 130,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 53832440584,
+      "end_ns": 53948279167,
+      "duration_ms": 115.838583
+    },
+    {
+      "sequence": 131,
+      "frame": 131,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 62176105125,
+      "end_ns": 62176124375,
+      "duration_ms": 0.01925
+    },
+    {
+      "sequence": 131,
+      "frame": 131,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 62180914459,
+      "end_ns": 62189393709,
+      "duration_ms": 8.47925
+    },
+    {
+      "sequence": 131,
+      "frame": 131,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 62189434125,
+      "end_ns": 62209683584,
+      "duration_ms": 20.249459
+    },
+    {
+      "sequence": 131,
+      "frame": 131,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 62209683584,
+      "end_ns": 62220923000,
+      "duration_ms": 11.239416
+    },
+    {
+      "sequence": 131,
+      "frame": 131,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 62220923000,
+      "end_ns": 62230032750,
+      "duration_ms": 9.10975
+    },
+    {
+      "sequence": 131,
+      "frame": 131,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 62230056959,
+      "end_ns": 62315851625,
+      "duration_ms": 85.794666
+    },
+    {
+      "sequence": 132,
+      "frame": 132,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 77563499042,
+      "end_ns": 77563562209,
+      "duration_ms": 0.063167
+    },
+    {
+      "sequence": 132,
+      "frame": 132,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 77577451084,
+      "end_ns": 77588835292,
+      "duration_ms": 11.384208
+    },
+    {
+      "sequence": 132,
+      "frame": 132,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 77588877042,
+      "end_ns": 77613705459,
+      "duration_ms": 24.828417
+    },
+    {
+      "sequence": 132,
+      "frame": 132,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 77613705459,
+      "end_ns": 77625969125,
+      "duration_ms": 12.263666
+    },
+    {
+      "sequence": 132,
+      "frame": 132,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 77625969125,
+      "end_ns": 77635802917,
+      "duration_ms": 9.833792
+    },
+    {
+      "sequence": 132,
+      "frame": 132,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 77635838375,
+      "end_ns": 77725649459,
+      "duration_ms": 89.811084
+    },
+    {
+      "sequence": 133,
+      "frame": 133,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 82818547042,
+      "end_ns": 82818567250,
+      "duration_ms": 0.020208
+    },
+    {
+      "sequence": 133,
+      "frame": 133,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 82831909084,
+      "end_ns": 82844453459,
+      "duration_ms": 12.544375
+    },
+    {
+      "sequence": 133,
+      "frame": 133,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 82844499375,
+      "end_ns": 82871193167,
+      "duration_ms": 26.693792
+    },
+    {
+      "sequence": 133,
+      "frame": 133,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 82871193167,
+      "end_ns": 82884239250,
+      "duration_ms": 13.046083
+    },
+    {
+      "sequence": 133,
+      "frame": 133,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 82884239250,
+      "end_ns": 82894210625,
+      "duration_ms": 9.971375
+    },
+    {
+      "sequence": 133,
+      "frame": 133,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 82894252167,
+      "end_ns": 82980893250,
+      "duration_ms": 86.641083
+    },
+    {
+      "sequence": 134,
+      "frame": 134,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 90243359084,
+      "end_ns": 90243395417,
+      "duration_ms": 0.036333
+    },
+    {
+      "sequence": 134,
+      "frame": 134,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 90254884792,
+      "end_ns": 90266924042,
+      "duration_ms": 12.03925
+    },
+    {
+      "sequence": 134,
+      "frame": 134,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 90266989459,
+      "end_ns": 90292995250,
+      "duration_ms": 26.005791
+    },
+    {
+      "sequence": 134,
+      "frame": 134,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 90292995250,
+      "end_ns": 90305488667,
+      "duration_ms": 12.493417
+    },
+    {
+      "sequence": 134,
+      "frame": 134,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 90305488667,
+      "end_ns": 90315669167,
+      "duration_ms": 10.1805
+    },
+    {
+      "sequence": 134,
+      "frame": 134,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 90315697459,
+      "end_ns": 90402031709,
+      "duration_ms": 86.33425
+    },
+    {
+      "sequence": 135,
+      "frame": 135,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 93482145792,
+      "end_ns": 93482154209,
+      "duration_ms": 0.008417
+    },
+    {
+      "sequence": 136,
+      "frame": 136,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 93608080584,
+      "end_ns": 93608085000,
+      "duration_ms": 0.004416
+    },
+    {
+      "sequence": 137,
+      "frame": 137,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 93620397584,
+      "end_ns": 93620404459,
+      "duration_ms": 0.006875
+    },
+    {
+      "sequence": 138,
+      "frame": 138,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 93621413459,
+      "end_ns": 93621416375,
+      "duration_ms": 0.002916
+    },
+    {
+      "sequence": 137,
+      "frame": 137,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 93621594292,
+      "end_ns": 93629324834,
+      "duration_ms": 7.730542
+    },
+    {
+      "sequence": 137,
+      "frame": 137,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 93629369875,
+      "end_ns": 93650854792,
+      "duration_ms": 21.484917
+    },
+    {
+      "sequence": 137,
+      "frame": 137,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 93650854792,
+      "end_ns": 93663373500,
+      "duration_ms": 12.518708
+    },
+    {
+      "sequence": 137,
+      "frame": 137,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 93663373500,
+      "end_ns": 93673841542,
+      "duration_ms": 10.468042
+    },
+    {
+      "sequence": 137,
+      "frame": 137,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 93673865917,
+      "end_ns": 93795882417,
+      "duration_ms": 122.0165
+    },
+    {
+      "sequence": 138,
+      "frame": 138,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 93800168500,
+      "end_ns": 93807282292,
+      "duration_ms": 7.113792
+    },
+    {
+      "sequence": 139,
+      "frame": 139,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 93817116125,
+      "end_ns": 93817123250,
+      "duration_ms": 0.007125
+    },
+    {
+      "sequence": 138,
+      "frame": 138,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 93807310042,
+      "end_ns": 93830698209,
+      "duration_ms": 23.388167
+    },
+    {
+      "sequence": 138,
+      "frame": 138,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 93830698209,
+      "end_ns": 93842457542,
+      "duration_ms": 11.759333
+    },
+    {
+      "sequence": 138,
+      "frame": 138,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 93842457542,
+      "end_ns": 93853013709,
+      "duration_ms": 10.556167
+    },
+    {
+      "sequence": 138,
+      "frame": 138,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 93853039084,
+      "end_ns": 93957500834,
+      "duration_ms": 104.46175
+    },
+    {
+      "sequence": 139,
+      "frame": 139,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 93961955250,
+      "end_ns": 93969022542,
+      "duration_ms": 7.067292
+    },
+    {
+      "sequence": 139,
+      "frame": 139,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 93969055500,
+      "end_ns": 93988932292,
+      "duration_ms": 19.876792
+    },
+    {
+      "sequence": 139,
+      "frame": 139,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 93988932292,
+      "end_ns": 94000656375,
+      "duration_ms": 11.724083
+    },
+    {
+      "sequence": 139,
+      "frame": 139,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 94000656375,
+      "end_ns": 94011231834,
+      "duration_ms": 10.575459
+    },
+    {
+      "sequence": 139,
+      "frame": 139,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 94011256584,
+      "end_ns": 94117410084,
+      "duration_ms": 106.1535
+    },
+    {
+      "sequence": 140,
+      "frame": 140,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 96156531750,
+      "end_ns": 96156548750,
+      "duration_ms": 0.017
+    },
+    {
+      "sequence": 140,
+      "frame": 140,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 96159853750,
+      "end_ns": 96175207917,
+      "duration_ms": 15.354167
+    },
+    {
+      "sequence": 140,
+      "frame": 140,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 96175255167,
+      "end_ns": 96206173042,
+      "duration_ms": 30.917875
+    },
+    {
+      "sequence": 140,
+      "frame": 140,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 96206173042,
+      "end_ns": 96219542542,
+      "duration_ms": 13.3695
+    },
+    {
+      "sequence": 140,
+      "frame": 140,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 96219542542,
+      "end_ns": 96230853792,
+      "duration_ms": 11.31125
+    },
+    {
+      "sequence": 140,
+      "frame": 140,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 96231025334,
+      "end_ns": 96336122542,
+      "duration_ms": 105.097208
+    },
+    {
+      "sequence": 141,
+      "frame": 141,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 99555347000,
+      "end_ns": 99555362500,
+      "duration_ms": 0.0155
+    },
+    {
+      "sequence": 141,
+      "frame": 141,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 99562768917,
+      "end_ns": 99578253875,
+      "duration_ms": 15.484958
+    },
+    {
+      "sequence": 141,
+      "frame": 141,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 99578300250,
+      "end_ns": 99606670250,
+      "duration_ms": 28.37
+    },
+    {
+      "sequence": 141,
+      "frame": 141,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 99606670250,
+      "end_ns": 99619278542,
+      "duration_ms": 12.608292
+    },
+    {
+      "sequence": 141,
+      "frame": 141,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 99619278542,
+      "end_ns": 99629613834,
+      "duration_ms": 10.335292
+    },
+    {
+      "sequence": 141,
+      "frame": 141,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 99629648709,
+      "end_ns": 99716531500,
+      "duration_ms": 86.882791
+    },
+    {
+      "sequence": 142,
+      "frame": 142,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 123358043334,
+      "end_ns": 123358056959,
+      "duration_ms": 0.013625
+    },
+    {
+      "sequence": 142,
+      "frame": 142,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 123366120792,
+      "end_ns": 123378025084,
+      "duration_ms": 11.904292
+    },
+    {
+      "sequence": 142,
+      "frame": 142,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 123378092375,
+      "end_ns": 123404045000,
+      "duration_ms": 25.952625
+    },
+    {
+      "sequence": 142,
+      "frame": 142,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 123404045000,
+      "end_ns": 123416731750,
+      "duration_ms": 12.68675
+    },
+    {
+      "sequence": 142,
+      "frame": 142,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 123416731750,
+      "end_ns": 123427216709,
+      "duration_ms": 10.484959
+    },
+    {
+      "sequence": 142,
+      "frame": 142,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 123427248917,
+      "end_ns": 123520532875,
+      "duration_ms": 93.283958
+    },
+    {
+      "sequence": 143,
+      "frame": 143,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 127161391042,
+      "end_ns": 127161407625,
+      "duration_ms": 0.016583
+    },
+    {
+      "sequence": 143,
+      "frame": 143,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 127169658375,
+      "end_ns": 127184404209,
+      "duration_ms": 14.745834
+    },
+    {
+      "sequence": 143,
+      "frame": 143,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 127184447709,
+      "end_ns": 127213943375,
+      "duration_ms": 29.495666
+    },
+    {
+      "sequence": 143,
+      "frame": 143,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 127213943375,
+      "end_ns": 127226796000,
+      "duration_ms": 12.852625
+    },
+    {
+      "sequence": 143,
+      "frame": 143,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 127226796000,
+      "end_ns": 127237088167,
+      "duration_ms": 10.292167
+    },
+    {
+      "sequence": 143,
+      "frame": 143,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 127237121084,
+      "end_ns": 127323855709,
+      "duration_ms": 86.734625
+    },
+    {
+      "sequence": 144,
+      "frame": 144,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 135895289792,
+      "end_ns": 135895334542,
+      "duration_ms": 0.04475
+    },
+    {
+      "sequence": 144,
+      "frame": 144,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 135910520542,
+      "end_ns": 135922590292,
+      "duration_ms": 12.06975
+    },
+    {
+      "sequence": 144,
+      "frame": 144,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 135922636750,
+      "end_ns": 135948043625,
+      "duration_ms": 25.406875
+    },
+    {
+      "sequence": 144,
+      "frame": 144,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 135948043625,
+      "end_ns": 135959937917,
+      "duration_ms": 11.894292
+    },
+    {
+      "sequence": 144,
+      "frame": 144,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 135959937917,
+      "end_ns": 135970152292,
+      "duration_ms": 10.214375
+    },
+    {
+      "sequence": 144,
+      "frame": 144,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 135970181459,
+      "end_ns": 136056378750,
+      "duration_ms": 86.197291
+    },
+    {
+      "sequence": 145,
+      "frame": 145,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 142400415084,
+      "end_ns": 142400426084,
+      "duration_ms": 0.011
+    },
+    {
+      "sequence": 145,
+      "frame": 145,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 142416012084,
+      "end_ns": 142423532750,
+      "duration_ms": 7.520666
+    },
+    {
+      "sequence": 145,
+      "frame": 145,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 142423568000,
+      "end_ns": 142441342375,
+      "duration_ms": 17.774375
+    },
+    {
+      "sequence": 145,
+      "frame": 145,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 142441342375,
+      "end_ns": 142452218834,
+      "duration_ms": 10.876459
+    },
+    {
+      "sequence": 145,
+      "frame": 145,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 142452218834,
+      "end_ns": 142461103625,
+      "duration_ms": 8.884791
+    },
+    {
+      "sequence": 145,
+      "frame": 145,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 142461127375,
+      "end_ns": 142546887584,
+      "duration_ms": 85.760209
+    },
+    {
+      "sequence": 146,
+      "frame": 146,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 144610404167,
+      "end_ns": 144610419750,
+      "duration_ms": 0.015583
+    },
+    {
+      "sequence": 146,
+      "frame": 146,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 144617840542,
+      "end_ns": 144632195584,
+      "duration_ms": 14.355042
+    },
+    {
+      "sequence": 146,
+      "frame": 146,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 144632245917,
+      "end_ns": 144661160792,
+      "duration_ms": 28.914875
+    },
+    {
+      "sequence": 146,
+      "frame": 146,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 144661160792,
+      "end_ns": 144674761125,
+      "duration_ms": 13.600333
+    },
+    {
+      "sequence": 146,
+      "frame": 146,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 144674761125,
+      "end_ns": 144685218959,
+      "duration_ms": 10.457834
+    },
+    {
+      "sequence": 146,
+      "frame": 146,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 144685255875,
+      "end_ns": 144772366542,
+      "duration_ms": 87.110667
+    },
+    {
+      "sequence": 147,
+      "frame": 147,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 148433671459,
+      "end_ns": 148433698667,
+      "duration_ms": 0.027208
+    },
+    {
+      "sequence": 147,
+      "frame": 147,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 148437718292,
+      "end_ns": 148449512209,
+      "duration_ms": 11.793917
+    },
+    {
+      "sequence": 147,
+      "frame": 147,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 148449554125,
+      "end_ns": 148475003292,
+      "duration_ms": 25.449167
+    },
+    {
+      "sequence": 147,
+      "frame": 147,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 148475003292,
+      "end_ns": 148487483917,
+      "duration_ms": 12.480625
+    },
+    {
+      "sequence": 147,
+      "frame": 147,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 148487483917,
+      "end_ns": 148497688417,
+      "duration_ms": 10.2045
+    },
+    {
+      "sequence": 147,
+      "frame": 147,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 148497716125,
+      "end_ns": 148583988959,
+      "duration_ms": 86.272834
+    },
+    {
+      "sequence": 148,
+      "frame": 148,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 153150210792,
+      "end_ns": 153150226167,
+      "duration_ms": 0.015375
+    },
+    {
+      "sequence": 148,
+      "frame": 148,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 153158483959,
+      "end_ns": 153173062250,
+      "duration_ms": 14.578291
+    },
+    {
+      "sequence": 148,
+      "frame": 148,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 153173120417,
+      "end_ns": 153202189875,
+      "duration_ms": 29.069458
+    },
+    {
+      "sequence": 148,
+      "frame": 148,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 153202189875,
+      "end_ns": 153215227792,
+      "duration_ms": 13.037917
+    },
+    {
+      "sequence": 148,
+      "frame": 148,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 153215227792,
+      "end_ns": 153225702084,
+      "duration_ms": 10.474292
+    },
+    {
+      "sequence": 148,
+      "frame": 148,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 153225732834,
+      "end_ns": 153314122334,
+      "duration_ms": 88.3895
+    },
+    {
+      "sequence": 149,
+      "frame": 149,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 181309005959,
+      "end_ns": 181309029875,
+      "duration_ms": 0.023916
+    },
+    {
+      "sequence": 149,
+      "frame": 149,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 181315830042,
+      "end_ns": 181332922875,
+      "duration_ms": 17.092833
+    },
+    {
+      "sequence": 149,
+      "frame": 149,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 181332981625,
+      "end_ns": 181361711542,
+      "duration_ms": 28.729917
+    },
+    {
+      "sequence": 149,
+      "frame": 149,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 181361711542,
+      "end_ns": 181373857750,
+      "duration_ms": 12.146208
+    },
+    {
+      "sequence": 149,
+      "frame": 149,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 181373857750,
+      "end_ns": 181383661792,
+      "duration_ms": 9.804042
+    },
+    {
+      "sequence": 149,
+      "frame": 149,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 181383691459,
+      "end_ns": 181470274959,
+      "duration_ms": 86.5835
+    },
+    {
+      "sequence": 150,
+      "frame": 150,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 190251153167,
+      "end_ns": 190251228834,
+      "duration_ms": 0.075667
+    },
+    {
+      "sequence": 150,
+      "frame": 150,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 190256719250,
+      "end_ns": 190270723000,
+      "duration_ms": 14.00375
+    },
+    {
+      "sequence": 150,
+      "frame": 150,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 190270780125,
+      "end_ns": 190298903625,
+      "duration_ms": 28.1235
+    },
+    {
+      "sequence": 150,
+      "frame": 150,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 190298903625,
+      "end_ns": 190312013959,
+      "duration_ms": 13.110334
+    },
+    {
+      "sequence": 150,
+      "frame": 150,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 190312013959,
+      "end_ns": 190322396125,
+      "duration_ms": 10.382166
+    },
+    {
+      "sequence": 150,
+      "frame": 150,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 190322420125,
+      "end_ns": 190409732209,
+      "duration_ms": 87.312084
+    },
+    {
+      "sequence": 151,
+      "frame": 151,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 192166403542,
+      "end_ns": 192166442834,
+      "duration_ms": 0.039292
+    },
+    {
+      "sequence": 151,
+      "frame": 151,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 192175046584,
+      "end_ns": 192189533042,
+      "duration_ms": 14.486458
+    },
+    {
+      "sequence": 151,
+      "frame": 151,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 192189579459,
+      "end_ns": 192218608875,
+      "duration_ms": 29.029416
+    },
+    {
+      "sequence": 151,
+      "frame": 151,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 192218608875,
+      "end_ns": 192231992334,
+      "duration_ms": 13.383459
+    },
+    {
+      "sequence": 151,
+      "frame": 151,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 192231992334,
+      "end_ns": 192242505917,
+      "duration_ms": 10.513583
+    },
+    {
+      "sequence": 151,
+      "frame": 151,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 192242538959,
+      "end_ns": 192329625042,
+      "duration_ms": 87.086083
+    },
+    {
+      "sequence": 152,
+      "frame": 152,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 209833880292,
+      "end_ns": 209833898459,
+      "duration_ms": 0.018167
+    },
+    {
+      "sequence": 152,
+      "frame": 152,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 209840120417,
+      "end_ns": 209855044750,
+      "duration_ms": 14.924333
+    },
+    {
+      "sequence": 152,
+      "frame": 152,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 209855092959,
+      "end_ns": 209885839250,
+      "duration_ms": 30.746291
+    },
+    {
+      "sequence": 152,
+      "frame": 152,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 209885839250,
+      "end_ns": 209899282459,
+      "duration_ms": 13.443209
+    },
+    {
+      "sequence": 152,
+      "frame": 152,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 209899282459,
+      "end_ns": 209909848042,
+      "duration_ms": 10.565583
+    },
+    {
+      "sequence": 152,
+      "frame": 152,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 209909877167,
+      "end_ns": 209997360959,
+      "duration_ms": 87.483792
+    },
+    {
+      "sequence": 153,
+      "frame": 153,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 216965915042,
+      "end_ns": 216965931417,
+      "duration_ms": 0.016375
+    },
+    {
+      "sequence": 153,
+      "frame": 153,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 216979511417,
+      "end_ns": 216990385750,
+      "duration_ms": 10.874333
+    },
+    {
+      "sequence": 153,
+      "frame": 153,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 216990428542,
+      "end_ns": 217014494417,
+      "duration_ms": 24.065875
+    },
+    {
+      "sequence": 153,
+      "frame": 153,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 217014494417,
+      "end_ns": 217026037292,
+      "duration_ms": 11.542875
+    },
+    {
+      "sequence": 153,
+      "frame": 153,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 217026037292,
+      "end_ns": 217035687000,
+      "duration_ms": 9.649708
+    },
+    {
+      "sequence": 153,
+      "frame": 153,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 217035715542,
+      "end_ns": 217121386167,
+      "duration_ms": 85.670625
+    },
+    {
+      "sequence": 154,
+      "frame": 154,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 219486748667,
+      "end_ns": 219486765959,
+      "duration_ms": 0.017292
+    },
+    {
+      "sequence": 154,
+      "frame": 154,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 219498408042,
+      "end_ns": 219514342292,
+      "duration_ms": 15.93425
+    },
+    {
+      "sequence": 154,
+      "frame": 154,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 219514388834,
+      "end_ns": 219544837084,
+      "duration_ms": 30.44825
+    },
+    {
+      "sequence": 154,
+      "frame": 154,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 219544837084,
+      "end_ns": 219558342959,
+      "duration_ms": 13.505875
+    },
+    {
+      "sequence": 154,
+      "frame": 154,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 219558342959,
+      "end_ns": 219569032542,
+      "duration_ms": 10.689583
+    },
+    {
+      "sequence": 154,
+      "frame": 154,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 219569060792,
+      "end_ns": 219656295125,
+      "duration_ms": 87.234333
+    },
+    {
+      "sequence": 155,
+      "frame": 155,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 222711705042,
+      "end_ns": 222711725292,
+      "duration_ms": 0.02025
+    },
+    {
+      "sequence": 155,
+      "frame": 155,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 222717726500,
+      "end_ns": 222732409459,
+      "duration_ms": 14.682959
+    },
+    {
+      "sequence": 155,
+      "frame": 155,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 222732462167,
+      "end_ns": 222759745834,
+      "duration_ms": 27.283667
+    },
+    {
+      "sequence": 155,
+      "frame": 155,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 222759745834,
+      "end_ns": 222772282250,
+      "duration_ms": 12.536416
+    },
+    {
+      "sequence": 155,
+      "frame": 155,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 222772282250,
+      "end_ns": 222782285334,
+      "duration_ms": 10.003084
+    },
+    {
+      "sequence": 155,
+      "frame": 155,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 222782310250,
+      "end_ns": 222868611125,
+      "duration_ms": 86.300875
+    },
+    {
+      "sequence": 156,
+      "frame": 156,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 244027667250,
+      "end_ns": 244027684459,
+      "duration_ms": 0.017209
+    },
+    {
+      "sequence": 156,
+      "frame": 156,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 244035904750,
+      "end_ns": 244049683709,
+      "duration_ms": 13.778959
+    },
+    {
+      "sequence": 156,
+      "frame": 156,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 244049734917,
+      "end_ns": 244077429375,
+      "duration_ms": 27.694458
+    },
+    {
+      "sequence": 156,
+      "frame": 156,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 244077429375,
+      "end_ns": 244090490500,
+      "duration_ms": 13.061125
+    },
+    {
+      "sequence": 156,
+      "frame": 156,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 244090490500,
+      "end_ns": 244100686042,
+      "duration_ms": 10.195542
+    },
+    {
+      "sequence": 156,
+      "frame": 156,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 244100712042,
+      "end_ns": 244187310542,
+      "duration_ms": 86.5985
+    },
+    {
+      "sequence": 157,
+      "frame": 157,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 248858646959,
+      "end_ns": 248858663292,
+      "duration_ms": 0.016333
+    },
+    {
+      "sequence": 157,
+      "frame": 157,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 248873358917,
+      "end_ns": 248890016542,
+      "duration_ms": 16.657625
+    },
+    {
+      "sequence": 157,
+      "frame": 157,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 248890085500,
+      "end_ns": 248922098584,
+      "duration_ms": 32.013084
+    },
+    {
+      "sequence": 157,
+      "frame": 157,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 248922098584,
+      "end_ns": 248935983667,
+      "duration_ms": 13.885083
+    },
+    {
+      "sequence": 157,
+      "frame": 157,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 248935983667,
+      "end_ns": 248946835042,
+      "duration_ms": 10.851375
+    },
+    {
+      "sequence": 157,
+      "frame": 157,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 248946863542,
+      "end_ns": 249034421250,
+      "duration_ms": 87.557708
+    },
+    {
+      "sequence": 158,
+      "frame": 158,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 253781584209,
+      "end_ns": 253781604834,
+      "duration_ms": 0.020625
+    },
+    {
+      "sequence": 158,
+      "frame": 158,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 253794223584,
+      "end_ns": 253806965459,
+      "duration_ms": 12.741875
+    },
+    {
+      "sequence": 158,
+      "frame": 158,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 253807012375,
+      "end_ns": 253832970875,
+      "duration_ms": 25.9585
+    },
+    {
+      "sequence": 158,
+      "frame": 158,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 253832970875,
+      "end_ns": 253845602792,
+      "duration_ms": 12.631917
+    },
+    {
+      "sequence": 158,
+      "frame": 158,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 253845602792,
+      "end_ns": 253855627125,
+      "duration_ms": 10.024333
+    },
+    {
+      "sequence": 158,
+      "frame": 158,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 253855651917,
+      "end_ns": 253941764709,
+      "duration_ms": 86.112792
+    },
+    {
+      "sequence": 159,
+      "frame": 159,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 256284213792,
+      "end_ns": 256284232250,
+      "duration_ms": 0.018458
+    },
+    {
+      "sequence": 159,
+      "frame": 159,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 256296371125,
+      "end_ns": 256312864417,
+      "duration_ms": 16.493292
+    },
+    {
+      "sequence": 159,
+      "frame": 159,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 256312932917,
+      "end_ns": 256344229875,
+      "duration_ms": 31.296958
+    },
+    {
+      "sequence": 159,
+      "frame": 159,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 256344229875,
+      "end_ns": 256357959584,
+      "duration_ms": 13.729709
+    },
+    {
+      "sequence": 159,
+      "frame": 159,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 256357959584,
+      "end_ns": 256368878417,
+      "duration_ms": 10.918833
+    },
+    {
+      "sequence": 159,
+      "frame": 159,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 256368905750,
+      "end_ns": 256456367625,
+      "duration_ms": 87.461875
+    },
+    {
+      "sequence": 160,
+      "frame": 160,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 260186098167,
+      "end_ns": 260186114834,
+      "duration_ms": 0.016667
+    },
+    {
+      "sequence": 160,
+      "frame": 160,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 260199694709,
+      "end_ns": 260212559417,
+      "duration_ms": 12.864708
+    },
+    {
+      "sequence": 160,
+      "frame": 160,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 260212602792,
+      "end_ns": 260239238500,
+      "duration_ms": 26.635708
+    },
+    {
+      "sequence": 160,
+      "frame": 160,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 260239238500,
+      "end_ns": 260252259500,
+      "duration_ms": 13.021
+    },
+    {
+      "sequence": 160,
+      "frame": 160,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 260252259500,
+      "end_ns": 260262319250,
+      "duration_ms": 10.05975
+    },
+    {
+      "sequence": 160,
+      "frame": 160,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 260262343292,
+      "end_ns": 260348417292,
+      "duration_ms": 86.074
+    },
+    {
+      "sequence": 161,
+      "frame": 161,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 263306981042,
+      "end_ns": 263306998875,
+      "duration_ms": 0.017833
+    },
+    {
+      "sequence": 161,
+      "frame": 161,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 263318870167,
+      "end_ns": 263332811792,
+      "duration_ms": 13.941625
+    },
+    {
+      "sequence": 161,
+      "frame": 161,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 263332859292,
+      "end_ns": 263361195167,
+      "duration_ms": 28.335875
+    },
+    {
+      "sequence": 161,
+      "frame": 161,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 263361195167,
+      "end_ns": 263374510875,
+      "duration_ms": 13.315708
+    },
+    {
+      "sequence": 161,
+      "frame": 161,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 263374510875,
+      "end_ns": 263384890750,
+      "duration_ms": 10.379875
+    },
+    {
+      "sequence": 161,
+      "frame": 161,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 263384916459,
+      "end_ns": 263471931875,
+      "duration_ms": 87.015416
+    },
+    {
+      "sequence": 162,
+      "frame": 162,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 266427881250,
+      "end_ns": 266428742084,
+      "duration_ms": 0.860834
+    },
+    {
+      "sequence": 163,
+      "frame": 163,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 266448571667,
+      "end_ns": 266448580167,
+      "duration_ms": 0.0085
+    },
+    {
+      "sequence": 162,
+      "frame": 162,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 266438312084,
+      "end_ns": 266449953292,
+      "duration_ms": 11.641208
+    },
+    {
+      "sequence": 162,
+      "frame": 162,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 266449981834,
+      "end_ns": 266472326125,
+      "duration_ms": 22.344291
+    },
+    {
+      "sequence": 164,
+      "frame": 164,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 266473514459,
+      "end_ns": 266473517834,
+      "duration_ms": 0.003375
+    },
+    {
+      "sequence": 162,
+      "frame": 162,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 266472326125,
+      "end_ns": 266484491125,
+      "duration_ms": 12.165
+    },
+    {
+      "sequence": 162,
+      "frame": 162,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 266484491125,
+      "end_ns": 266494810292,
+      "duration_ms": 10.319167
+    },
+    {
+      "sequence": 162,
+      "frame": 162,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 266494847875,
+      "end_ns": 266585267709,
+      "duration_ms": 90.419834
+    },
+    {
+      "sequence": 165,
+      "frame": 165,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 266499908292,
+      "end_ns": 266589371000,
+      "duration_ms": 89.462708
+    },
+    {
+      "sequence": 165,
+      "frame": 165,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 266589436625,
+      "end_ns": 266595879042,
+      "duration_ms": 6.442417
+    },
+    {
+      "sequence": 165,
+      "frame": 165,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 266595910000,
+      "end_ns": 266612908875,
+      "duration_ms": 16.998875
+    },
+    {
+      "sequence": 165,
+      "frame": 165,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 266612908875,
+      "end_ns": 266623794667,
+      "duration_ms": 10.885792
+    },
+    {
+      "sequence": 165,
+      "frame": 165,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 266623794667,
+      "end_ns": 266633512667,
+      "duration_ms": 9.718
+    },
+    {
+      "sequence": 165,
+      "frame": 165,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 266633541459,
+      "end_ns": 266719685625,
+      "duration_ms": 86.144166
+    },
+    {
+      "sequence": 166,
+      "frame": 166,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 272643733250,
+      "end_ns": 272643779209,
+      "duration_ms": 0.045959
+    },
+    {
+      "sequence": 166,
+      "frame": 166,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 272659328750,
+      "end_ns": 272670633375,
+      "duration_ms": 11.304625
+    },
+    {
+      "sequence": 166,
+      "frame": 166,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 272670676709,
+      "end_ns": 272695489500,
+      "duration_ms": 24.812791
+    },
+    {
+      "sequence": 166,
+      "frame": 166,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 272695489500,
+      "end_ns": 272707256750,
+      "duration_ms": 11.76725
+    },
+    {
+      "sequence": 166,
+      "frame": 166,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 272707256750,
+      "end_ns": 272717009250,
+      "duration_ms": 9.7525
+    },
+    {
+      "sequence": 166,
+      "frame": 166,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 272717038625,
+      "end_ns": 272803191459,
+      "duration_ms": 86.152834
+    },
+    {
+      "sequence": 167,
+      "frame": 167,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 277984976875,
+      "end_ns": 277984993125,
+      "duration_ms": 0.01625
+    },
+    {
+      "sequence": 167,
+      "frame": 167,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 277998179334,
+      "end_ns": 278010659959,
+      "duration_ms": 12.480625
+    },
+    {
+      "sequence": 167,
+      "frame": 167,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 278010713834,
+      "end_ns": 278037418667,
+      "duration_ms": 26.704833
+    },
+    {
+      "sequence": 167,
+      "frame": 167,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 278037418667,
+      "end_ns": 278050446125,
+      "duration_ms": 13.027458
+    },
+    {
+      "sequence": 167,
+      "frame": 167,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 278050446125,
+      "end_ns": 278060430375,
+      "duration_ms": 9.98425
+    },
+    {
+      "sequence": 167,
+      "frame": 167,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 278060461917,
+      "end_ns": 278146647250,
+      "duration_ms": 86.185333
+    },
+    {
+      "sequence": 168,
+      "frame": 168,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 285820886834,
+      "end_ns": 285820908917,
+      "duration_ms": 0.022083
+    },
+    {
+      "sequence": 168,
+      "frame": 168,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 285821522209,
+      "end_ns": 285837374167,
+      "duration_ms": 15.851958
+    },
+    {
+      "sequence": 168,
+      "frame": 168,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 285837427084,
+      "end_ns": 285867256375,
+      "duration_ms": 29.829291
+    },
+    {
+      "sequence": 168,
+      "frame": 168,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 285867256375,
+      "end_ns": 285880172292,
+      "duration_ms": 12.915917
+    },
+    {
+      "sequence": 168,
+      "frame": 168,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 285880172292,
+      "end_ns": 285890609667,
+      "duration_ms": 10.437375
+    },
+    {
+      "sequence": 168,
+      "frame": 168,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 285890638500,
+      "end_ns": 285977550459,
+      "duration_ms": 86.911959
+    },
+    {
+      "sequence": 169,
+      "frame": 169,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 289964965959,
+      "end_ns": 289965055542,
+      "duration_ms": 0.089583
+    },
+    {
+      "sequence": 169,
+      "frame": 169,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 289975062084,
+      "end_ns": 289987950209,
+      "duration_ms": 12.888125
+    },
+    {
+      "sequence": 169,
+      "frame": 169,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 289988001667,
+      "end_ns": 290015383334,
+      "duration_ms": 27.381667
+    },
+    {
+      "sequence": 169,
+      "frame": 169,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 290015383334,
+      "end_ns": 290028510542,
+      "duration_ms": 13.127208
+    },
+    {
+      "sequence": 169,
+      "frame": 169,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 290028510542,
+      "end_ns": 290038605459,
+      "duration_ms": 10.094917
+    },
+    {
+      "sequence": 169,
+      "frame": 169,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 290038640167,
+      "end_ns": 290124932709,
+      "duration_ms": 86.292542
+    },
+    {
+      "sequence": 170,
+      "frame": 170,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 292670252167,
+      "end_ns": 292670271417,
+      "duration_ms": 0.01925
+    },
+    {
+      "sequence": 170,
+      "frame": 170,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 292677355292,
+      "end_ns": 292692067542,
+      "duration_ms": 14.71225
+    },
+    {
+      "sequence": 170,
+      "frame": 170,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 292692120875,
+      "end_ns": 292721808209,
+      "duration_ms": 29.687334
+    },
+    {
+      "sequence": 170,
+      "frame": 170,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 292721808209,
+      "end_ns": 292735236334,
+      "duration_ms": 13.428125
+    },
+    {
+      "sequence": 170,
+      "frame": 170,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 292735236334,
+      "end_ns": 292745795417,
+      "duration_ms": 10.559083
+    },
+    {
+      "sequence": 170,
+      "frame": 170,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 292745821917,
+      "end_ns": 292833161000,
+      "duration_ms": 87.339083
+    },
+    {
+      "sequence": 171,
+      "frame": 171,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 296391469625,
+      "end_ns": 296391511500,
+      "duration_ms": 0.041875
+    },
+    {
+      "sequence": 171,
+      "frame": 171,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 296397261292,
+      "end_ns": 296410628667,
+      "duration_ms": 13.367375
+    },
+    {
+      "sequence": 171,
+      "frame": 171,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 296410672167,
+      "end_ns": 296438149584,
+      "duration_ms": 27.477417
+    },
+    {
+      "sequence": 171,
+      "frame": 171,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 296438149584,
+      "end_ns": 296451454959,
+      "duration_ms": 13.305375
+    },
+    {
+      "sequence": 171,
+      "frame": 171,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 296451454959,
+      "end_ns": 296461775209,
+      "duration_ms": 10.32025
+    },
+    {
+      "sequence": 171,
+      "frame": 171,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 296461802667,
+      "end_ns": 296548122792,
+      "duration_ms": 86.320125
+    },
+    {
+      "sequence": 172,
+      "frame": 172,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 308180791834,
+      "end_ns": 308180801042,
+      "duration_ms": 0.009208
+    },
+    {
+      "sequence": 172,
+      "frame": 172,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 308190549542,
+      "end_ns": 308198388667,
+      "duration_ms": 7.839125
+    },
+    {
+      "sequence": 172,
+      "frame": 172,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 308198423584,
+      "end_ns": 308217782167,
+      "duration_ms": 19.358583
+    },
+    {
+      "sequence": 172,
+      "frame": 172,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 308217782167,
+      "end_ns": 308228972459,
+      "duration_ms": 11.190292
+    },
+    {
+      "sequence": 172,
+      "frame": 172,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 308228972459,
+      "end_ns": 308237900292,
+      "duration_ms": 8.927833
+    },
+    {
+      "sequence": 172,
+      "frame": 172,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 308237920459,
+      "end_ns": 308324992500,
+      "duration_ms": 87.072041
+    },
+    {
+      "sequence": 173,
+      "frame": 173,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 318469428292,
+      "end_ns": 318469472584,
+      "duration_ms": 0.044292
+    },
+    {
+      "sequence": 173,
+      "frame": 173,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 318482708500,
+      "end_ns": 318495897042,
+      "duration_ms": 13.188542
+    },
+    {
+      "sequence": 173,
+      "frame": 173,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 318495943084,
+      "end_ns": 318522186167,
+      "duration_ms": 26.243083
+    },
+    {
+      "sequence": 173,
+      "frame": 173,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 318522186167,
+      "end_ns": 318534386042,
+      "duration_ms": 12.199875
+    },
+    {
+      "sequence": 173,
+      "frame": 173,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 318534386042,
+      "end_ns": 318544220584,
+      "duration_ms": 9.834542
+    },
+    {
+      "sequence": 173,
+      "frame": 173,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 318544246709,
+      "end_ns": 318630397584,
+      "duration_ms": 86.150875
+    },
+    {
+      "sequence": 174,
+      "frame": 174,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 329786735792,
+      "end_ns": 329786777709,
+      "duration_ms": 0.041917
+    },
+    {
+      "sequence": 174,
+      "frame": 174,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 329791371500,
+      "end_ns": 329805433500,
+      "duration_ms": 14.062
+    },
+    {
+      "sequence": 174,
+      "frame": 174,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 329805482625,
+      "end_ns": 329833562417,
+      "duration_ms": 28.079792
+    },
+    {
+      "sequence": 174,
+      "frame": 174,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 329833562417,
+      "end_ns": 329846970750,
+      "duration_ms": 13.408333
+    },
+    {
+      "sequence": 174,
+      "frame": 174,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 329846970750,
+      "end_ns": 329857524125,
+      "duration_ms": 10.553375
+    },
+    {
+      "sequence": 174,
+      "frame": 174,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 329857546000,
+      "end_ns": 329945015750,
+      "duration_ms": 87.46975
+    },
+    {
+      "sequence": 175,
+      "frame": 175,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 335105893042,
+      "end_ns": 335105909084,
+      "duration_ms": 0.016042
+    },
+    {
+      "sequence": 175,
+      "frame": 175,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 335113529084,
+      "end_ns": 335124909375,
+      "duration_ms": 11.380291
+    },
+    {
+      "sequence": 175,
+      "frame": 175,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 335124961167,
+      "end_ns": 335149591084,
+      "duration_ms": 24.629917
+    },
+    {
+      "sequence": 175,
+      "frame": 175,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 335149591084,
+      "end_ns": 335161693959,
+      "duration_ms": 12.102875
+    },
+    {
+      "sequence": 175,
+      "frame": 175,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 335161693959,
+      "end_ns": 335171511917,
+      "duration_ms": 9.817958
+    },
+    {
+      "sequence": 175,
+      "frame": 175,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 335171545542,
+      "end_ns": 335257620709,
+      "duration_ms": 86.075167
+    },
+    {
+      "sequence": 176,
+      "frame": 176,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 338222646125,
+      "end_ns": 338222677125,
+      "duration_ms": 0.031
+    },
+    {
+      "sequence": 176,
+      "frame": 176,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 338232924125,
+      "end_ns": 338250418042,
+      "duration_ms": 17.493917
+    },
+    {
+      "sequence": 176,
+      "frame": 176,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 338250477834,
+      "end_ns": 338282606084,
+      "duration_ms": 32.12825
+    },
+    {
+      "sequence": 176,
+      "frame": 176,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 338282606084,
+      "end_ns": 338296339584,
+      "duration_ms": 13.7335
+    },
+    {
+      "sequence": 176,
+      "frame": 176,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 338296339584,
+      "end_ns": 338306909584,
+      "duration_ms": 10.57
+    },
+    {
+      "sequence": 176,
+      "frame": 176,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 338306944084,
+      "end_ns": 338394053542,
+      "duration_ms": 87.109458
+    },
+    {
+      "sequence": 177,
+      "frame": 177,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 341645595875,
+      "end_ns": 341645615209,
+      "duration_ms": 0.019334
+    },
+    {
+      "sequence": 177,
+      "frame": 177,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 341652501584,
+      "end_ns": 341664881750,
+      "duration_ms": 12.380166
+    },
+    {
+      "sequence": 177,
+      "frame": 177,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 341664936334,
+      "end_ns": 341691061625,
+      "duration_ms": 26.125291
+    },
+    {
+      "sequence": 177,
+      "frame": 177,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 341691061625,
+      "end_ns": 341704040334,
+      "duration_ms": 12.978709
+    },
+    {
+      "sequence": 177,
+      "frame": 177,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 341704040334,
+      "end_ns": 341713932167,
+      "duration_ms": 9.891833
+    },
+    {
+      "sequence": 177,
+      "frame": 177,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 341713954834,
+      "end_ns": 341800024459,
+      "duration_ms": 86.069625
+    },
+    {
+      "sequence": 178,
+      "frame": 178,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 343259614167,
+      "end_ns": 343259628792,
+      "duration_ms": 0.014625
+    },
+    {
+      "sequence": 178,
+      "frame": 178,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 343270527125,
+      "end_ns": 343286167667,
+      "duration_ms": 15.640542
+    },
+    {
+      "sequence": 178,
+      "frame": 178,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 343286222542,
+      "end_ns": 343317117792,
+      "duration_ms": 30.89525
+    },
+    {
+      "sequence": 178,
+      "frame": 178,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 343317117792,
+      "end_ns": 343330757542,
+      "duration_ms": 13.63975
+    },
+    {
+      "sequence": 178,
+      "frame": 178,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 343330757542,
+      "end_ns": 343341427584,
+      "duration_ms": 10.670042
+    },
+    {
+      "sequence": 178,
+      "frame": 178,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 343341457042,
+      "end_ns": 343428979125,
+      "duration_ms": 87.522083
+    },
+    {
+      "sequence": 179,
+      "frame": 179,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 350301054209,
+      "end_ns": 350301072125,
+      "duration_ms": 0.017916
+    },
+    {
+      "sequence": 179,
+      "frame": 179,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 350308935750,
+      "end_ns": 350321563667,
+      "duration_ms": 12.627917
+    },
+    {
+      "sequence": 179,
+      "frame": 179,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 350321619292,
+      "end_ns": 350348654000,
+      "duration_ms": 27.034708
+    },
+    {
+      "sequence": 179,
+      "frame": 179,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 350348654000,
+      "end_ns": 350361823625,
+      "duration_ms": 13.169625
+    },
+    {
+      "sequence": 179,
+      "frame": 179,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 350361823625,
+      "end_ns": 350371899584,
+      "duration_ms": 10.075959
+    },
+    {
+      "sequence": 179,
+      "frame": 179,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 350371929709,
+      "end_ns": 350458128042,
+      "duration_ms": 86.198333
+    },
+    {
+      "sequence": 180,
+      "frame": 180,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 351830213125,
+      "end_ns": 351830247959,
+      "duration_ms": 0.034834
+    },
+    {
+      "sequence": 180,
+      "frame": 180,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 351844489417,
+      "end_ns": 351860905209,
+      "duration_ms": 16.415792
+    },
+    {
+      "sequence": 180,
+      "frame": 180,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 351860979917,
+      "end_ns": 351891382417,
+      "duration_ms": 30.4025
+    },
+    {
+      "sequence": 180,
+      "frame": 180,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 351891382417,
+      "end_ns": 351904864084,
+      "duration_ms": 13.481667
+    },
+    {
+      "sequence": 180,
+      "frame": 180,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 351904864084,
+      "end_ns": 351915714250,
+      "duration_ms": 10.850166
+    },
+    {
+      "sequence": 180,
+      "frame": 180,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 351915743292,
+      "end_ns": 352003038417,
+      "duration_ms": 87.295125
+    },
+    {
+      "sequence": 181,
+      "frame": 181,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 355748507542,
+      "end_ns": 355748563542,
+      "duration_ms": 0.056
+    },
+    {
+      "sequence": 181,
+      "frame": 181,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 355764529750,
+      "end_ns": 355776314959,
+      "duration_ms": 11.785209
+    },
+    {
+      "sequence": 181,
+      "frame": 181,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 355776358459,
+      "end_ns": 355801377375,
+      "duration_ms": 25.018916
+    },
+    {
+      "sequence": 181,
+      "frame": 181,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 355801377375,
+      "end_ns": 355813272625,
+      "duration_ms": 11.89525
+    },
+    {
+      "sequence": 181,
+      "frame": 181,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 355813272625,
+      "end_ns": 355823305917,
+      "duration_ms": 10.033292
+    },
+    {
+      "sequence": 181,
+      "frame": 181,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 355823333709,
+      "end_ns": 355909255250,
+      "duration_ms": 85.921541
+    },
+    {
+      "sequence": 182,
+      "frame": 182,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 360555731042,
+      "end_ns": 360555744125,
+      "duration_ms": 0.013083
+    },
+    {
+      "sequence": 182,
+      "frame": 182,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 360568556875,
+      "end_ns": 360579628459,
+      "duration_ms": 11.071584
+    },
+    {
+      "sequence": 182,
+      "frame": 182,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 360579666500,
+      "end_ns": 360603722834,
+      "duration_ms": 24.056334
+    },
+    {
+      "sequence": 182,
+      "frame": 182,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 360603722834,
+      "end_ns": 360614957209,
+      "duration_ms": 11.234375
+    },
+    {
+      "sequence": 182,
+      "frame": 182,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 360614957209,
+      "end_ns": 360624568959,
+      "duration_ms": 9.61175
+    },
+    {
+      "sequence": 182,
+      "frame": 182,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 360624601834,
+      "end_ns": 360710447584,
+      "duration_ms": 85.84575
+    },
+    {
+      "sequence": 183,
+      "frame": 183,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 363467052584,
+      "end_ns": 363467066625,
+      "duration_ms": 0.014041
+    },
+    {
+      "sequence": 183,
+      "frame": 183,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 363471008292,
+      "end_ns": 363483598917,
+      "duration_ms": 12.590625
+    },
+    {
+      "sequence": 183,
+      "frame": 183,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 363483649959,
+      "end_ns": 363509854250,
+      "duration_ms": 26.204291
+    },
+    {
+      "sequence": 183,
+      "frame": 183,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 363509854250,
+      "end_ns": 363523154042,
+      "duration_ms": 13.299792
+    },
+    {
+      "sequence": 183,
+      "frame": 183,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 363523154042,
+      "end_ns": 363533256917,
+      "duration_ms": 10.102875
+    },
+    {
+      "sequence": 183,
+      "frame": 183,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 363533285709,
+      "end_ns": 363619509959,
+      "duration_ms": 86.22425
+    },
+    {
+      "sequence": 184,
+      "frame": 184,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 367269032667,
+      "end_ns": 367269055625,
+      "duration_ms": 0.022958
+    },
+    {
+      "sequence": 184,
+      "frame": 184,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 367274267917,
+      "end_ns": 367282858917,
+      "duration_ms": 8.591
+    },
+    {
+      "sequence": 184,
+      "frame": 184,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 367282902917,
+      "end_ns": 367304034125,
+      "duration_ms": 21.131208
+    },
+    {
+      "sequence": 184,
+      "frame": 184,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 367304034125,
+      "end_ns": 367315073125,
+      "duration_ms": 11.039
+    },
+    {
+      "sequence": 184,
+      "frame": 184,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 367315073125,
+      "end_ns": 367324924625,
+      "duration_ms": 9.8515
+    },
+    {
+      "sequence": 184,
+      "frame": 184,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 367324964542,
+      "end_ns": 367415992125,
+      "duration_ms": 91.027583
+    },
+    {
+      "sequence": 185,
+      "frame": 185,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 368886824500,
+      "end_ns": 368886860292,
+      "duration_ms": 0.035792
+    },
+    {
+      "sequence": 185,
+      "frame": 185,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 368892354584,
+      "end_ns": 368898953292,
+      "duration_ms": 6.598708
+    },
+    {
+      "sequence": 185,
+      "frame": 185,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 368898995584,
+      "end_ns": 368916822125,
+      "duration_ms": 17.826541
+    },
+    {
+      "sequence": 185,
+      "frame": 185,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 368916822125,
+      "end_ns": 368928743667,
+      "duration_ms": 11.921542
+    },
+    {
+      "sequence": 185,
+      "frame": 185,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 368928743667,
+      "end_ns": 368938727292,
+      "duration_ms": 9.983625
+    },
+    {
+      "sequence": 185,
+      "frame": 185,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 368938758084,
+      "end_ns": 369030510584,
+      "duration_ms": 91.7525
+    },
+    {
+      "sequence": 186,
+      "frame": 186,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 374327965084,
+      "end_ns": 374327994709,
+      "duration_ms": 0.029625
+    },
+    {
+      "sequence": 186,
+      "frame": 186,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 374330350000,
+      "end_ns": 374339122750,
+      "duration_ms": 8.77275
+    },
+    {
+      "sequence": 186,
+      "frame": 186,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 374339173625,
+      "end_ns": 374360419875,
+      "duration_ms": 21.24625
+    },
+    {
+      "sequence": 186,
+      "frame": 186,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 374360419875,
+      "end_ns": 374372248875,
+      "duration_ms": 11.829
+    },
+    {
+      "sequence": 186,
+      "frame": 186,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 374372248875,
+      "end_ns": 374382412750,
+      "duration_ms": 10.163875
+    },
+    {
+      "sequence": 186,
+      "frame": 186,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 374382450375,
+      "end_ns": 374474997417,
+      "duration_ms": 92.547042
+    },
+    {
+      "sequence": 187,
+      "frame": 187,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 382575409084,
+      "end_ns": 382575437459,
+      "duration_ms": 0.028375
+    },
+    {
+      "sequence": 187,
+      "frame": 187,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 382587323459,
+      "end_ns": 382596065375,
+      "duration_ms": 8.741916
+    },
+    {
+      "sequence": 187,
+      "frame": 187,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 382596107334,
+      "end_ns": 382617215292,
+      "duration_ms": 21.107958
+    },
+    {
+      "sequence": 187,
+      "frame": 187,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 382617215292,
+      "end_ns": 382628355709,
+      "duration_ms": 11.140417
+    },
+    {
+      "sequence": 187,
+      "frame": 187,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 382628355709,
+      "end_ns": 382637906875,
+      "duration_ms": 9.551166
+    },
+    {
+      "sequence": 187,
+      "frame": 187,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 382637943917,
+      "end_ns": 382727617417,
+      "duration_ms": 89.6735
+    },
+    {
+      "sequence": 188,
+      "frame": 188,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 390436733667,
+      "end_ns": 390436765625,
+      "duration_ms": 0.031958
+    },
+    {
+      "sequence": 188,
+      "frame": 188,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 390443000584,
+      "end_ns": 390449620542,
+      "duration_ms": 6.619958
+    },
+    {
+      "sequence": 188,
+      "frame": 188,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 390449669334,
+      "end_ns": 390468093667,
+      "duration_ms": 18.424333
+    },
+    {
+      "sequence": 188,
+      "frame": 188,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 390468093667,
+      "end_ns": 390479874459,
+      "duration_ms": 11.780792
+    },
+    {
+      "sequence": 188,
+      "frame": 188,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 390479874459,
+      "end_ns": 390489956750,
+      "duration_ms": 10.082291
+    },
+    {
+      "sequence": 188,
+      "frame": 188,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 390489991584,
+      "end_ns": 390582054167,
+      "duration_ms": 92.062583
+    },
+    {
+      "sequence": 189,
+      "frame": 189,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 396043412917,
+      "end_ns": 396043425209,
+      "duration_ms": 0.012292
+    },
+    {
+      "sequence": 189,
+      "frame": 189,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 396048713334,
+      "end_ns": 396056311792,
+      "duration_ms": 7.598458
+    },
+    {
+      "sequence": 189,
+      "frame": 189,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 396056356375,
+      "end_ns": 396075569459,
+      "duration_ms": 19.213084
+    },
+    {
+      "sequence": 189,
+      "frame": 189,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 396075569459,
+      "end_ns": 396087179417,
+      "duration_ms": 11.609958
+    },
+    {
+      "sequence": 189,
+      "frame": 189,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 396087179417,
+      "end_ns": 396097057334,
+      "duration_ms": 9.877917
+    },
+    {
+      "sequence": 189,
+      "frame": 189,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 396097089542,
+      "end_ns": 396188158834,
+      "duration_ms": 91.069292
+    },
+    {
+      "sequence": 190,
+      "frame": 190,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 403393397459,
+      "end_ns": 403393564417,
+      "duration_ms": 0.166958
+    },
+    {
+      "sequence": 190,
+      "frame": 190,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 403405008250,
+      "end_ns": 403418884500,
+      "duration_ms": 13.87625
+    },
+    {
+      "sequence": 190,
+      "frame": 190,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 403418946500,
+      "end_ns": 403440549834,
+      "duration_ms": 21.603334
+    },
+    {
+      "sequence": 190,
+      "frame": 190,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 403440549834,
+      "end_ns": 403452443625,
+      "duration_ms": 11.893791
+    },
+    {
+      "sequence": 190,
+      "frame": 190,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 403452443625,
+      "end_ns": 403462903834,
+      "duration_ms": 10.460209
+    },
+    {
+      "sequence": 190,
+      "frame": 190,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 403462939875,
+      "end_ns": 403560678500,
+      "duration_ms": 97.738625
+    },
+    {
+      "sequence": 191,
+      "frame": 191,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 409293477875,
+      "end_ns": 409296360459,
+      "duration_ms": 2.882584
+    },
+    {
+      "sequence": 191,
+      "frame": 191,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 409310004959,
+      "end_ns": 409320204125,
+      "duration_ms": 10.199166
+    },
+    {
+      "sequence": 191,
+      "frame": 191,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 409320253584,
+      "end_ns": 409342278084,
+      "duration_ms": 22.0245
+    },
+    {
+      "sequence": 191,
+      "frame": 191,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 409342278084,
+      "end_ns": 409355216209,
+      "duration_ms": 12.938125
+    },
+    {
+      "sequence": 191,
+      "frame": 191,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 409355216209,
+      "end_ns": 409366874625,
+      "duration_ms": 11.658416
+    },
+    {
+      "sequence": 191,
+      "frame": 191,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 409366920334,
+      "end_ns": 409462300292,
+      "duration_ms": 95.379958
+    },
+    {
+      "sequence": 192,
+      "frame": 192,
+      "stage": "submit_begin\u2192submit_end",
+      "begin_ns": 412904729084,
+      "end_ns": 412904776667,
+      "duration_ms": 0.047583
+    },
+    {
+      "sequence": 192,
+      "frame": 192,
+      "stage": "render_callback\u2192elements_built",
+      "begin_ns": 412912982000,
+      "end_ns": 412920470042,
+      "duration_ms": 7.488042
+    },
+    {
+      "sequence": 192,
+      "frame": 192,
+      "stage": "layout_request_begin\u2192layout_request_end",
+      "begin_ns": 412920514292,
+      "end_ns": 412939565667,
+      "duration_ms": 19.051375
+    },
+    {
+      "sequence": 192,
+      "frame": 192,
+      "stage": "layout_request_end\u2192prepaint_begin",
+      "begin_ns": 412939565667,
+      "end_ns": 412951434834,
+      "duration_ms": 11.869167
+    },
+    {
+      "sequence": 192,
+      "frame": 192,
+      "stage": "prepaint_begin\u2192prepaint_end",
+      "begin_ns": 412951434834,
+      "end_ns": 412961519834,
+      "duration_ms": 10.085
+    },
+    {
+      "sequence": 192,
+      "frame": 192,
+      "stage": "paint_begin\u2192paint_end",
+      "begin_ns": 412961560834,
+      "end_ns": 413054242250,
+      "duration_ms": 92.681416
+    }
+  ],
+  "rows": [
+    {
+      "native_id": 6,
+      "frame": 136,
+      "accepted_to_dequeued_ms": 0.147709,
+      "submission_ms": 0.004416,
+      "overlap": []
+    },
+    {
+      "native_id": 7,
+      "frame": 137,
+      "accepted_to_dequeued_ms": 0.037708,
+      "submission_ms": 0.006875,
+      "overlap": []
+    },
+    {
+      "native_id": 8,
+      "frame": 138,
+      "accepted_to_dequeued_ms": 178.717041,
+      "submission_ms": 0.002916,
+      "overlap": [
+        {
+          "sequence": 137,
+          "frame": 137,
+          "stage": "render_callback\u2192elements_built",
+          "begin_ns": 93621594292,
+          "end_ns": 93629324834,
+          "duration_ms": 7.730542,
+          "overlap_ms": 7.730542
+        },
+        {
+          "sequence": 137,
+          "frame": 137,
+          "stage": "layout_request_begin\u2192layout_request_end",
+          "begin_ns": 93629369875,
+          "end_ns": 93650854792,
+          "duration_ms": 21.484917,
+          "overlap_ms": 21.484917
+        },
+        {
+          "sequence": 137,
+          "frame": 137,
+          "stage": "layout_request_end\u2192prepaint_begin",
+          "begin_ns": 93650854792,
+          "end_ns": 93663373500,
+          "duration_ms": 12.518708,
+          "overlap_ms": 12.518708
+        },
+        {
+          "sequence": 137,
+          "frame": 137,
+          "stage": "prepaint_begin\u2192prepaint_end",
+          "begin_ns": 93663373500,
+          "end_ns": 93673841542,
+          "duration_ms": 10.468042,
+          "overlap_ms": 10.468042
+        },
+        {
+          "sequence": 137,
+          "frame": 137,
+          "stage": "paint_begin\u2192paint_end",
+          "begin_ns": 93673865917,
+          "end_ns": 93795882417,
+          "duration_ms": 122.0165,
+          "overlap_ms": 122.0165
+        }
+      ]
+    },
+    {
+      "native_id": 9,
+      "frame": 139,
+      "accepted_to_dequeued_ms": 144.7825,
+      "submission_ms": 0.007125,
+      "overlap": [
+        {
+          "sequence": 138,
+          "frame": 138,
+          "stage": "layout_request_begin\u2192layout_request_end",
+          "begin_ns": 93807310042,
+          "end_ns": 93830698209,
+          "duration_ms": 23.388167,
+          "overlap_ms": 13.58525
+        },
+        {
+          "sequence": 138,
+          "frame": 138,
+          "stage": "layout_request_end\u2192prepaint_begin",
+          "begin_ns": 93830698209,
+          "end_ns": 93842457542,
+          "duration_ms": 11.759333,
+          "overlap_ms": 11.759333
+        },
+        {
+          "sequence": 138,
+          "frame": 138,
+          "stage": "prepaint_begin\u2192prepaint_end",
+          "begin_ns": 93842457542,
+          "end_ns": 93853013709,
+          "duration_ms": 10.556167,
+          "overlap_ms": 10.556167
+        },
+        {
+          "sequence": 138,
+          "frame": 138,
+          "stage": "paint_begin\u2192paint_end",
+          "begin_ns": 93853039084,
+          "end_ns": 93957500834,
+          "duration_ms": 104.46175,
+          "overlap_ms": 104.46175
+        }
+      ]
+    },
+    {
+      "native_id": 10,
+      "frame": 162,
+      "accepted_to_dequeued_ms": 1.825,
+      "submission_ms": 0.860834,
+      "overlap": []
+    },
+    {
+      "native_id": 11,
+      "frame": 163,
+      "accepted_to_dequeued_ms": 140.781042,
+      "submission_ms": 0.0085,
+      "overlap": [
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "render_callback\u2192elements_built",
+          "begin_ns": 266438312084,
+          "end_ns": 266449953292,
+          "duration_ms": 11.641208,
+          "overlap_ms": 1.384792
+        },
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "layout_request_begin\u2192layout_request_end",
+          "begin_ns": 266449981834,
+          "end_ns": 266472326125,
+          "duration_ms": 22.344291,
+          "overlap_ms": 22.344291
+        },
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "layout_request_end\u2192prepaint_begin",
+          "begin_ns": 266472326125,
+          "end_ns": 266484491125,
+          "duration_ms": 12.165,
+          "overlap_ms": 12.165
+        },
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "prepaint_begin\u2192prepaint_end",
+          "begin_ns": 266484491125,
+          "end_ns": 266494810292,
+          "duration_ms": 10.319167,
+          "overlap_ms": 10.319167
+        },
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "paint_begin\u2192paint_end",
+          "begin_ns": 266494847875,
+          "end_ns": 266585267709,
+          "duration_ms": 90.419834,
+          "overlap_ms": 90.419834
+        }
+      ]
+    },
+    {
+      "native_id": 12,
+      "frame": 164,
+      "accepted_to_dequeued_ms": 115.880375,
+      "submission_ms": 0.003375,
+      "overlap": [
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "layout_request_end\u2192prepaint_begin",
+          "begin_ns": 266472326125,
+          "end_ns": 266484491125,
+          "duration_ms": 12.165,
+          "overlap_ms": 10.980416
+        },
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "prepaint_begin\u2192prepaint_end",
+          "begin_ns": 266484491125,
+          "end_ns": 266494810292,
+          "duration_ms": 10.319167,
+          "overlap_ms": 10.319167
+        },
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "paint_begin\u2192paint_end",
+          "begin_ns": 266494847875,
+          "end_ns": 266585267709,
+          "duration_ms": 90.419834,
+          "overlap_ms": 90.419834
+        }
+      ]
+    },
+    {
+      "native_id": 13,
+      "frame": 165,
+      "accepted_to_dequeued_ms": 89.49275,
+      "submission_ms": 89.462708,
+      "overlap": [
+        {
+          "sequence": 162,
+          "frame": 162,
+          "stage": "paint_begin\u2192paint_end",
+          "begin_ns": 266494847875,
+          "end_ns": 266585267709,
+          "duration_ms": 90.419834,
+          "overlap_ms": 85.363042
+        }
+      ]
+    },
+    {
+      "native_id": 14,
+      "frame": 172,
+      "accepted_to_dequeued_ms": 0.021708,
+      "submission_ms": 0.009208,
+      "overlap": []
+    }
+  ],
+  "unpaired": []
+}

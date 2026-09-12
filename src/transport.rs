@@ -13,6 +13,15 @@ pub enum Update {
     Eof,
 }
 
+impl Update {
+    pub fn observation(&self) -> Option<crate::diagnostics::FrameTrace> {
+        match self {
+            Self::Frame(frame) => frame.observation,
+            _ => None,
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Session {
     initialized: Option<(Version, Hello, AssetRoot)>,
@@ -67,10 +76,26 @@ pub fn start_reader(diagnostics: Diagnostics) -> async_channel::Receiver<Update>
     std::thread::spawn(move || {
         let stdin = std::io::stdin();
         read_protocol_observed(stdin.lock(), &diagnostics, |update| {
-            tx.send_blocking(update).is_ok()
+            submit_update(&tx, update, &diagnostics)
         });
     });
     rx
+}
+
+fn submit_update(
+    tx: &async_channel::Sender<Update>,
+    update: Update,
+    diagnostics: &Diagnostics,
+) -> bool {
+    let observation = update.observation();
+    diagnostics.frame_queue_stage(observation, "submit_begin", || (tx.len(), tx.capacity()));
+    let sent = tx.send_blocking(update).is_ok();
+    diagnostics.frame_queue_stage(
+        observation,
+        if sent { "submit_end" } else { "submit_failed" },
+        || (tx.len(), tx.capacity()),
+    );
+    sent
 }
 
 #[cfg(test)]
@@ -147,6 +172,122 @@ fn read_protocol_observed(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn traced_handoff_preserves_bounded_order_and_reports_receiver_close() {
+        use std::io::Write;
+        use std::sync::{Arc, Mutex, mpsc};
+        struct Capture {
+            bytes: Arc<Mutex<Vec<u8>>>,
+            third_begin: mpsc::Sender<()>,
+        }
+        impl Write for Capture {
+            fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+                let record: serde_json::Value = serde_json::from_slice(bytes).unwrap();
+                self.bytes.lock().unwrap().extend_from_slice(bytes);
+                if record["stage"] == "submit_begin" && record["sequence"] == 3 {
+                    self.third_begin.send(()).unwrap();
+                }
+                Ok(bytes.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        for version in [1, 2] {
+            for close_receiver in [false, true] {
+                let bytes = Arc::new(Mutex::new(Vec::new()));
+                let (begin_tx, begin_rx) = mpsc::channel();
+                let diagnostics = Diagnostics::with_writer(Capture {
+                    bytes: bytes.clone(),
+                    third_begin: begin_tx,
+                });
+                let mut input = hello(version);
+                input.push(b'\n');
+                for number in [7, 7, 2] {
+                    let mut frame = serde_json::json!({"protocol":version,"type":"frame","frame":number,"sprites":[]});
+                    frame[if version == 1 { "text" } else { "textLayers" }] = serde_json::json!([]);
+                    input.extend(serde_json::to_vec(&frame).unwrap());
+                    input.push(b'\n');
+                }
+                let mut frames = Vec::new();
+                read_protocol_observed(input.as_slice(), &diagnostics, |u| {
+                    if matches!(u, Update::Frame(_)) {
+                        frames.push(u);
+                    }
+                    true
+                });
+                let mut frames = frames.into_iter();
+                let (tx, rx) = async_channel::bounded(2);
+                assert!(submit_update(&tx, frames.next().unwrap(), &diagnostics));
+                assert!(submit_update(&tx, frames.next().unwrap(), &diagnostics));
+                let third = frames.next().unwrap();
+                let worker_diagnostics = diagnostics.clone();
+                let worker_tx = tx.clone();
+                let (done_tx, done_rx) = mpsc::channel();
+                let worker = std::thread::spawn(move || {
+                    done_tx
+                        .send(submit_update(&worker_tx, third, &worker_diagnostics))
+                        .unwrap();
+                });
+                // Observation acknowledges entry while capacity is still exhausted;
+                // no elapsed-time threshold or arbitrary sleep controls this test.
+                begin_rx.recv().unwrap();
+                assert_eq!(tx.len(), 2);
+                assert!(matches!(done_rx.try_recv(), Err(mpsc::TryRecvError::Empty)));
+                if close_receiver {
+                    rx.close();
+                }
+                let first = rx.recv_blocking().unwrap();
+                assert!(matches!(first, Update::Frame(frame) if frame.number == 7));
+                assert_eq!(done_rx.recv().unwrap(), !close_receiver);
+                worker.join().unwrap();
+                let second = rx.recv_blocking().unwrap();
+                assert!(matches!(second, Update::Frame(frame) if frame.number == 7));
+                if !close_receiver {
+                    let last = rx.recv_blocking().unwrap();
+                    assert!(matches!(last, Update::Frame(frame) if frame.number == 2));
+                }
+                futures_lite::future::block_on(diagnostics.finish()).unwrap();
+                let records: Vec<serde_json::Value> =
+                    String::from_utf8(bytes.lock().unwrap().clone())
+                        .unwrap()
+                        .lines()
+                        .map(|line| serde_json::from_str(line).unwrap())
+                        .collect();
+                for sequence in 1..=3 {
+                    let observed: Vec<_> = records
+                        .iter()
+                        .filter(|r| {
+                            r["sequence"] == sequence
+                                && r["stage"]
+                                    .as_str()
+                                    .is_some_and(|s| s.starts_with("submit_"))
+                        })
+                        .collect();
+                    assert_eq!(observed.len(), 2);
+                    assert_eq!(observed[0]["stage"], "submit_begin");
+                    assert_eq!(
+                        observed[1]["stage"],
+                        if sequence == 3 && close_receiver {
+                            "submit_failed"
+                        } else {
+                            "submit_end"
+                        }
+                    );
+                    assert_eq!(observed[0]["queued_updates"], sequence - 1);
+                    for record in &observed {
+                        assert_eq!(record["protocol"], version);
+                        assert_eq!(record["frame"], if sequence == 3 { 2 } else { 7 });
+                        assert_eq!(record["queue_capacity"], 2);
+                        assert!(record["queued_updates"].as_u64().unwrap() <= 2);
+                    }
+                    assert!(observed[0]["at_ns"].as_u64() <= observed[1]["at_ns"].as_u64());
+                }
+                assert_eq!(records.last().unwrap()["dropped_records"], 0);
+            }
+        }
+    }
 
     #[test]
     fn observed_frames_keep_duplicate_numbers_distinct_and_rejections_unaccepted() {

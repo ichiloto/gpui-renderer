@@ -1,0 +1,23 @@
+{"diagnostic":"clock_anchor","stage":"start","clock":"CLOCK_UPTIME_RAW","pid":61094,"elapsed_before_ns":250,"host_ns":154741363146583,"elapsed_after_ns":292}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"received","at_ns":96334}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"accepted","at_ns":211209}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"submit_begin","at_ns":213084,"queued_updates":1,"queue_capacity":2}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"submit_end","at_ns":213292,"queued_updates":2,"queue_capacity":2}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":1,"stage":"received","at_ns":94901292}
+{"diagnostic":"geometry","stage":"initial_window","at_ns":97644792,"values":[["display_id",1.0],["screen_x",0.0],["screen_y",0.0],["screen_width",1920.0],["screen_height",1200.0],["work_x",0.0],["work_y",76.0],["work_width",1920.0],["work_height",1094.0],["available_content_width",1920.0],["available_content_height",1062.0],["logical_width",1280.0],["logical_height",576.0],["content_width",1280.0],["content_height",576.0],["outer_width",1280.0],["outer_height",608.0],["display_relative_left",320.0],["display_relative_top",273.0],["scale",1.0]]}
+{"diagnostic":"geometry","stage":"viewport","at_ns":161345584,"values":[["outer_left",320.0],["outer_top",273.0],["outer_width",1280.0],["outer_height",608.0],["width",1280.0],["height",576.0],["scale",1.0],["offset_x",0.0],["offset_y",0.0],["presented_width",1280.0],["presented_height",576.0]]}
+message protocol 2 differs from session protocol 1
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"dequeued","at_ns":165372334,"queued_updates":1,"queue_capacity":2}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"replace_begin","at_ns":165381375}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"replaced","at_ns":165381500}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"render_callback","at_ns":182175125}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"elements_built","at_ns":182360334}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"layout_request_begin","at_ns":182363334}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"layout_request_end","at_ns":182776292}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"prepaint_begin","at_ns":184702292}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"prepaint_end","at_ns":184844292}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"paint_begin","at_ns":184847500}
+{"diagnostic":"frame","sequence":1,"protocol":1,"frame":1,"stage":"paint_end","at_ns":186768750}
+message protocol 2 differs from session protocol 1
+{"diagnostic":"clock_anchor","stage":"shutdown","clock":"CLOCK_UPTIME_RAW","pid":61094,"elapsed_before_ns":210888584,"host_ns":154741574035083,"elapsed_after_ns":210888792}
+{"diagnostic":"summary","dropped_records":0}

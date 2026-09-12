@@ -1,0 +1,5 @@
+{"protocol":2,"type":"ready"}
+{"protocol":2,"type":"error","message":"invalid protocol message: expected value at line 1 column 1"}
+{"protocol":2,"type":"error","message":"message protocol 1 differs from session protocol 2"}
+{"protocol":2,"type":"error","message":"message protocol 1 differs from session protocol 2"}
+{"protocol":2,"type":"error","message":"hello has already initialized this session"}

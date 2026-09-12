@@ -124,6 +124,11 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
             let mut window: Option<WindowHandle<Renderer>> = None;
             let mut output = output;
             while let Ok(update) = updates.recv().await {
+                output
+                    .diagnostics
+                    .frame_queue_stage(update.observation(), "dequeued", || {
+                        (updates.len(), updates.capacity())
+                    });
                 let stop = matches!(update, Update::Shutdown | Update::Fatal(_) | Update::Eof);
                 let result = cx.update(|cx| match update {
                     Update::Hello(version, hello) => {
@@ -189,6 +194,9 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                             let number = frame.number;
                             if let Err(error) = window.update(cx, |view, _, cx| {
                                 let observation = frame.observation;
+                                view.output
+                                    .diagnostics
+                                    .frame_stage(observation, "replace_begin");
                                 view.state.replace(frame);
                                 view.output.diagnostics.frame_stage(observation, "replaced");
                                 cx.notify();

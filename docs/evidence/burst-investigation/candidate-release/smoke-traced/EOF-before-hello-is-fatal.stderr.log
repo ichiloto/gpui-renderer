@@ -1,0 +1,4 @@
+{"diagnostic":"clock_anchor","stage":"start","clock":"CLOCK_UPTIME_RAW","pid":61083,"elapsed_before_ns":209,"host_ns":154737933455041,"elapsed_after_ns":375}
+stdin closed before a successful hello
+{"diagnostic":"clock_anchor","stage":"shutdown","clock":"CLOCK_UPTIME_RAW","pid":61083,"elapsed_before_ns":94898875,"host_ns":154738028353583,"elapsed_after_ns":94898917}
+{"diagnostic":"summary","dropped_records":0}

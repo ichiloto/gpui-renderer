@@ -2,6 +2,7 @@
 """Real-process IPC checks. Requires a graphical desktop; opens brief native windows."""
 import argparse
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -10,21 +11,38 @@ root = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--binary", type=Path, default=root / "target/debug/gpui-renderer")
 parser.add_argument("--evidence-dir", type=Path)
+parser.add_argument("--trace", action="store_true", help="Validate opt-in stderr diagnostics without changing stdout")
 args = parser.parse_args()
 binary = args.binary
+environment = dict(os.environ, ICHILOTO_GPUI_TRACE="1" if args.trace else "0")
 fixture = subprocess.check_output(["python3", str(root / "scripts/fixture.py")])
 shutdown = b'{"protocol":1,"type":"shutdown"}\n'
 
 
 def run_case(name, data, status, kinds, protocols=None):
-    result = subprocess.run([str(binary)], input=data, capture_output=True, timeout=10)
+    result = subprocess.run([str(binary)], input=data, capture_output=True, timeout=10, env=environment)
     events = [json.loads(line) for line in result.stdout.splitlines()]
     assert result.returncode == status, (name, result.returncode, result.stderr)
     assert [event["protocol"] for event in events] == (protocols or [1] * len(events)), (name, events)
     assert [event["type"] for event in events] == kinds, (name, events)
     assert not result.stdout or result.stdout.endswith(b"\n"), (name, result.stdout)
     errors = [event["message"] for event in events if event["type"] == "error"]
-    assert result.stderr.decode().splitlines() == errors, (name, result.stderr, errors)
+    ordinary = []
+    diagnostics = []
+    for line in result.stderr.decode().splitlines():
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            ordinary.append(line)
+            continue
+        assert isinstance(record, dict) and "diagnostic" in record, (name, line)
+        diagnostics.append(record)
+    assert ordinary == errors, (name, ordinary, errors)
+    if args.trace:
+        assert diagnostics and diagnostics[-1] == {"diagnostic": "summary", "dropped_records": 0}, (name, diagnostics)
+        assert any(r["diagnostic"] in ("clock_anchor", "clock_anchor_unavailable") for r in diagnostics)
+    else:
+        assert not diagnostics, (name, diagnostics)
     if args.evidence_dir:
         args.evidence_dir.mkdir(parents=True, exist_ok=True)
         stem = args.evidence_dir / name.replace(" ", "-")
@@ -44,7 +62,7 @@ run_case("unsupported version then shutdown", b'{"protocol":3,"type":"shutdown"}
 with tempfile.TemporaryFile() as input_file, tempfile.TemporaryFile() as stderr:
     input_file.write(fixture)
     input_file.seek(0)
-    process = subprocess.Popen([str(binary)], stdin=input_file, stdout=subprocess.PIPE, stderr=stderr)
+    process = subprocess.Popen([str(binary)], stdin=input_file, stdout=subprocess.PIPE, stderr=stderr, env=environment)
     process.stdout.close()
     assert process.wait(timeout=10) == 1, "broken stdout must be fatal"
 print("PASS broken stdout: status=1")
@@ -53,7 +71,7 @@ print("PASS broken stdout: status=1")
 with tempfile.TemporaryFile() as input_file, tempfile.TemporaryFile() as stderr:
     input_file.write(fixture + b"malformed\n" * 50000)
     input_file.seek(0)
-    process = subprocess.Popen([str(binary)], stdin=input_file, stdout=subprocess.PIPE, stderr=stderr)
+    process = subprocess.Popen([str(binary)], stdin=input_file, stdout=subprocess.PIPE, stderr=stderr, env=environment)
     assert process.wait(timeout=10) == 1, "unread stdout must time out without hanging the UI"
     process.stdout.close()
 print("PASS unread stdout: bounded shutdown, status=1")

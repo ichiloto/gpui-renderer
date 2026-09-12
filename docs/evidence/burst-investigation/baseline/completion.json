@@ -1,0 +1,16 @@
+{
+  "exit": 0,
+  "stty_identical": true,
+  "console_pid": 7629,
+  "game_pid": 7644,
+  "renderer_pid": 7655,
+  "process_check": "ps -p 7629,7644,7655 -o pid,ppid,command returned header only after native close",
+  "keys_written_parsed": 17,
+  "received_accepted_replaced_frames": 186,
+  "offset_bounds": [
+    150867832382958,
+    150867832383583
+  ],
+  "raw_log_path": "/tmp/ichiloto-renderer-burst-20260912/runtime/logs/latency.ndjson",
+  "raw_log_sha256": "c8e78333a8e9ed267bae311a937607e82d287c47bf074aeac777e583ee862c42"
+}

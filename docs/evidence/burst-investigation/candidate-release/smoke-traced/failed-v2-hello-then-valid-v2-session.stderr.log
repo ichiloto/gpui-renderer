@@ -1,0 +1,29 @@
+{"diagnostic":"clock_anchor","stage":"start","clock":"CLOCK_UPTIME_RAW","pid":61093,"elapsed_before_ns":209,"host_ns":154741143455541,"elapsed_after_ns":250}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"received","at_ns":106167}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"accepted","at_ns":259292}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"submit_begin","at_ns":260959,"queued_updates":2,"queue_capacity":2}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"submit_end","at_ns":87714250,"queued_updates":1,"queue_capacity":2}
+cannot resolve assetRoot: No such file or directory (os error 2)
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"received","at_ns":87718792}
+{"diagnostic":"geometry","stage":"initial_window","at_ns":87868709,"values":[["display_id",1.0],["screen_x",0.0],["screen_y",0.0],["screen_width",1920.0],["screen_height",1200.0],["work_x",0.0],["work_y",76.0],["work_width",1920.0],["work_height",1094.0],["available_content_width",1920.0],["available_content_height",1062.0],["logical_width",960.0],["logical_height",528.0],["content_width",960.0],["content_height",528.0],["outer_width",960.0],["outer_height",560.0],["display_relative_left",480.0],["display_relative_top",297.0],["scale",1.0]]}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"accepted","at_ns":87924209}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"submit_begin","at_ns":87925709,"queued_updates":1,"queue_capacity":2}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"submit_end","at_ns":87925959,"queued_updates":2,"queue_capacity":2}
+{"diagnostic":"geometry","stage":"viewport","at_ns":150827167,"values":[["outer_left",480.0],["outer_top",297.0],["outer_width",960.0],["outer_height",560.0],["width",960.0],["height",528.0],["scale",1.0],["offset_x",0.0],["offset_y",0.0],["presented_width",960.0],["presented_height",528.0]]}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"dequeued","at_ns":153066959,"queued_updates":1,"queue_capacity":2}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"replace_begin","at_ns":153072709}
+{"diagnostic":"frame","sequence":1,"protocol":2,"frame":1,"stage":"replaced","at_ns":153072917}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"dequeued","at_ns":153074334,"queued_updates":0,"queue_capacity":2}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"replace_begin","at_ns":153074417}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"replaced","at_ns":153077292}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"render_callback","at_ns":169341209}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"elements_built","at_ns":169688750}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"layout_request_begin","at_ns":169693125}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"layout_request_end","at_ns":170221709}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"prepaint_begin","at_ns":172269667}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"prepaint_end","at_ns":172485875}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"paint_begin","at_ns":172489917}
+{"diagnostic":"frame","sequence":2,"protocol":2,"frame":2,"stage":"paint_end","at_ns":176307917}
+invalid protocol message: expected value at line 1 column 1
+{"diagnostic":"clock_anchor","stage":"shutdown","clock":"CLOCK_UPTIME_RAW","pid":61093,"elapsed_before_ns":203654667,"host_ns":154741347110000,"elapsed_after_ns":203654709}
+{"diagnostic":"summary","dropped_records":0}

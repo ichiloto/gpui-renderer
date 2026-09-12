@@ -29,11 +29,14 @@ impl Render for Renderer {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         // Observes callback entry only: GPUI can coalesce frames or repaint the
         // same snapshot. This is not GPU completion or proof of visible pixels.
-        if let Some(frame) = &self.state.frame {
-            self.output
-                .diagnostics
-                .frame_stage(frame.observation, "render_callback");
-        }
+        let observation = self
+            .state
+            .frame
+            .as_ref()
+            .and_then(|frame| frame.observation);
+        self.output
+            .diagnostics
+            .frame_stage(observation, "render_callback");
         let grid = self.state.hello.grid;
         let cw = grid.cell_width as f32;
         let ch = grid.cell_height as f32;
@@ -87,7 +90,7 @@ impl Render for Renderer {
             .overflow_hidden()
             .bg(rgb(DEFAULT_BACKGROUND));
         if transform.scale == 0.0 {
-            return root;
+            return crate::render_trace::observe(root, &self.output.diagnostics, observation);
         }
         let bounds = transform.surface_bounds();
         let mut surface = positioned(div(), bounds)
@@ -149,7 +152,8 @@ impl Render for Renderer {
             }
         }
 
-        root.child(surface)
+        let root = root.child(surface);
+        crate::render_trace::observe(root, &self.output.diagnostics, observation)
     }
 }
 

@@ -1,0 +1,7 @@
+{
+  "renderer_head": "e7f550d221a412fc34f46b92293653db7d161c20",
+  "binary": "/Users/andrewmasiye/Development/php/games/engines/ichiloto/2.0/engine/resources/renderers/installed/gpui/darwin-arm64/Ichiloto Renderer.app/Contents/MacOS/gpui-renderer",
+  "binary_sha256": "4ee59a0e0f34ec776af97120631ea4aea3c09de4d8a3786d4a8c664d4a824a58",
+  "private_config_sha256": "60fa09472886f98839c030d57e55e84821dd736079c9adbc3a0b18f6c4be78f2",
+  "source_config_sha256": "60fa09472886f98839c030d57e55e84821dd736079c9adbc3a0b18f6c4be78f2"
+}
