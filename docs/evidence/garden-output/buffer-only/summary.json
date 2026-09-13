@@ -1,0 +1,1456 @@
+{
+  "source": "/tmp/ichiloto-garden-output/buffer-only/logs/latency.ndjson",
+  "source_sha256": "25f9c3edb49b2b63f0937ad4d1825b91141b501a8cf4ccc485df20540f7bde73",
+  "measurement_scope": "complete session",
+  "engine_pid": 97013,
+  "host_offset_bounds_ns": [
+    182153204539833,
+    182153204539875
+  ],
+  "anchors": [
+    {
+      "diagnostic": "clock_anchor",
+      "stage": "start",
+      "clock": "CLOCK_UPTIME_RAW",
+      "pid": 97022,
+      "elapsed_before_ns": 83,
+      "host_ns": 182153204539958,
+      "elapsed_after_ns": 125
+    },
+    {
+      "diagnostic": "clock_anchor",
+      "stage": "shutdown",
+      "clock": "CLOCK_UPTIME_RAW",
+      "pid": 97022,
+      "elapsed_before_ns": 6466046875,
+      "host_ns": 182159670586750,
+      "elapsed_after_ns": 6466046917
+    }
+  ],
+  "boundary": "CPU observations only; callback/paint end do not establish GPU completion or visible FPS",
+  "renderer_dropped": [
+    0
+  ],
+  "engine_dropped": [],
+  "trailing_stderr": "",
+  "ordinary_stderr": [],
+  "geometry": [
+    {
+      "diagnostic": "geometry",
+      "stage": "initial_window",
+      "at_ns": 143444458,
+      "values": [
+        [
+          "display_id",
+          1.0
+        ],
+        [
+          "screen_x",
+          0.0
+        ],
+        [
+          "screen_y",
+          0.0
+        ],
+        [
+          "screen_width",
+          1920.0
+        ],
+        [
+          "screen_height",
+          1200.0
+        ],
+        [
+          "work_x",
+          0.0
+        ],
+        [
+          "work_y",
+          79.0
+        ],
+        [
+          "work_width",
+          1920.0
+        ],
+        [
+          "work_height",
+          1091.0
+        ],
+        [
+          "available_content_width",
+          1920.0
+        ],
+        [
+          "available_content_height",
+          1059.0
+        ],
+        [
+          "logical_width",
+          1350.0
+        ],
+        [
+          "logical_height",
+          720.0
+        ],
+        [
+          "content_width",
+          1350.0
+        ],
+        [
+          "content_height",
+          720.0
+        ],
+        [
+          "outer_width",
+          1350.0
+        ],
+        [
+          "outer_height",
+          752.0
+        ],
+        [
+          "display_relative_left",
+          285.0
+        ],
+        [
+          "display_relative_top",
+          199.0
+        ],
+        [
+          "scale",
+          1.0
+        ]
+      ]
+    },
+    {
+      "diagnostic": "geometry",
+      "stage": "text_metrics",
+      "at_ns": 220768000,
+      "values": [
+        [
+          "cell_width",
+          10.0
+        ],
+        [
+          "cell_height",
+          20.0
+        ],
+        [
+          "advance_per_em",
+          0.60205078125
+        ],
+        [
+          "line_per_em",
+          0.6923828125
+        ],
+        [
+          "logical_font_size",
+          15.779399871826172
+        ]
+      ]
+    },
+    {
+      "diagnostic": "geometry",
+      "stage": "viewport",
+      "at_ns": 220776125,
+      "values": [
+        [
+          "outer_left",
+          285.0
+        ],
+        [
+          "outer_top",
+          199.0
+        ],
+        [
+          "outer_width",
+          1350.0
+        ],
+        [
+          "outer_height",
+          752.0
+        ],
+        [
+          "width",
+          1350.0
+        ],
+        [
+          "height",
+          720.0
+        ],
+        [
+          "scale",
+          1.0
+        ],
+        [
+          "offset_x",
+          0.0
+        ],
+        [
+          "offset_y",
+          0.0
+        ],
+        [
+          "presented_width",
+          1350.0
+        ],
+        [
+          "presented_height",
+          720.0
+        ]
+      ]
+    }
+  ],
+  "frames": 36,
+  "renderer_stages": {
+    "received": 36,
+    "accepted": 36,
+    "submit_begin": 36,
+    "submit_end": 36,
+    "dequeued": 36,
+    "replace_begin": 36,
+    "replaced": 36,
+    "render_callback": 36,
+    "elements_built": 36,
+    "layout_request_begin": 36,
+    "layout_request_end": 36,
+    "prepaint_begin": 36,
+    "prepaint_end": 36,
+    "paint_begin": 36,
+    "paint_end": 36
+  },
+  "incomplete_callback_sequences": [],
+  "has_paint_observations": true,
+  "renderer_durations": {
+    "received_to_accepted": {
+      "n": 36,
+      "median_ms": 0.5050415,
+      "p95_ms": 0.685042,
+      "max_ms": 9.957166
+    },
+    "accepted_to_replaced": {
+      "n": 36,
+      "median_ms": 0.025646,
+      "p95_ms": 0.036708,
+      "max_ms": 0.055083
+    },
+    "submit_begin_to_submit_end": {
+      "n": 36,
+      "median_ms": 0.004521,
+      "p95_ms": 0.017542,
+      "max_ms": 0.036334
+    },
+    "dequeued_to_replaced": {
+      "n": 36,
+      "median_ms": 0.009416,
+      "p95_ms": 0.01125,
+      "max_ms": 0.011916
+    },
+    "replaced_to_first_callback": {
+      "n": 36,
+      "median_ms": 8.413646,
+      "p95_ms": 15.755916,
+      "max_ms": 16.53075
+    },
+    "render_callback_to_elements_built": {
+      "n": 36,
+      "median_ms": 2.0001249999999997,
+      "p95_ms": 2.259375,
+      "max_ms": 3.197458
+    },
+    "layout_request_begin_to_layout_request_end": {
+      "n": 36,
+      "median_ms": 3.3663745,
+      "p95_ms": 4.887291,
+      "max_ms": 7.871084
+    },
+    "layout_request_end_to_prepaint_begin": {
+      "n": 36,
+      "median_ms": 4.434937,
+      "p95_ms": 5.923667,
+      "max_ms": 8.362625
+    },
+    "prepaint_begin_to_prepaint_end": {
+      "n": 36,
+      "median_ms": 2.042146,
+      "p95_ms": 2.525459,
+      "max_ms": 2.695625
+    },
+    "paint_begin_to_paint_end": {
+      "n": 36,
+      "median_ms": 22.130521,
+      "p95_ms": 28.062083,
+      "max_ms": 30.005417
+    },
+    "render_callback_to_paint_end": {
+      "n": 36,
+      "median_ms": 33.4261045,
+      "p95_ms": 43.5795,
+      "max_ms": 52.147875
+    }
+  },
+  "engine_durations": {
+    "transport.encode": {
+      "n": 37,
+      "median_ms": 0.074875,
+      "p95_ms": 0.091791,
+      "max_ms": 0.096583
+    },
+    "game.update.end": {
+      "n": 48,
+      "median_ms": 0.08852099999999999,
+      "p95_ms": 0.315834,
+      "max_ms": 0.441458
+    },
+    "probe.update": {
+      "n": 48,
+      "median_ms": 0.089875,
+      "p95_ms": 0.319917,
+      "max_ms": 0.44325
+    },
+    "presentation.sprites": {
+      "n": 48,
+      "median_ms": 0.015729,
+      "p95_ms": 0.025166,
+      "max_ms": 0.313583
+    },
+    "console.cells": {
+      "n": 48,
+      "median_ms": 21.796125,
+      "p95_ms": 23.697625,
+      "max_ms": 23.817791
+    },
+    "console.runs": {
+      "n": 96,
+      "median_ms": 1.226854,
+      "p95_ms": 3.30525,
+      "max_ms": 3.892375
+    },
+    "presentation.snapshot": {
+      "n": 48,
+      "median_ms": 25.0985,
+      "p95_ms": 26.924958,
+      "max_ms": 27.176583
+    },
+    "presentation.message": {
+      "n": 48,
+      "median_ms": 0.081958,
+      "p95_ms": 0.108333,
+      "max_ms": 0.110292
+    },
+    "presentation.compare": {
+      "n": 48,
+      "median_ms": 0.0013335,
+      "p95_ms": 0.069916,
+      "max_ms": 0.078792
+    },
+    "presentation.end": {
+      "n": 48,
+      "median_ms": 25.723166499999998,
+      "p95_ms": 27.547,
+      "max_ms": 27.800292
+    },
+    "game.render.end": {
+      "n": 48,
+      "median_ms": 28.215229,
+      "p95_ms": 31.156459,
+      "max_ms": 31.339875
+    },
+    "probe.field.recompose": {
+      "n": 36,
+      "median_ms": 78.2330625,
+      "p95_ms": 87.828875,
+      "max_ms": 87.976042
+    }
+  },
+  "phase_durations": {
+    "startup_or_shutdown": {
+      "transport.encode": {
+        "n": 1,
+        "median_ms": 0.007125,
+        "p95_ms": 0.007125,
+        "max_ms": 0.007125
+      }
+    },
+    "idle": {
+      "game.update.end": {
+        "n": 12,
+        "median_ms": 0.2031455,
+        "p95_ms": 0.441458,
+        "max_ms": 0.441458
+      },
+      "probe.update": {
+        "n": 12,
+        "median_ms": 0.2053125,
+        "p95_ms": 0.44325,
+        "max_ms": 0.44325
+      },
+      "presentation.sprites": {
+        "n": 12,
+        "median_ms": 0.021688,
+        "p95_ms": 0.313583,
+        "max_ms": 0.313583
+      },
+      "console.cells": {
+        "n": 12,
+        "median_ms": 22.725813000000002,
+        "p95_ms": 23.697625,
+        "max_ms": 23.697625
+      },
+      "console.runs": {
+        "n": 24,
+        "median_ms": 1.34725,
+        "p95_ms": 3.375583,
+        "max_ms": 3.892375
+      },
+      "presentation.snapshot": {
+        "n": 12,
+        "median_ms": 26.192479499999997,
+        "p95_ms": 26.579,
+        "max_ms": 26.579
+      },
+      "presentation.message": {
+        "n": 12,
+        "median_ms": 0.0959165,
+        "p95_ms": 0.110292,
+        "max_ms": 0.110292
+      },
+      "presentation.compare": {
+        "n": 12,
+        "median_ms": 0.0611665,
+        "p95_ms": 0.078792,
+        "max_ms": 0.078792
+      },
+      "transport.encode": {
+        "n": 1,
+        "median_ms": 0.096583,
+        "p95_ms": 0.096583,
+        "max_ms": 0.096583
+      },
+      "presentation.end": {
+        "n": 12,
+        "median_ms": 26.898667,
+        "p95_ms": 27.410125,
+        "max_ms": 27.410125
+      },
+      "game.render.end": {
+        "n": 12,
+        "median_ms": 29.6503125,
+        "p95_ms": 30.666417,
+        "max_ms": 30.666417
+      }
+    },
+    "pan": {
+      "game.update.end": {
+        "n": 36,
+        "median_ms": 0.08583299999999999,
+        "p95_ms": 0.265542,
+        "max_ms": 0.315834
+      },
+      "probe.update": {
+        "n": 36,
+        "median_ms": 0.0870835,
+        "p95_ms": 0.26775,
+        "max_ms": 0.319917
+      },
+      "probe.field.recompose": {
+        "n": 36,
+        "median_ms": 78.2330625,
+        "p95_ms": 87.828875,
+        "max_ms": 87.976042
+      },
+      "presentation.sprites": {
+        "n": 36,
+        "median_ms": 0.014562499999999999,
+        "p95_ms": 0.019291,
+        "max_ms": 0.021125
+      },
+      "console.cells": {
+        "n": 36,
+        "median_ms": 21.543062499999998,
+        "p95_ms": 23.725125,
+        "max_ms": 23.817791
+      },
+      "console.runs": {
+        "n": 72,
+        "median_ms": 1.222292,
+        "p95_ms": 3.233334,
+        "max_ms": 3.543084
+      },
+      "presentation.snapshot": {
+        "n": 36,
+        "median_ms": 24.464125,
+        "p95_ms": 27.010084,
+        "max_ms": 27.176583
+      },
+      "presentation.message": {
+        "n": 36,
+        "median_ms": 0.0806875,
+        "p95_ms": 0.095208,
+        "max_ms": 0.108833
+      },
+      "presentation.compare": {
+        "n": 36,
+        "median_ms": 0.0013124999999999999,
+        "p95_ms": 0.002,
+        "max_ms": 0.057417
+      },
+      "presentation.end": {
+        "n": 36,
+        "median_ms": 25.114167000000002,
+        "p95_ms": 27.618375,
+        "max_ms": 27.800292
+      },
+      "game.render.end": {
+        "n": 36,
+        "median_ms": 27.394270499999998,
+        "p95_ms": 31.237625,
+        "max_ms": 31.339875
+      },
+      "transport.encode": {
+        "n": 35,
+        "median_ms": 0.074875,
+        "p95_ms": 0.082292,
+        "max_ms": 0.091791
+      }
+    }
+  },
+  "frame_rows": [
+    {
+      "sequence": 1,
+      "frame": 1,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 9.957166,
+      "accepted_to_replaced_ms": 0.031459,
+      "submit_begin_to_submit_end_ms": 0.004458,
+      "dequeued_to_replaced_ms": 0.004834,
+      "replaced_to_first_callback_ms": 13.518875
+    },
+    {
+      "sequence": 2,
+      "frame": 2,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.685042,
+      "accepted_to_replaced_ms": 0.055083,
+      "submit_begin_to_submit_end_ms": 0.036334,
+      "dequeued_to_replaced_ms": 0.011916,
+      "replaced_to_first_callback_ms": 15.195042
+    },
+    {
+      "sequence": 3,
+      "frame": 3,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.591917,
+      "accepted_to_replaced_ms": 0.034625,
+      "submit_begin_to_submit_end_ms": 0.005458,
+      "dequeued_to_replaced_ms": 0.01125,
+      "replaced_to_first_callback_ms": 4.948083
+    },
+    {
+      "sequence": 4,
+      "frame": 4,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.5635,
+      "accepted_to_replaced_ms": 0.026958,
+      "submit_begin_to_submit_end_ms": 0.00475,
+      "dequeued_to_replaced_ms": 0.009292,
+      "replaced_to_first_callback_ms": 11.386542
+    },
+    {
+      "sequence": 5,
+      "frame": 5,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.504375,
+      "accepted_to_replaced_ms": 0.026417,
+      "submit_begin_to_submit_end_ms": 0.004583,
+      "dequeued_to_replaced_ms": 0.010375,
+      "replaced_to_first_callback_ms": 1.216042
+    },
+    {
+      "sequence": 6,
+      "frame": 6,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.59225,
+      "accepted_to_replaced_ms": 0.027458,
+      "submit_begin_to_submit_end_ms": 0.005083,
+      "dequeued_to_replaced_ms": 0.009917,
+      "replaced_to_first_callback_ms": 7.707417
+    },
+    {
+      "sequence": 7,
+      "frame": 7,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.522125,
+      "accepted_to_replaced_ms": 0.024291,
+      "submit_begin_to_submit_end_ms": 0.005083,
+      "dequeued_to_replaced_ms": 0.009416,
+      "replaced_to_first_callback_ms": 2.071709
+    },
+    {
+      "sequence": 8,
+      "frame": 8,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.553042,
+      "accepted_to_replaced_ms": 0.022041,
+      "submit_begin_to_submit_end_ms": 0.003875,
+      "dequeued_to_replaced_ms": 0.009208,
+      "replaced_to_first_callback_ms": 12.021209
+    },
+    {
+      "sequence": 9,
+      "frame": 9,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.5075,
+      "accepted_to_replaced_ms": 0.02575,
+      "submit_begin_to_submit_end_ms": 0.005959,
+      "dequeued_to_replaced_ms": 0.009708,
+      "replaced_to_first_callback_ms": 2.6275
+    },
+    {
+      "sequence": 10,
+      "frame": 10,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.546667,
+      "accepted_to_replaced_ms": 0.025375,
+      "submit_begin_to_submit_end_ms": 0.005,
+      "dequeued_to_replaced_ms": 0.009334,
+      "replaced_to_first_callback_ms": 13.849583
+    },
+    {
+      "sequence": 11,
+      "frame": 11,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.482292,
+      "accepted_to_replaced_ms": 0.031708,
+      "submit_begin_to_submit_end_ms": 0.003792,
+      "dequeued_to_replaced_ms": 0.009333,
+      "replaced_to_first_callback_ms": 8.689
+    },
+    {
+      "sequence": 12,
+      "frame": 12,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.502875,
+      "accepted_to_replaced_ms": 0.026417,
+      "submit_begin_to_submit_end_ms": 0.004542,
+      "dequeued_to_replaced_ms": 0.0095,
+      "replaced_to_first_callback_ms": 2.842
+    },
+    {
+      "sequence": 13,
+      "frame": 13,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.484417,
+      "accepted_to_replaced_ms": 0.021375,
+      "submit_begin_to_submit_end_ms": 0.003875,
+      "dequeued_to_replaced_ms": 0.008667,
+      "replaced_to_first_callback_ms": 13.310083
+    },
+    {
+      "sequence": 14,
+      "frame": 14,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.477583,
+      "accepted_to_replaced_ms": 0.022125,
+      "submit_begin_to_submit_end_ms": 0.003958,
+      "dequeued_to_replaced_ms": 0.00875,
+      "replaced_to_first_callback_ms": 5.45325
+    },
+    {
+      "sequence": 15,
+      "frame": 15,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.501541,
+      "accepted_to_replaced_ms": 0.021084,
+      "submit_begin_to_submit_end_ms": 0.003834,
+      "dequeued_to_replaced_ms": 0.008542,
+      "replaced_to_first_callback_ms": 13.888708
+    },
+    {
+      "sequence": 16,
+      "frame": 16,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.498833,
+      "accepted_to_replaced_ms": 0.026834,
+      "submit_begin_to_submit_end_ms": 0.008042,
+      "dequeued_to_replaced_ms": 0.009125,
+      "replaced_to_first_callback_ms": 4.93775
+    },
+    {
+      "sequence": 17,
+      "frame": 17,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.499333,
+      "accepted_to_replaced_ms": 0.027,
+      "submit_begin_to_submit_end_ms": 0.0045,
+      "dequeued_to_replaced_ms": 0.009541,
+      "replaced_to_first_callback_ms": 12.614959
+    },
+    {
+      "sequence": 18,
+      "frame": 18,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.492208,
+      "accepted_to_replaced_ms": 0.025542,
+      "submit_begin_to_submit_end_ms": 0.007583,
+      "dequeued_to_replaced_ms": 0.009125,
+      "replaced_to_first_callback_ms": 2.031208
+    },
+    {
+      "sequence": 19,
+      "frame": 19,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.477958,
+      "accepted_to_replaced_ms": 0.022584,
+      "submit_begin_to_submit_end_ms": 0.004,
+      "dequeued_to_replaced_ms": 0.00925,
+      "replaced_to_first_callback_ms": 8.006458
+    },
+    {
+      "sequence": 20,
+      "frame": 20,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.497208,
+      "accepted_to_replaced_ms": 0.025833,
+      "submit_begin_to_submit_end_ms": 0.00625,
+      "dequeued_to_replaced_ms": 0.009458,
+      "replaced_to_first_callback_ms": 12.348792
+    },
+    {
+      "sequence": 21,
+      "frame": 21,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.471334,
+      "accepted_to_replaced_ms": 0.028083,
+      "submit_begin_to_submit_end_ms": 0.004708,
+      "dequeued_to_replaced_ms": 0.009792,
+      "replaced_to_first_callback_ms": 1.069458
+    },
+    {
+      "sequence": 22,
+      "frame": 22,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.513542,
+      "accepted_to_replaced_ms": 0.024917,
+      "submit_begin_to_submit_end_ms": 0.005291,
+      "dequeued_to_replaced_ms": 0.009167,
+      "replaced_to_first_callback_ms": 10.531
+    },
+    {
+      "sequence": 23,
+      "frame": 23,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.531583,
+      "accepted_to_replaced_ms": 0.024709,
+      "submit_begin_to_submit_end_ms": 0.00375,
+      "dequeued_to_replaced_ms": 0.009459,
+      "replaced_to_first_callback_ms": 15.755916
+    },
+    {
+      "sequence": 24,
+      "frame": 24,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.499625,
+      "accepted_to_replaced_ms": 0.024625,
+      "submit_begin_to_submit_end_ms": 0.004542,
+      "dequeued_to_replaced_ms": 0.009458,
+      "replaced_to_first_callback_ms": 2.511833
+    },
+    {
+      "sequence": 25,
+      "frame": 25,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.505708,
+      "accepted_to_replaced_ms": 0.023917,
+      "submit_begin_to_submit_end_ms": 0.004417,
+      "dequeued_to_replaced_ms": 0.008959,
+      "replaced_to_first_callback_ms": 5.924958
+    },
+    {
+      "sequence": 26,
+      "frame": 26,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.4985,
+      "accepted_to_replaced_ms": 0.023708,
+      "submit_begin_to_submit_end_ms": 0.003833,
+      "dequeued_to_replaced_ms": 0.009416,
+      "replaced_to_first_callback_ms": 8.138292
+    },
+    {
+      "sequence": 27,
+      "frame": 27,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.494625,
+      "accepted_to_replaced_ms": 0.023209,
+      "submit_begin_to_submit_end_ms": 0.004125,
+      "dequeued_to_replaced_ms": 0.009334,
+      "replaced_to_first_callback_ms": 7.8245
+    },
+    {
+      "sequence": 28,
+      "frame": 28,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.526625,
+      "accepted_to_replaced_ms": 0.023208,
+      "submit_begin_to_submit_end_ms": 0.003541,
+      "dequeued_to_replaced_ms": 0.009208,
+      "replaced_to_first_callback_ms": 3.3995
+    },
+    {
+      "sequence": 29,
+      "frame": 29,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.530333,
+      "accepted_to_replaced_ms": 0.025958,
+      "submit_begin_to_submit_end_ms": 0.00425,
+      "dequeued_to_replaced_ms": 0.009541,
+      "replaced_to_first_callback_ms": 14.414084
+    },
+    {
+      "sequence": 30,
+      "frame": 30,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.542916,
+      "accepted_to_replaced_ms": 0.033209,
+      "submit_begin_to_submit_end_ms": 0.006459,
+      "dequeued_to_replaced_ms": 0.01025,
+      "replaced_to_first_callback_ms": 9.418833
+    },
+    {
+      "sequence": 31,
+      "frame": 31,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.513834,
+      "accepted_to_replaced_ms": 0.0225,
+      "submit_begin_to_submit_end_ms": 0.003833,
+      "dequeued_to_replaced_ms": 0.0095,
+      "replaced_to_first_callback_ms": 9.135
+    },
+    {
+      "sequence": 32,
+      "frame": 32,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.497834,
+      "accepted_to_replaced_ms": 0.036708,
+      "submit_begin_to_submit_end_ms": 0.007333,
+      "dequeued_to_replaced_ms": 0.009333,
+      "replaced_to_first_callback_ms": 10.241792
+    },
+    {
+      "sequence": 33,
+      "frame": 33,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.502333,
+      "accepted_to_replaced_ms": 0.024208,
+      "submit_begin_to_submit_end_ms": 0.00425,
+      "dequeued_to_replaced_ms": 0.00975,
+      "replaced_to_first_callback_ms": 6.97775
+    },
+    {
+      "sequence": 34,
+      "frame": 34,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.515459,
+      "accepted_to_replaced_ms": 0.033958,
+      "submit_begin_to_submit_end_ms": 0.017542,
+      "dequeued_to_replaced_ms": 0.009958,
+      "replaced_to_first_callback_ms": 16.53075
+    },
+    {
+      "sequence": 35,
+      "frame": 35,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.507459,
+      "accepted_to_replaced_ms": 0.026333,
+      "submit_begin_to_submit_end_ms": 0.003583,
+      "dequeued_to_replaced_ms": 0.009333,
+      "replaced_to_first_callback_ms": 13.292792
+    },
+    {
+      "sequence": 36,
+      "frame": 36,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1,
+        "render_callback": 1,
+        "elements_built": 1,
+        "layout_request_begin": 1,
+        "layout_request_end": 1,
+        "prepaint_begin": 1,
+        "prepaint_end": 1,
+        "paint_begin": 1,
+        "paint_end": 1
+      },
+      "received_to_accepted_ms": 0.485125,
+      "accepted_to_replaced_ms": 0.023542,
+      "submit_begin_to_submit_end_ms": 0.003959,
+      "dequeued_to_replaced_ms": 0.009709,
+      "replaced_to_first_callback_ms": 6.739791
+    }
+  ]
+}

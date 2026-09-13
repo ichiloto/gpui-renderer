@@ -1,0 +1,3 @@
+# Preserve captured test/tool output byte-for-byte for its recorded checksums.
+docs/evidence/**/*.txt -whitespace
+docs/evidence/**/*.log -whitespace

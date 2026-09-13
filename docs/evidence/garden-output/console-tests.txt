@@ -1,0 +1,10 @@
+Composer dependencies are portable.
+Development autoload cascades: sibling first, vendored release as the fallback.
+/Users/andrewmasiye/.rvm/scripts/rvm: line 29: /bin/ps: Operation not permitted
+/Users/andrewmasiye/.rvm/scripts/rvm: line 29: /bin/ps: Operation not permitted
+PASS: play selects stable renderers and scopes launch intent to the child process.
+PASS: generate:map writes the complete Engine 0.5 map layout.
+PASS: new projects include stable identity and save compatibility metadata.
+PASS: legacy projects gain stable, idempotent save metadata without overwriting existing contracts.
+SKIP: set ICHILOTO_GAME_SRC to run project validation integration checks.
+SKIP: set ICHILOTO_GAME_SRC to run battle-report integration checks.

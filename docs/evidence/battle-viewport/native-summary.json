@@ -1,0 +1,87 @@
+{
+  "engine_pid": 82826,
+  "parent_terminal_rows_columns": [
+    60,
+    220
+  ],
+  "initial_window": {
+    "display_id": 1.0,
+    "screen_x": 0.0,
+    "screen_y": 0.0,
+    "screen_width": 1920.0,
+    "screen_height": 1200.0,
+    "work_x": 0.0,
+    "work_y": 77.0,
+    "work_width": 1920.0,
+    "work_height": 1093.0,
+    "available_content_width": 1920.0,
+    "available_content_height": 1061.0,
+    "logical_width": 1350.0,
+    "logical_height": 720.0,
+    "content_width": 1350.0,
+    "content_height": 720.0,
+    "outer_width": 1350.0,
+    "outer_height": 752.0,
+    "display_relative_left": 285.0,
+    "display_relative_top": 200.0,
+    "scale": 1.0
+  },
+  "largest_viewport": {
+    "outer_left": 0.0,
+    "outer_top": 30.0,
+    "outer_width": 1920.0,
+    "outer_height": 1094.0,
+    "width": 1920.0,
+    "height": 1062.0,
+    "scale": 1.0,
+    "offset_x": 285.0,
+    "offset_y": 171.0,
+    "presented_width": 1350.0,
+    "presented_height": 720.0
+  },
+  "final_viewport": {
+    "outer_left": 285.0,
+    "outer_top": 200.0,
+    "outer_width": 1350.0,
+    "outer_height": 752.0,
+    "width": 1350.0,
+    "height": 720.0,
+    "scale": 1.0,
+    "offset_x": 0.0,
+    "offset_y": 0.0,
+    "presented_width": 1350.0,
+    "presented_height": 720.0
+  },
+  "all_presented_sizes": [
+    [
+      1350.0,
+      720.0
+    ]
+  ],
+  "native_record_count": 345,
+  "native_frame_stages": {
+    "received": 7,
+    "accepted": 7,
+    "submit_begin": 7,
+    "submit_end": 7,
+    "dequeued": 7,
+    "replace_begin": 7,
+    "replaced": 7,
+    "render_callback": 33,
+    "elements_built": 33,
+    "layout_request_begin": 33,
+    "layout_request_end": 33,
+    "prepaint_begin": 33,
+    "prepaint_end": 33,
+    "paint_begin": 33,
+    "paint_end": 33
+  },
+  "engine_trace_drop_records": [],
+  "closure": {
+    "exit_status": 0,
+    "stderr_bytes": 0,
+    "error_log_bytes": 0,
+    "terminal_modes_restored": true
+  },
+  "limits": "Controlled composition check with held simulation; camera pan selected in PHP. Visual observations and closed-app inventory supplied by Engine coordinator in native-coordinator-report.md. No screenshot files retained. Native zoom/restore tested; smaller-window downscaling covered by existing renderer tests."
+}

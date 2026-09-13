@@ -25,6 +25,7 @@ pub struct PreparedFrame {
     pub sprites: Vec<PreparedSprite>,
     pub text_layers: Vec<TextLayer>,
     pub plan: Vec<PaintItem>,
+    pub cached_images: Vec<Arc<RenderImage>>,
 }
 
 impl PreparedFrame {
@@ -42,6 +43,7 @@ impl PreparedFrame {
             text_layers: vec![],
             sprites,
             plan,
+            cached_images: assets.cached_images(),
         })
     }
 
@@ -65,6 +67,7 @@ impl PreparedFrame {
             text_layers: frame.text_layers,
             sprites,
             plan,
+            cached_images: assets.cached_images(),
         })
     }
 }
@@ -79,12 +82,17 @@ fn prepare_sprites(source: Vec<Sprite>, assets: &AssetRoot) -> Result<Vec<Prepar
         } else {
             let image = assets.load(&sprite.asset)?;
             decoded_bytes += image.as_bytes(0).map_or(0, |bytes| bytes.len());
-            if decoded_bytes > 64 * 1024 * 1024 {
+            if decoded_bytes > crate::assets::MAX_DECODED_BYTES {
                 return Err("frame exceeds 64 MiB decoded image limit".into());
             }
             images.insert(sprite.asset.clone(), image.clone());
             image
         };
+        if let Some(rect) = sprite.source_rect {
+            let size = image.size(0);
+            // Decoder limits guarantee positive dimensions at most 4096.
+            rect.validate_image(size.width.0 as u32, size.height.0 as u32)?;
+        }
         sprites.push(PreparedSprite { sprite, image });
     }
     Ok(sprites)
@@ -143,6 +151,7 @@ mod tests {
             RendererState {
                 hello: Hello {
                     title: "Home".into(),
+                    required_capabilities: vec![],
                     asset_root,
                     grid: Grid {
                         columns: 80,
@@ -166,6 +175,146 @@ mod tests {
             height: 48,
             anchor: Anchor::BottomCenter,
             layer,
+            source_rect: None,
+        }
+    }
+    #[test]
+    fn distinct_crops_share_full_sheet_across_frames_and_keep_layering() {
+        use crate::protocol::SourceRect;
+        let (mut state, _) = setup();
+        let dir = tempfile::tempdir().unwrap();
+        image::RgbaImage::from_fn(4, 2, |x, y| {
+            image::Rgba(if x < 2 {
+                [255, 0, 0, 255]
+            } else {
+                [0, 0, 255, if y == 0 { 128 } else { 0 }]
+            })
+        })
+        .save(dir.path().join("sheet.png"))
+        .unwrap();
+        let assets = AssetRoot::new(dir.path()).unwrap();
+        let mut left = sprite("left", 100);
+        left.asset = "sheet.png".into();
+        left.source_rect = Some(SourceRect {
+            x: 0,
+            y: 0,
+            width: 2,
+            height: 2,
+        });
+        let mut right = left.clone();
+        right.id = "right".into();
+        right.source_rect.as_mut().unwrap().x = 2;
+        let mut frame = v2();
+        frame.sprites = vec![left.clone(), right.clone()];
+        let first = PreparedFrame::prepare_v2(frame.clone(), state.hello.grid, &assets).unwrap();
+        assert_eq!(
+            first.plan,
+            [
+                PaintItem::Text(0),
+                PaintItem::Sprite(0),
+                PaintItem::Sprite(1),
+                PaintItem::Text(1)
+            ]
+        );
+        assert!(Arc::ptr_eq(
+            &first.sprites[0].image,
+            &first.sprites[1].image
+        ));
+        let sheet = first.sprites[0].image.clone();
+        assert_eq!(sheet.as_bytes(0).unwrap().len(), 4 * 2 * 4);
+        assert_eq!(&sheet.as_bytes(0).unwrap()[0..4], &[0, 0, 255, 255]);
+        assert_eq!(&sheet.as_bytes(0).unwrap()[8..12], &[255, 0, 0, 128]);
+        state.replace(first);
+        frame.sprites[0].source_rect = right.source_rect;
+        // Same frame number and only the crop changes; a complete replacement still applies.
+        state.replace(PreparedFrame::prepare_v2(frame, state.hello.grid, &assets).unwrap());
+        let current = state.frame.as_ref().unwrap();
+        assert_eq!(current.sprites[0].sprite.source_rect, right.source_rect);
+        assert!(Arc::ptr_eq(&sheet, &current.sprites[0].image));
+        assert_eq!(current.cached_images.len(), 1);
+        let full = PreparedFrame::prepare(
+            Frame {
+                frame: 2,
+                text: vec![],
+                sprites: vec![Sprite {
+                    source_rect: None,
+                    ..left
+                }],
+            },
+            state.hello.grid,
+            &assets,
+        )
+        .unwrap();
+        assert!(Arc::ptr_eq(&sheet, &full.sprites[0].image));
+        assert!(full.sprites[0].sprite.source_rect.is_none());
+        assert_eq!(full.plan, [PaintItem::LegacyText, PaintItem::Sprite(0)]);
+    }
+
+    #[test]
+    fn crop_bounds_use_the_decoded_image_and_rejection_preserves_snapshot() {
+        use crate::protocol::SourceRect;
+        let (mut state, assets) = setup();
+        let mut frame = v2();
+        frame.sprites[0].source_rect = Some(SourceRect {
+            x: 16,
+            y: 24,
+            width: 16,
+            height: 24,
+        });
+        state.replace(PreparedFrame::prepare_v2(frame.clone(), state.hello.grid, &assets).unwrap());
+        let image = state.frame.as_ref().unwrap().sprites[0].image.clone();
+        for bad in [
+            SourceRect {
+                x: 17,
+                y: 24,
+                width: 16,
+                height: 24,
+            },
+            SourceRect {
+                x: 16,
+                y: 25,
+                width: 16,
+                height: 24,
+            },
+            SourceRect {
+                x: 32,
+                y: 0,
+                width: 1,
+                height: 1,
+            },
+            SourceRect {
+                x: 0,
+                y: 48,
+                width: 1,
+                height: 1,
+            },
+            SourceRect {
+                x: u32::MAX,
+                y: 0,
+                width: 2,
+                height: 1,
+            },
+        ] {
+            frame.sprites[0].source_rect = Some(bad);
+            frame.frame = 2;
+            assert!(PreparedFrame::prepare_v2(frame.clone(), state.hello.grid, &assets).is_err());
+            assert!(
+                PreparedFrame::prepare(
+                    Frame {
+                        frame: 2,
+                        text: vec![],
+                        sprites: frame.sprites.clone()
+                    },
+                    state.hello.grid,
+                    &assets
+                )
+                .is_err()
+            );
+            assert_eq!(state.frame.as_ref().unwrap().number, 1);
+            assert!(Arc::ptr_eq(
+                &image,
+                &state.frame.as_ref().unwrap().sprites[0].image
+            ));
         }
     }
     #[test]
@@ -342,6 +491,45 @@ mod tests {
             (last.row, last.column, last.glyph, last.background),
             (4, 3, None, 0xff0000)
         );
+    }
+    #[test]
+    fn themed_ansi_backgrounds_and_literal_colours_are_preserved_even_for_spaces() {
+        use crate::color::{ANSI16, ColorSpec};
+        let text = TextLayer {
+            id: "selection".into(),
+            layer: 1000,
+            runs: vec![
+                crate::protocol::TextRun {
+                    row: 0,
+                    column: 0,
+                    text: "A ".into(),
+                    foreground: Some(ColorSpec::Ansi16 { index: 0 }),
+                    background: Some(ColorSpec::Ansi16 { index: 4 }),
+                },
+                crate::protocol::TextRun {
+                    row: 0,
+                    column: 2,
+                    text: "B".into(),
+                    foreground: Some(ColorSpec::Rgb { r: 0, g: 0, b: 128 }),
+                    background: Some(ColorSpec::Rgb { r: 1, g: 2, b: 3 }),
+                },
+                crate::protocol::TextRun {
+                    row: 0,
+                    column: 3,
+                    text: " ".into(),
+                    foreground: None,
+                    background: Some(ColorSpec::Ansi256 { index: 21 }),
+                },
+            ],
+        };
+        let cells: Vec<_> = painted_cells(&text).collect();
+        assert_eq!((cells[0].foreground, cells[0].background), (0, ANSI16[4]));
+        assert_eq!((cells[1].glyph, cells[1].background), (None, ANSI16[4]));
+        assert_eq!(
+            (cells[2].foreground, cells[2].background),
+            (0x000080, 0x010203)
+        );
+        assert_eq!((cells[3].glyph, cells[3].background), (None, 0x0000ff));
     }
     #[test]
     fn unified_plan_orders_world_sprite_ui_and_all_ties_stably() {

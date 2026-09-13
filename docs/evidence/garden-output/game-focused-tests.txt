@@ -1,0 +1,22 @@
+
+   PASS  Tests\Integration\GraphicalPlayerTest
+  ✓ it preserves terminal art alongside author-supplied directional wal… 0.02s  
+  ✓ it loads every authored player sheet through the engine sprite contract
+  ✓ it refuses all legacy calibration writes when any destination alrea… 0.05s  
+  ✓ it refuses all legacy calibration writes when any destination alrea… 0.05s  
+  ✓ it refuses all legacy calibration writes when any destination alrea… 0.06s  
+  ✓ it refuses all legacy calibration writes when any destination alrea… 0.05s  
+
+   PASS  Tests\Integration\MilestoneThreeSliceATest
+  ✓ it connects the accepted overworld gate for the active deployment a… 0.07s  
+  ✓ it ships exact reachable maps with safe spawns and conditionally ga… 0.08s  
+  ✓ it keeps the required route-check cue available from the active que… 0.01s  
+  ✓ it records the route inspection and closes the empty-reward deploym… 0.01s  
+  ✓ it uses the first-class Garden arrival asset as the only live presentation source
+  ✓ it runs the live Garden arrival trigger to its approved normal fina… 0.01s  
+  ✓ it runs the live Garden arrival trigger through legal skip to the same final state
+  ✓ it round-trips the version five post-check-in state without changin… 0.02s  
+  ✓ it keeps every later system outside the released Garden contract af… 0.01s  
+
+  Tests:    15 passed (270 assertions)
+  Duration: 0.57s

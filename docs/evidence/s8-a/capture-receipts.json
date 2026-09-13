@@ -1,0 +1,20 @@
+{
+  "clippy": {
+    "raw_path": "/tmp/ichiloto-renderer-s8-a-20260912/clippy.log",
+    "raw_sha256": "19ff6f89db5bd0c8789bf9f15324cb509c54111afb2e77649c3a5735fbab1e36",
+    "review_copy": "clippy.txt",
+    "normalization": "trailing blank lines removed"
+  },
+  "release-tests": {
+    "raw_path": "/tmp/ichiloto-renderer-s8-a-20260912/release-tests.log",
+    "raw_sha256": "edd6deccb8abf53f46af4fc22ffea0485845a3efc130293eae2d87ca2acd2f33",
+    "review_copy": "release-tests.txt",
+    "normalization": "trailing blank lines removed"
+  },
+  "release-build": {
+    "raw_path": "/tmp/ichiloto-renderer-s8-a-20260912/release-build.log",
+    "raw_sha256": "cbbfbb0c3414b8f2f4a4eb248964e3629b7993d32035cb0ac7d69fda8c4cf20b",
+    "review_copy": "release-build.txt",
+    "normalization": "trailing blank lines removed"
+  }
+}

@@ -1,0 +1,160 @@
+[
+  {
+    "source": "/tmp/ichiloto-garden-output/mirror/logs/latency.ndjson",
+    "evidence": "mirror/engine.ndjson",
+    "sha256": "97826ba8bd2941ea831ccdc51a53d348c07f0a63e1b6c3cb07bf764feac6d90d"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-renderer-mirror/summary.json",
+    "evidence": "mirror/summary.json",
+    "sha256": "2dd537a9d8088eda4ce03af8dca12462608130a4f1b6560691aa13b0a08575bf"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/mirror/probe-result.json",
+    "evidence": "mirror/probe-result.json",
+    "sha256": "3231c2363c9907af8d0b1ee9906904c73514234894ec2c7cc16f420bb8ad41f6"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/mirror/stty-before",
+    "evidence": "mirror/stty-before",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/mirror/stty-after",
+    "evidence": "mirror/stty-after",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/mirror/exit-status",
+    "evidence": "mirror/exit-status",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/buffer-only/logs/latency.ndjson",
+    "evidence": "buffer-only/engine.ndjson",
+    "sha256": "25f9c3edb49b2b63f0937ad4d1825b91141b501a8cf4ccc485df20540f7bde73"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-renderer-buffer-only/summary.json",
+    "evidence": "buffer-only/summary.json",
+    "sha256": "b0db56877f785d93dacfd541050b2c589c8cfeb230a271788db9ab0c0c7c292f"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/buffer-only/probe-result.json",
+    "evidence": "buffer-only/probe-result.json",
+    "sha256": "ac147d4beeba33cd88a3fb47f6ef1cde81a396d6d384d59960738556851af3ee"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/buffer-only/stty-before",
+    "evidence": "buffer-only/stty-before",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/buffer-only/stty-after",
+    "evidence": "buffer-only/stty-after",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/buffer-only/exit-status",
+    "evidence": "buffer-only/exit-status",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized/logs/latency.ndjson",
+    "evidence": "normalized-unconfirmed-draw/engine.ndjson",
+    "sha256": "8fbb32c2dc9f31ae39dac7ef77254d39499874004018add40b7e9cd17b80c5e8"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-renderer-normalized/summary.json",
+    "evidence": "normalized-unconfirmed-draw/summary.json",
+    "sha256": "feb3d311df8ad1209c47b1c3553615f4b66218a38517d7b6926dc36c6c4e3ec8"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized/probe-result.json",
+    "evidence": "normalized-unconfirmed-draw/probe-result.json",
+    "sha256": "d2de1c65befedc33ecdb26872923273a10e42cadbf2838ad34d1b035cef894c5"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized/stty-before",
+    "evidence": "normalized-unconfirmed-draw/stty-before",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized/stty-after",
+    "evidence": "normalized-unconfirmed-draw/stty-after",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized/exit-status",
+    "evidence": "normalized-unconfirmed-draw/exit-status",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/engine-tests-final.log",
+    "evidence": "engine-tests-final.txt",
+    "source_sha256": "2f7b574275acea877c6ea524f10dfa9a63ed9768c44254a1f2445ffe8e215b26",
+    "normalization": "Remove ANSI SGR display escapes and trailing blank lines only.",
+    "sha256": "aad7ddb85d5c567a80622e75d4152939ad59b70fa0d2cf66eccaac0ad33aa0aa"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/phpstan-final.log",
+    "evidence": "phpstan-final.txt",
+    "source_sha256": "a6b1c0e09f14fa1bdf20effbabe5fa20807fd45f519c2e2c1c4c903b3d9c79b0",
+    "normalization": "Remove ANSI SGR display escapes and trailing blank lines only.",
+    "sha256": "a4b86c9cd4ceab9dfccd0142e782c2d6bdc9f56398be2b278f5701a9284d5634"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/console-tests.log",
+    "evidence": "console-tests.txt",
+    "source_sha256": "31d2a6f6120e061bdf79884f47659fe6734f41acfb730c434f1932260c8707be",
+    "normalization": "Remove ANSI SGR display escapes and trailing blank lines only.",
+    "sha256": "31d2a6f6120e061bdf79884f47659fe6734f41acfb730c434f1932260c8707be"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized-foreground/logs/latency.ndjson",
+    "evidence": "normalized-foreground/engine.ndjson",
+    "sha256": "fb52bc7c3d6ed426e3696b0729becc067f310c4ea806da30fdb7ad295e6b10fb"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-renderer-normalized-foreground/summary.json",
+    "evidence": "normalized-foreground/summary.json",
+    "sha256": "4e1c1f1299eb8e698c154b0b27b71606eeca4d7f3b8dec5a11ba791da811e766"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-renderer-normalized-foreground-workload/summary.json",
+    "evidence": "normalized-foreground/workload-summary.json",
+    "sha256": "66e4e5c9bf5ff7095791c951d406ef50abad1fcab9a4f0da6ee12652acda57f0"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/driver.php",
+    "evidence": "normalized-foreground/gated-driver.php",
+    "sha256": "2cbca24c5dc136f61b1fa854242450404651081c18fc8d26c8f8f3ca786df861"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized-foreground/probe-result.json",
+    "evidence": "normalized-foreground/probe-result.json",
+    "sha256": "d4a49b1a7e30901420d8007ba042cb2700eb6ffa40ead1bc779fc1aa357e8961"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized-foreground/stty-before",
+    "evidence": "normalized-foreground/stty-before",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized-foreground/stty-after",
+    "evidence": "normalized-foreground/stty-after",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/normalized-foreground/exit-status",
+    "evidence": "normalized-foreground/exit-status",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+  },
+  {
+    "source": "/tmp/ichiloto-garden-output/game-focused-tests.log",
+    "evidence": "game-focused-tests.txt",
+    "source_sha256": "eb447683f3953f052e7f9217d13bb91d7285c7db9ed555589105d4f12e068187",
+    "normalization": "Remove ANSI SGR display escapes and trailing blank lines only.",
+    "sha256": "73015e3f66c7e67b803601766a50d06b483e23ae93be1d2f592e27f893a462f1"
+  }
+]

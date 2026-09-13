@@ -1,0 +1,96 @@
+
+   PASS  Tests\Unit\GameConstructorGeometryTest
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.12s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.10s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.10s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.09s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.16s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.24s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.20s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.28s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.18s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.18s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.15s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.15s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.17s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.14s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.17s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.15s  
+sh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+
+   PASS  Tests\Unit\RendererRuntimeTest
+  ✓ it opts in exactly once and shares input and presentation on one se… 0.09s  
+  ✓ it selects renderer-only game output while preserving frames and silent cleanup
+  ✓ it runs a real PHP-only peer through explicit v1 and v2 runtime lif… 0.06s  
+  ✓ it runs a real PHP-only peer through explicit v1 and v2 runtime lif… 0.06s  
+  ✓ it preserves input and shuts down once when startup fails after a child was started
+  ✓ it keeps game startup failure and cleanup from borrowing or painting the terminal
+  ✓ it services changed frame bytes before returning to the game frame…  0.08s  
+  ✓ it keeps presentation delivery bounded when a complete frame exceed… 0.06s  
+  ✓ it does not poll the transport twice just to drain already pumped lifecycle events
+  ✓ it propagates transport failures and diagnostic-bearing renderer errors with (null)
+  ✓ it propagates transport failures and diagnostic-bearing renderer errors with ('{"protocol":1,"type":"error",…mage"}')
+  ✓ it keeps native close outside input and unwinds waits persistently
+  ✓ it lets real Game quit on native close without updating gameplay or confirming
+  ✓ it keeps the Game grid fixed and restores resources on ordinary quit without touching stdin modes
+  ✓ it does not start a renderer for terminal-only Game and rejects late or repeated attachment
+  ✓ it rejects fixed-grid mismatch and never captures unfinished composition
+  ✓ it honors explicit grid dimensions even when they equal the legacy…  0.03s  
+  ✓ it honors explicit grid dimensions even when they equal the legacy…  0.02s  
+  ✓ it retains legacy terminal auto sizing when dimensions were not exp… 0.04s  
+  ✓ it presents the same field ownership from real Game renders and blo… 0.02s  
+  ✓ it keeps scenario and temporary music ownership identical during terminal and renderer waits with dataset "terminal"
+  ✓ it keeps scenario and temporary music ownership identical during terminal and renderer waits with dataset "renderer"
+  ✓ it cleans up scenario audio exactly once when native close interrupts a held field cue
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+
+   PASS  Tests\Unit\RendererLaunchTest
+  ✓ it reads normalized launch intent and preserves invalid identities…  0.05s  
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('', 'terminal')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with (' ', 'terminal')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('terminal', 'terminal')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('gpui', 'gpui')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('GPUI', 'gpui')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with (' GpUi', 'gpui')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('0', '0')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('foo', 'foo')
+  ✓ it registers exactly the stable identities and constructs GPUI through its injected resolver
+  ✓ it rejects unknown and duplicate renderer identities
+  ✓ it resolves only an executable packaged for the requested platform
+  ✓ it fails clearly for missing malformed or unusable installed manifests with (null)
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('null')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":2,"renderers":{}}')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{}}')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{"gp…ng"}}}')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{"gp…de"}}}') #1
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{"gp…th"}}}')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{"gp…de"}}}') #2
+  ✓ it rejects non-executable files and links outside the package root
+  ✓ it automatically attaches one runtime before deciding terminal input ownership
+  ✓ it keeps absent or terminal intent on the existing terminal input l… 0.02s  
+  ✓ it keeps absent or terminal intent on the existing terminal input l… 0.02s  
+  ✓ it keeps absent or terminal intent on the existing terminal input l… 0.02s  
+  ✓ it honors explicit runtime attachment without consulting even invalid launch intent with ('terminal')
+  ✓ it honors explicit runtime attachment without consulting even invalid launch intent with ('gpui')
+  ✓ it honors explicit runtime attachment without consulting even invalid launch intent with ('unknown')
+  ✓ it fails selection before touching input and never rereads a failed intent as terminal with ('gpui')
+  ✓ it fails selection before touching input and never rereads a failed intent as terminal with ('foo')
+  ✓ it fails selection before touching input and never rereads a failed intent as terminal with ('0')
+
+  Tests:    71 passed (421 assertions)
+  Duration: 3.32s

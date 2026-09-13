@@ -1,0 +1,1589 @@
+
+   PASS  Tests\Unit\AbilityBookTest
+  ✓ it sorts learned abilities in ascending and descending order         0.01s  
+  ✓ it learns a ready ability and consumes mixed unlock costs            0.01s  
+  ✓ it filters battle-usable abilities from the learned list
+
+   PASS  Tests\Unit\AccessoryTest
+  ✓ it keeps parameter changes when built from an array                  0.02s  
+  ✓ it defaults to neutral parameter changes when none are supplied
+
+   PASS  Tests\Unit\ActionExecutionStateTest
+  ✓ it builds floating damage and knockout popup lines for defeated tar… 0.01s  
+  ✓ it builds a miss popup when no visible stat changes occur
+  ✓ it builds damage Critical and elemental feedback from typed results
+  ✓ it maps restorative magic to a green cast effect
+  ✓ it maps battle actions to optional project-configured presentation sounds
+  ✓ it lets authored animation and summon audio override generic battle cues
+  ✓ it treats battle as concluded when a side has no living battlers
+  ✓ it builds typed popup lines for damaging and restorative state ticks
+  ✓ it rejects malformed stat popup lines at the battlefield boundary
+
+   PASS  Tests\Unit\ActorDefinitionTest
+  ✓ it reconstructs fixed actor naturals from project data and defaults… 0.01s  
+  ✓ it round trips a runtime-selected natural variant by identity without saving its scalars
+  ✓ it restores current resources from legacy Stats-object save payloads
+  ✓ it fails actor variant compatibility with actor variant and save context
+  ✓ it fails missing actor definitions with actor variant and save context
+
+   PASS  Tests\Unit\AnimationTest
+  ✓ it hydrates animations from arrays and preserves frame cells and cu… 0.01s  
+  ✓ it adds and removes cells and cues through the runtime model
+  ✓ it advances reusable animations non-blockingly across every elapsed frame
+  ✓ it keeps the blocking animation player compatible with shared trave… 0.05s  
+
+   PASS  Tests\Unit\AttackActionTest
+  ✓ it reduces the target hp when an attack lands                        0.02s  
+  ✓ it can miss when the target evades well                              0.26s  
+
+   PASS  Tests\Unit\AudioManagerTest
+  ✓ it builds an mpv command with volume and native looping              0.01s  
+  ✓ it builds an ffplay command with volume and native looping
+  ✓ it builds a paplay command with pulse volume units
+  ✓ it builds an afplay command with normalized volume
+  ✓ it builds an mpg123 command with scale-factor volume and looping
+  ✓ it clamps out-of-range volumes when building commands
+  ✓ it reports format support from the file extension
+  ✓ it tracks and terminates a spawned process
+  ✓ it tracks the process ID of a spawned player
+  ✓ it reports a finished process as not running                         0.06s  
+  ✓ it plays a sound effect when sound effects are enabled
+  ✓ it does not play sound effects when they are disabled
+  ✓ it caps the number of concurrent sound effects                       0.01s  
+  ✓ it starts looping background music when music is enabled
+  ✓ it prefers native looping playback for background music when available
+  ✓ it respawns looping background music when only a one-shot backend is available
+  ✓ it keeps a track pending while music is disabled and starts it once enabled
+  ✓ it stops background music when music is disabled mid-play
+  ✓ it defers a volume change on backends that cannot seek instead of restarting the track
+  ✓ it resumes at the current track position when the volume changes on a seek-capable backend
+  ✓ it folds the resume position back into the track for natively looping players
+  ✓ it defers a volume change for natively looping players when the track duration is unknown
+  ✓ it resolves tracks from the conventional assets/Audio directories without an extension
+  ✓ it silently ignores playback requests when no player is available
+  ✓ it silently ignores missing audio files
+  ✓ it terminates every tracked player process on shutdown
+  ✓ it terminates a replaced background music player when the track switches
+  ✓ it stops the players of every constructed manager via shutdownAll
+  ✓ it skips files no available backend can decode
+  ✓ it plays a system sound through its configured track
+  ✓ it switches and restores cinematic music through non-blocking authored fades
+  ✓ it preserves deterministic cinematic audio final state for continue and stop policies
+  ✓ it stays silent for a system sound the project has not configured
+[1;1H╔══════HP═════════════════MP══════╗[2;1H║  100 [■■■■■■■■■■]    10 [■■■■■] ║[3;1H║  100 [■■■■■■■■■■]    10 [■■■■■] ║[4;1H║  100 [■■■■■■■■■■]    10 [■■■■■] ║[5;1H║  100 [■■■■■■■■■■]    10 [■■■■■] ║[6;1H╚═════════════════════════════════╝
+   PASS  Tests\Unit\BattleCharacterStatusWindowTest
+  ✓ it keeps low non-zero hp and mp bars visibly filled                  0.02s  
+  ✓ it keeps zero hp and mp bars framed at a stable width
+  ✓ it aligns the hp, mp, and atb headings with the compact battle bars
+  ✓ it can retain four battlers for future four-person battle layouts
+
+   PASS  Tests\Unit\BattleCommandCatalogTest
+  ✓ it builds battle magic options from a character spellbook            0.01s  
+  ✓ it builds battle skill options from a character ability book
+  ✓ it builds battle item options from the shared field inventory
+  ✓ it preserves open summon commands for generic projects
+  ✓ it hides locked summons and exposes them only to their assigned holder
+
+   PASS  Tests\Unit\BattleCommandContextWindowTest
+  ✓ it scrolls battle submenu options when the list exceeds the viewpor… 0.01s  
+  ✓ it keeps an emoji-presented skill label inside the battle submenu width
+
+   PASS  Tests\Unit\BattleCommandOptionTest
+  ✓ it carries the skill MP cost onto the battle option                  0.01s  
+  ✓ it never reports a negative MP cost
+
+   PASS  Tests\Unit\BattleCommandTypeTest
+  ✓ it uses the default summon label without configuration
+  ✓ it renames the summon command per role from project config
+  ✓ it resolves role-specific labels back to the summon command
+  ✓ it renames the summon command game-wide from project config
+
+   PASS  Tests\Unit\BattleCommandWindowTest
+  ✓ it blinks the active command only while the command window is focused
+
+   PASS  Tests\Unit\BattleEntryRulesTest
+  ✓ it preserves current behaviour when the project has no battle entry rule file
+  ✓ it runs the Engine-only project fixture for ordinary active and boss reserve entry
+  ✓ it defaults omitted troop classification to ordinary and propagates typed classifications
+  ✓ it hydrates explicit ordinary and boss classification through troop data
+  ✓ it fails closed with the troop source when classification is unsupported
+  ✓ it keeps ordinary-only and boss-only rules in their declared classifications
+  ✓ it matches active reserve and any against the immutable entry roster
+  ✓ it applies Speed and Grace to the correct active and reserve actors
+  ✓ it does not apply an active rule to an actor who began in reserve
+  ✓ it does nothing when an ordinary world condition is false
+  ✓ it applies once and commits writes only after the temporary stage exists
+  ✓ it runs multiple valid rules by priority then declaration order
+  ✓ it advances a two-step queue by at most one entry-snapshot-eligible rule per battle
+  ✓ it runs every rule eligible in the original entry snapshot in deterministic order
+  ✓ it rejects a manually constructed non-stageable effect before any mutation
+  ✓ it reports unknown actors unknown stats and malformed deltas without mutation
+  ✓ it fails atomically when a matched rule targets an actor absent from the entry roster
+  ✓ it rolls back an earlier effect when a later effect fails
+  ✓ it does not reapply an earlier successful rule when a later rule interrupts entry
+  ✓ it rolls back temporary effects and earlier writes when a durable write callback fails
+  ✓ it rejects unsupported transactional writes with rule file and field diagnostics
+  ✓ it never serializes temporary entry stages and every terminal outcome cleans active and reserve stages with ('victory')
+  ✓ it never serializes temporary entry stages and every terminal outcome cleans active and reserve stages with ('defeat')
+  ✓ it never serializes temporary entry stages and every terminal outcome cleans active and reserve stages with ('retreat')
+  ✓ it round trips only durable queue state between eligible battles
+  ✓ it uses the same entry evaluator for random and scripted battle configurations with ('random')
+  ✓ it uses the same entry evaluator for random and scripted battle configurations with ('scripted')
+  ✓ it uses the same entry result for active-time and traditional battle settings with ('active-time')
+  ✓ it uses the same entry result for active-time and traditional battle settings with ('traditional')
+
+   PASS  Tests\Unit\BattleEscapePolicyTest
+  ✓ it keeps unauthored battles escapable
+  ✓ it removes escape from forbidden battle commands
+  ✓ it fails closed for malformed escape policies with dataset "unknown string"
+  ✓ it fails closed for malformed escape policies with dataset "empty string"
+  ✓ it fails closed for malformed escape policies with dataset "integer"
+  ✓ it fails closed for malformed escape policies with dataset "array"
+  ✓ it fails closed for malformed escape policies with dataset "boolean"
+
+   PASS  Tests\Unit\BattleGroupTest
+  ✓ it marks a party as defeated when all battlers are knocked out
+  ✓ it does not mark a party as defeated while a battler is still conscious
+  ✓ it tracks remaining equipment copies after party members equip them
+
+   PASS  Tests\Unit\BattlePacingTest
+  ✓ it uses the slow preset duration for battle messages
+  ✓ it matches the slow physical attack timing budget
+
+   PASS  Tests\Unit\BattleResultWindowTest
+  ✓ it reveals battle rewards sequentially
+
+   PASS  Tests\Unit\BattleReturnTest
+  ✓ it sends a battle back to the field it was started from
+  ✓ it sends a battle back to the arena it was started from
+  ✓ it falls back to the field when nothing recorded where the battle came from
+  ✓ it falls back to the field when the recorded scene is not registered
+
+   PASS  Tests\Unit\BattleRewardsTest
+  ✓ it drops nothing when no candidate passes its drop-rate roll
+  ✓ it drops the item when its drop rate always passes
+  ✓ it drops nothing when there are no drop candidates
+
+   PASS  Tests\Unit\BattleScreenTest
+  ✓ it styles battle selection lines with the configured highlight color
+  ✓ it can blink the active battle selection line
+  ✓ it restores the battlefield when a visible battle message is hidden
+
+   PASS  Tests\Unit\BattleSimulatorTest
+  ✓ it reports a fight the party always wins                             0.01s  
+  ✓ it reports a fight the party always loses                            0.01s  
+  ✓ it calls a fight neither side can finish a stalemate                 0.03s  
+  ✓ it leaves the party as it found it                                   0.03s  
+  ✓ it fights every run from full health                                 0.06s  
+  ✓ it reports what each member contributed                              0.18s  
+  ✓ it describes a fight worth having as a real fight
+  ✓ it runs at least one battle however few it is asked for
+  ✓ it uses the live resolver and final staged stat values for seeded previews
+
+   PASS  Tests\Unit\CameraTest
+  ✓ it centers maps that are smaller than the viewport                   0.03s  
+  ✓ it keeps large maps anchored to the viewport while scrolling
+  ✓ it uses the upper middle cell as the focus point on even viewports
+  ✓ it re-centers smaller maps after the viewport is resized
+  ✓ it detaches, clamps, focuses, restores and reattaches without duplicating camera math
+
+   PASS  Tests\Unit\CharacterRoleDisplayTest
+  ✓ it shows the assigned role throughout character information views    0.01s  
+
+   PASS  Tests\Unit\CharacterTest
+  ✓ it can create a character                                            0.01s  
+  ✓ it keeps stored HP and MP totals equipment-aware after equipping bonus gear
+  ✓ it does not zero stats at level 100 when the top curve level is missing
+  ✓ it rehydrates level curves after unserializing so level 100 stats stay non-zero
+  ✓ it recovers invalid zero-total vitals from legacy serialized character payloads
+
+   PASS  Tests\Unit\CinematicDefinitionTest
+  ✓ it discovers and hydrates original folder-based cinematic assets     0.01s  
+  ✓ it keeps stable identity independent from its display name
+  ✓ it exports one authoritative runtime and authoring vocabulary
+  ✓ it rejects authored skipping when any reachable command is irreversible with dataset "direct battle"
+  ✓ it rejects authored skipping when any reachable command is irreversible with dataset "sequence item grant"
+  ✓ it rejects authored skipping when any reachable command is irreversible with dataset "parallel gold grant"
+  ✓ it rejects authored skipping when any reachable command is irreversible with dataset "branch quest acceptance"
+  ✓ it rejects authored skipping when any reachable command is irreversible with dataset "choice recovery"
+  ✓ it rejects authored skipping when any reachable command is irreversible with dataset "cancel knowledge write"
+  ✓ it conservatively rejects Common Events inside authored-skippable cinematics
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "switch value required"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "variable add forbidden"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "event identity stable"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "integral movement"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "transfer map required"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "camera operation restricted"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "actor identity required"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "presentation payload forbidden"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "music policy complete"
+  ✓ it validates finalizer payload shapes instead of accepting type-only commands with dataset "checkpoint removed"
+  ✓ it accepts every deterministic finalizer type with a complete valid shape
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "cast must be list"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "cast entries keyed"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "finalizer must be list"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "finalizer entries keyed"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "checkpoints stable"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "checkpoints unique"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "version positive integer"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "script commands list"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "script entries keyed"
+  ✓ it fails closed on malformed cinematic list fields, versions and route steps with dataset "route steps keyed"
+  ✓ it reports malformed nested blocks with stable cinematic command paths
+  ✓ it rejects duplicate cast and unsafe or absent authored finalizers
+  ✓ it rejects empty parallel blocks and malformed cinematic fields before runtime
+
+   PASS  Tests\Unit\CinematicTextTimingPolicyTest
+  ✓ it holds narration for its visible reading time rather than a short… 0.01s  
+  ✓ it counts only visible words and honours project narration timing policy
+
+   PASS  Tests\Unit\CollisionDictionaryTest
+  ✓ it loads numeric tile glyphs after PHP normalizes their array keys…  0.01s  
+  ✓ it reports invalid dictionary entries without trying to stringify enum objects
+
+   PASS  Tests\Unit\ColoredCameraTest
+  ✓ it measures colored world rows by visible symbols                    0.01s  
+
+   PASS  Tests\Unit\CombatResolverTest
+  ✓ it applies physical and magical defence once through one diminishing family
+  ✓ it reports misses guaranteed hits criticals and guard as explicit steps
+  ✓ it distinguishes an authored guaranteed Critical from a bounded Critical chance
+  ✓ it separates requested and actual healing damage and overkill
+  ✓ it represents every elemental outcome and bounds ordinary composition
+  ✓ it aggregates ordered repeated and multi-target hits without double counting
+  ✓ it derives bounded future effects from actual action loss rather than overkill
+  ✓ it repeats declared hit effects without repeating cost or unrelated side effects
+  ✓ it drains from actual HP lost and keeps actor and victim target aggregates distinct
+  ✓ it honours declared multi-effect roll scope without merging equal-name targets
+  ✓ it matches seeded live and simulator resolution at the typed action boundary
+
+   PASS  Tests\Unit\ConditionalDialogueTest
+  ✓ it recognises a plain page list as unconditional
+  ✓ it speaks the first variant whose conditions hold
+  ✓ it carries the chosen variant's writes
+  ✓ it says nothing when every variant is gated out
+  ✓ it does not expose content guarded by an unknown condition
+  ✓ it supports a script variant as well as lines
+
+   PASS  Tests\Unit\ConsoleBufferTest
+  ✓ it uses the DEC private autowrap mode understood by terminal emulators
+  ✓ it restores autowrap before handing the terminal screen back
+  ✓ it can repaint an unchanged canonical region without repainting the screen
+  ✓ it preserves explicit region repairs through complete screen recomposition
+  ✓ it repaints every locator edge when its displayed state changes
+  ✓ it writes plain ascii rows exactly
+  ✓ it overwrites at an offset without disturbing the rest of the row
+  ✓ it formats documented Symfony named and hexadecimal colors before buffering sprites
+  ✓ it keeps column accounting correct when a wide glyph lands in an ascii row
+  ✓ it makes ambiguous item pictographs occupy their reserved terminal cells
+  ✓ it skips re-emitting a row whose content is genuinely unchanged
+  ✓ it atomically recomposes a complete screen and clears vanished rows
+  ✓ it emits only final changed rows from a complete screen recomposition
+  ✓ it replaces a menu with every row of a dense styled field            0.04s  
+  ✓ it fully repaints a new screen owner even when the canonical buffer already matches
+  ✓ it restores the authoritative screen when recomposition fails
+  ✓ it rejects complete screen recomposition inside an active frame
+  ✓ it erases a wide sprite from the row it covered
+  ✓ it batches a frame into a single terminal write
+  ✓ it emits sparse window interiors without retransmitting unchanged b… 0.01s  
+  ✓ it nests batched frames and flushes once at the outermost close
+  ✓ it coalesces repeated row paints to the final frame composition
+  ✓ it tracks window borders and content in the canonical console buffer
+  ✓ it flushes only an overlay span instead of retransmitting its style… 0.01s  
+
+   PASS  Tests\Unit\ConsoleLayerSnapshotTest
+  ✓ it excludes a named layer only from a new immutable snapshot and re… 0.02s  
+  ✓ it retains event cue and NPC underlay from the actual normal composition order
+  ✓ it preserves later overlays even when they write the identical player glyph with ('@')
+  ✓ it preserves later overlays even when they write the identical player glyph with ('X')
+  ✓ it preserves later overlays even when they write the identical player glyph with (' ')
+  ✓ it masks every cell of wide and multi-row art without moving subsequent cells
+  ✓ it restores wide underlay and protects whole glyphs touched by later overlays
+  ✓ it keeps redraw history bounded and handles overlapping named layers independently
+  ✓ it rolls back provenance when normal composition fails and clears it on successful recomposition or resize
+  ✓ it retains S4 incomplete-frame rejection and restores layer scope after exceptions
+sh: /dev/tty: Device not configured
+
+   PASS  Tests\Unit\ConsoleOutputSelectionTest
+  ✓ it keeps identical canonical cells and styled layers without termin… 0.01s  
+  ✓ it keeps recomposition rollback and balancing in buffer-only mode
+  ✓ it initializes and closes a buffer-only session without borrowing t… 0.02s  
+  ✓ it allows a later terminal session to paint normally and forbids changing a borrowed screen
+  ✓ it rejects sink changes inside an active frame without losing pending terminal paint
+
+   PASS  Tests\Unit\ConsolePartialWriteTest
+  ✓ it delivers a payload larger than the pipe buffer in full            0.01s  
+  ✓ it offers complete scene payloads to the terminal in bounded chunks
+  ✓ it drains every bounded chunk when the terminal rejects unbuffered writes
+  ✓ it prefers the dedicated terminal descriptor over the shared output wrapper
+  ✓ it clears the physical terminal through the authoritative frame descriptor
+  ✓ it keeps unbatched cursor positioning and content on one ordered descriptor
+  ✓ it routes cursor facade controls through the authoritative descriptor
+  ✓ it preserves a blocking terminal stream mode during a controlled flush
+  ✓ it preserves a non-blocking terminal stream mode during a controlled flush
+  ✓ it delivers a payload that fits in the buffer
+  ✓ it ignores empty payloads without touching the stream
+
+   PASS  Tests\Unit\ConsoleSnapshotTest
+  ✓ it snapshots empty and sparse buffers as a full fixed-size plain gr… 0.01s  
+  ✓ it strips styling only in the snapshot and leaves all Console and cursor state unchanged
+  ✓ it preserves the anchor continuation and following columns of a wide scalar with ('🐈')
+  ✓ it preserves the anchor continuation and following columns of a wide scalar with ('界')
+  ✓ it preserves the anchor continuation and following columns of a wide scalar with ('🚶')
+  ✓ it uses a one-cell fallback for multi-scalar graphemes without collapsing reserved cells with ('é', 1)
+  ✓ it uses a one-cell fallback for multi-scalar graphemes without collapsing reserved cells with ('❤️', 2)
+  ✓ it uses a one-cell fallback for multi-scalar graphemes without collapsing reserved cells with ('🗡', 2)
+  ✓ it uses a one-cell fallback for multi-scalar graphemes without collapsing reserved cells with ('❤︎', 1)
+  ✓ it sanitizes control cells without leaking protocol controls or moving subsequent columns with (Binary String: 0x00)
+  ✓ it sanitizes control cells without leaking protocol controls or moving subsequent columns with ('')
+  ✓ it sanitizes control cells without leaking protocol controls or moving subsequent columns with (' ')
+  ✓ it sanitizes control cells without leaking protocol controls or moving subsequent columns with ('\r')
+  ✓ it sanitizes control cells without leaking protocol controls or moving subsequent columns with ('')
+  ✓ it sanitizes control cells without leaking protocol controls or moving subsequent columns with ('')
+  ✓ it sanitizes control cells without leaking protocol controls or moving subsequent columns with ('')
+  ✓ it rejects corrupt rows instead of silently coercing or blanking them with (123)
+  ✓ it rejects corrupt rows instead of silently coercing or blanking them with (false)
+  ✓ it applies the scalar fallback to composite emoji after existing terminal stabilization
+  ✓ it presents canonical Console cells while suppressing terminal-only style changes
+  ✓ it rejects capture inside nested frames without changing frame depth or flushing
+  ✓ it rejects snapshots during recomposition and retains the original completed frame
+  ✓ it checks recomposition ownership independently of nested frame depth
+  ✓ it captures full-width and resized rows without changing earlier snapshots
+  ✓ it detaches caller references and forbids modifying snapshot cells or dimensions
+  ✓ it validates manually supplied snapshot geometry and text with (0, 1, [''])
+  ✓ it validates manually supplied snapshot geometry and text with (1, 0, [])
+  ✓ it validates manually supplied snapshot geometry and text with (1, 2, ['x'])
+  ✓ it validates manually supplied snapshot geometry and text with (2, 1, ['x'])
+  ✓ it validates manually supplied snapshot geometry and text with (1, 1, ['x'])
+  ✓ it validates manually supplied snapshot geometry and text with (1, 1, [''])
+  ✓ it validates manually supplied snapshot geometry and text with (1, 1, [12])
+
+   PASS  Tests\Unit\ConsoleTest
+  ✓ it floors float coordinates when writing to the console buffer       0.01s  
+  ✓ it keeps emoji writes aligned to terminal cell width
+  ✓ it keeps an explicitly presented emoji and trailing border in their cells
+  ✓ it clears a full wide glyph when overwriting its trailing cell
+  ✓ it reads terminal cells correctly after wide glyph writes
+  ✓ it parses stty terminal size output into width and height
+  ✓ it rejects invalid terminal size values during normalization
+
+   PASS  Tests\Unit\ContentSizedMenuTest
+  ✓ it grows every content-sized window when authored rows exceed its c… 0.01s  
+  ✓ it lets deliberately paginated windows retain a fixed viewport
+  ✓ it sizes the title menu for every authored command plus padding and borders
+  ✓ it applies the same content-sized contract to the game-over command menu
+
+   PASS  Tests\Unit\CurveGeneratorTest
+  ✓ it clamps parameter curve lookups to the highest generated level     0.01s  
+  ✓ it clamps experience curve lookups to the highest generated level
+
+   PASS  Tests\Unit\DebugTest
+  ✓ it writes errors to the error log even when debug mode is off
+
+   PASS  Tests\Unit\DialogueHudLayeringTest
+  ✓ it suppresses a lower HUD where an 80x24 dialogue footprint intersects it
+  ✓ it keeps a non-intersecting HUD visible on a wider layout
+  ✓ it does not flash the HUD across dialogue pages or a dialogue to choice transition
+  ✓ it recomputes intersection after a narrow resize and after widening again
+  ✓ it suppresses only intersecting lower-precedence HUD elements
+  ✓ it changes presentation only and leaves active field and dialogue state untouched
+  ✓ it keeps ordinary and motion-independent rendering unchanged without a higher layer
+  ✓ it keeps existing non-layered UI elements backward compatible under a modal
+  ✓ it treats touching edges as non-overlapping terminal footprints
+
+   PASS  Tests\Unit\DirectionalGraphicalSpriteSetTest
+  ✓ it parses the documented complete set and resolves the existing gameplay headings with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (NORTH, 'North'), 'north')
+  ✓ it parses the documented complete set and resolves the existing gameplay headings with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (EAST, 'East'), 'east')
+  ✓ it parses the documented complete set and resolves the existing gameplay headings with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (SOUTH, 'South'), 'south')
+  ✓ it parses the documented complete set and resolves the existing gameplay headings with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (WEST, 'West'), 'west')
+  ✓ it parses the documented complete set and resolves the existing gameplay headings with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (NONE, 'None'), 'south')
+  ✓ it keeps each direction independent and detaches parsed data from caller references
+  ✓ it supports direct typed construction and defaults only omitted anchor and layer
+  ✓ it rejects every missing cardinal direction rather than silently falling back with ('north')
+  ✓ it rejects every missing cardinal direction rather than silently falling back with ('east')
+  ✓ it rejects every missing cardinal direction rather than silently falling back with ('south')
+  ✓ it rejects every missing cardinal direction rather than silently falling back with ('west')
+  ✓ it rejects malformed direction entries with their direction in the diagnostic with (null)
+  ✓ it rejects malformed direction entries with their direction in the diagnostic with (false)
+  ✓ it rejects malformed direction entries with their direction in the diagnostic with ('East.png')
+  ✓ it rejects malformed direction entries with their direction in the diagnostic with (123)
+  ✓ it rejects malformed direction entries with their direction in the diagnostic with ([])
+  ✓ it rejects malformed direction entries with their direction in the diagnostic with (['East.png'])
+  ✓ it validates authored types values and field names without coercion with ('asset', 123)
+  ✓ it validates authored types values and field names without coercion with ('asset', null)
+  ✓ it validates authored types values and field names without coercion with ('asset', '../West.png')
+  ✓ it validates authored types values and field names without coercion with ('width', '32')
+  ✓ it validates authored types values and field names without coercion with ('width', 32.0)
+  ✓ it validates authored types values and field names without coercion with ('width', null)
+  ✓ it validates authored types values and field names without coercion with ('width', 0)
+  ✓ it validates authored types values and field names without coercion with ('height', false)
+  ✓ it validates authored types values and field names without coercion with ('height', 4097)
+  ✓ it validates authored types values and field names without coercion with ('anchor', null)
+  ✓ it validates authored types values and field names without coercion with ('anchor', Ichiloto\Engine\Rendering\Presentation\PresentationSpriteAnchor Enum (BOTTOM_CENTER, 'bottom_center'))
+  ✓ it validates authored types values and field names without coercion with ('anchor', 'top_left')
+  ✓ it validates authored types values and field names without coercion with ('layer', '100')
+  ✓ it validates authored types values and field names without coercion with ('layer', null)
+  ✓ it validates authored types values and field names without coercion with ('layer', 2147483648)
+  ✓ it validates authored types values and field names without coercion with ('layer', -2147483649)
+  ✓ it validates authored types values and field names without coercion with ('widht', 32)
+  ✓ it rejects unrecognized directions instead of ignoring configuration typos
+
+   PASS  Tests\Unit\ElementalGearTest
+  ✓ it is neutral to every element in plain clothes                      0.01s  
+  ✓ it halves an element a warding piece resists
+  ✓ it multiplies stacked wards
+  ✓ it keeps absorbing once anything absorbs
+  ✓ it lets a null piece nullify even an absorb
+  ✓ it reads affinities without caring about case
+  ✓ it scales incoming damage and heals on absorb
+  ✓ it imbues basic attacks with the weapon element
+  ✓ it attacks neutrally with a plain weapon
+  ✓ it lands a weapon element on an enemy weakness in a real basic attack
+  ✓ it preserves canonical weapon elements and defensive affinities through hydration and cloning
+  ✓ it rejects unknown elements and malformed affinity factors
+  ✓ it accepts a project-owned canonical element vocabulary
+
+   PASS  Tests\Unit\EnemyActionEvaluatorTest
+  ✓ it always-conditions always hold                                     0.01s  
+  ✓ it gates on turn number with and without an interval
+  ✓ it gates on the enemy HP percentage
+  ✓ it gates on afflicted states and party level
+  ✓ it drops patterns the enemy cannot afford
+  ✓ it passes world switches through action selection
+  ✓ it keeps only patterns rated within two of the best
+
+   WARN  Tests\Unit\EnemyTest
+  - it can create an enemy                                               0.01s  
+
+   PASS  Tests\Unit\EquipmentOptimizationTest
+  ✓ it rates equipment by the sum of its parameter changes
+  ✓ it returns the better rated of two equipment entries
+  ✓ it optimizes each slot with the best-rated compatible equipment
+  ✓ it does not optimize with equipment already worn by another party member
+  ✓ it does not assign a single armor copy to more than one slot during optimization
+  ✓ it reclaims its own equipped gear when re-optimizing
+  ✓ it clears all equipment slots
+  ✓ it selects the same sidegrades differently under declared role policies
+  ✓ it lets semantic-slot policy override base stat priorities
+  ✓ it scores bounded accuracy critical elemental and typed-special outcomes only when declared
+  ✓ it excludes project-controlled equipment from automatic selection
+  ✓ it breaks declared-policy ties by stable definition id
+  ✓ it preserves role equipment restrictions while optimizing
+
+   PASS  Tests\Unit\EquipmentRestrictionTest
+  ✓ it resolves authored equipment type names
+  ✓ it allows every type when a role lists none
+  ✓ it restricts a role to its listed types
+  ✓ it gates canEquip on the role restriction
+  ✓ it carries the type through armor hydration
+[1;1H████████[2;1H████████[3;1H████████[1;1H▓▓▓▓▓▓▓▓[2;1H▓▓▓▓▓▓▓▓[3;1H▓▓▓▓▓▓▓▓[1;1H▒▒▒▒▒▒▒▒[2;1H▒▒▒▒▒▒▒▒[3;1H▒▒▒▒▒▒▒▒[1;1H░░░░░░░░[2;1H░░░░░░░░[3;1H░░░░░░░░[1;1H████████[2;1H████████[3;1H████████[1;1H▓▓▓▓▓▓▓▓[2;1H▓▓▓▓▓▓▓▓[3;1H▓▓▓▓▓▓▓▓[1;1H▒▒▒▒▒▒▒▒[2;1H▒▒▒▒▒▒▒▒[3;1H▒▒▒▒▒▒▒▒[1;1H░░░░░░░░[2;1H░░░░░░░░[3;1H░░░░░░░░[1;1H▒▒▒▒▒▒▒▒[2;1H▒▒▒▒▒▒▒▒[3;1H▒▒▒▒▒▒▒▒[1;1H▓▓▓▓▓▓▓▓[2;1H▓▓▓▓▓▓▓▓[3;1H▓▓▓▓▓▓▓▓[1;1H████████[2;1H████████[3;1H████████[1;1H▓▓▓▓▓▓▓▓[2;1H▓▓▓▓▓▓▓▓[3;1H▓▓▓▓▓▓▓▓[1;1H▒▒▒▒▒▒▒▒[2;1H▒▒▒▒▒▒▒▒[3;1H▒▒▒▒▒▒▒▒[1;1H░░░░░░░░[2;1H░░░░░░░░[3;1H░░░░░░░░
+   PASS  Tests\Unit\EventInterpreterContinuationTest
+  ✓ it grants catalog items by name and requested quantity
+  ✓ it keeps immediate scripts compatible and completes once
+  ✓ it routes generic knowledge commands through the shared progress service and fails closed when malformed
+  ✓ it recovers every travelling member without changing roster order
+  ✓ it fails closed on an unknown top-level command and permits a corrected trigger retry
+  ✓ it propagates unknown commands out of nested branch arms before parent commands with dataset "then arm"
+  ✓ it propagates unknown commands out of nested branch arms before parent commands with dataset "else arm"
+  ✓ it propagates an unknown choice-arm command before later arm and parent commands
+  ✓ it yields waits without blocking and retains a nested branch frame
+  ✓ it keeps cinematic narration visible for the global reading-time floor
+  ✓ it centres title card copy while leaving narration copy left aligned
+  ✓ it resumes dialogue and choices on later ticks
+  ✓ it runs an authored choice cancellation arm without selecting an option
+  ✓ it prevents trigger re-entry and applies one-shot completion writes once
+  ✓ it runs exit cleanup after a one-shot action trigger completes in place
+  ✓ it renders an authored event cue only while its trigger is available and incomplete
+  ✓ it delegates a camera-scrolling step to the complete field compositor
+  ✓ it restores authored event cues after an ordinary player step
+  ✓ it preserves event cues in the no-FieldState camera-scroll fallback
+  ✓ it can gate a cue without disabling its trigger interaction
+  ✓ it retires map-owned action state when event triggers are replaced
+  ✓ it fails closed when a prompted script trigger becomes unavailable before execution
+  ✓ it rejects unavailable field gates before movement advances any field state
+  ✓ it lets a loaded player already inside a newly locked event area move out
+  ✓ it starts an automatic script at the initial field position
+  ✓ it defers NPC conversation writes and prevents duplicate rewards while its script is active
+  ✓ it executes player and stable-id NPC routes step by step including facing
+  ✓ it fails a blocked route immediately with map and attempted position context
+  ✓ it fails malformed or parallel route data safely when validation was skipped
+  ✓ it resumes after an in-script transfer and defers transfer autosave until completion
+  ✓ it runs destination automatic triggers after the transfer session finishes
+  ✓ it blocks manual saves and quicksaves while a session is unstable
+  ✓ it suspends for battle and resumes later commands with an optional result variable
+  ✓ it runs the complete technical continuation route and saves its stable completion through IED1
+  ✓ it keeps normal defeat as game over unless continuation is explicitly authored
+  ✓ it retains exactly three active battlers from a larger travelling roster
+  ✓ it advances nested parallel lanes deterministically with lane-local pending state
+  ✓ it handles empty sequential blocks and fails malformed parallel blocks when validation is skipped
+  ✓ it cancels sibling lane operations when one parallel lane fails
+  ✓ it continues staged movement while a parallel dialogue lane owns presentation
+  ✓ it runs the original cinematic fixture to deterministic cleanup and save availability
+  ✓ it uses the same authored finalizer for skips before and after transfer with dataset "before movement"
+  ✓ it uses the same authored finalizer for skips before and after transfer with dataset "during camera, movement, and narration"
+  ✓ it uses the same authored finalizer for skips before and after transfer with dataset "after transfer"
+  ✓ it launches a stable cinematic id from an action trigger and completes after transfer
+  ✓ it completes reusable automatic cinematic triggers through the authored skip path
+  ✓ it preserves field conditions, blocked movement and cues for cinematic triggers
+  ✓ it fails cinematic triggers closed without completion writes and permits a retry
+  ✓ it rejects missing malformed unresolved and concurrently owned cinematic launches
+  ✓ it skips safely during dialogue and rejects authored skipping across a battle boundary
+  ✓ it does not let a second skip cancel an active authored finalizer
+  ✓ it uses cinematic transition coverage without the legacy blocking transfer transition with dataset "normal motion"
+  ✓ it uses cinematic transition coverage without the legacy blocking transfer transition with dataset "reduced motion"
+  ✓ it retains configured transfer transitions for ordinary event scripts
+  ✓ it restores camera input and staged cast after controlled cinematic failure
+  ✓ it composes common events inside a cinematic lane and propagates nested failure context
+  ✓ it fails closed when a cinematic Common Event contains malformed command entries
+  ✓ it pans, tracks moving staged subjects, shakes within bounds and resets the camera
+  ✓ it applies cinematic motion final states immediately when reduced motion is enabled
+  ✓ it uses safe deterministic staged-actor visibility and collision defaults
+  ✓ it enforces and diagnoses the complete staged-actor collision policy
+
+   PASS  Tests\Unit\ExperienceAwarderTest
+  ✓ it grants every crossed role skill and reports magic separately      0.01s  
+  ✓ it preserves current resources when an experience award does not level up
+  ✓ it awards the full travelling roster and reconciles idempotently
+
+   PASS  Tests\Unit\FieldMusicTest
+  ✓ it keeps a scenario across differently scored interiors, exteriors…  0.01s  
+  ✓ it starts and ends a scenario without requiring a transfer or player movement
+  ✓ it resolves highest priority first with stable ties and exact map scopes
+  ✓ it allows deliberate scenario silence and falls back to the next eligible scenario
+  ✓ it re-evaluates ordinary map variants without a transfer
+  ✓ it does not inherit a mission theme as the default of an autoplay-off map
+  ✓ it releases a mission to silence if no map ever supplied a default
+  ✓ it preserves legacy event music when entering an autoplay-off map
+  ✓ it lets battle, victory and title own music and restores the live scenario on return
+  ✓ it holds rest music through state changes and nested temporary scopes
+  ✓ it preserves cinematic ownership across map transfers, fades and a battle return with ('complete')
+  ✓ it preserves cinematic ownership across map transfers, fades and a battle return with ('skip')
+  ✓ it preserves cinematic ownership across map transfers, fades and a battle return with ('failure')
+  ✓ it preserves explicit cinematic stop or continue when the underlying field did not change with ('stop', null)
+  ✓ it preserves explicit cinematic stop or continue when the underlying field did not change with ('continue', 'cue')
+  ✓ it reconstructs conditional music from saved world state without saving playback objects
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "not a list"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "not a rule"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "missing identity"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "missing track"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "blank track"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "duplicate identity"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "priority string"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "unknown field"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "condition string"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "unknown condition"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "blank condition name"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "invalid quest status"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "invalid maps"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "empty maps"
+  ✓ it rejects malformed rules rather than silently activating an override with dataset "wildcard maps"
+
+   PASS  Tests\Unit\FieldSkillExecutorTest
+  ✓ it requires an explicit target for one-ally field magic without spe… 0.01s  
+  ✓ it heals the selected ally and charges the spell cost exactly once
+  ✓ it refunds MP when the selected target cannot benefit from the spell
+  ✓ it applies all-ally magic to every eligible party member for one cost
+  ✓ it supports user-scoped recovery without a target prompt
+  ✓ it filters targets by alive and dead scope status
+  ✓ it rejects battle-only, enemy-scoped and effectless field requests without spending MP
+  ✓ it supports authored random ally counts without selecting the same target twice
+
+   PASS  Tests\Unit\FoundationStatLayerTest
+  ✓ it stacks inventory by stable definition id rather than mutable dis… 0.01s  
+  ✓ it keeps broad armor classes out of the wrong semantic slot
+  ✓ it grants permanent growth idempotently and rejects conflicting id reuse
+  ✓ it exposes every stat layer cap loss and headroom
+  ✓ it keeps the shared stat container wide enough for the explicit enemy policy
+  ✓ it preserves current resources and zero through growth class and equipment recalculation
+  ✓ it round trips acquired growth while keeping equipment out of the ledger
+  ✓ it keeps fixed actor-natural definitions out of mutable save payloads
+  ✓ it persists inventory by definition id and genuine mutable state only
+  ✓ it returns safe catalogue instances rather than mutable singletons
+
+   PASS  Tests\Unit\GameConstructorGeometryTest
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.09s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.08s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.08s  
+  ✓ it resolves real Game constructor geometry without mistaking inject… 0.08s  
+
+   PASS  Tests\Unit\GameErrorHandlingTest
+  ✓ it respects PHP warning suppression without hiding reportable game…  0.07s  
+  ✓ it respects PHP warning suppression without hiding reportable game…  0.06s  
+  ✓ it respects PHP warning suppression without hiding reportable game…  0.06s  
+
+   PASS  Tests\Unit\GameStateTest
+  ✓ it stores and reads switches with a false default                    0.01s  
+  ✓ it stores and reads variables with defaults and addition
+  ✓ it records story events idempotently
+  ✓ it tracks one-shot event completion per map and marker
+  ✓ it round-trips through toArray and fromArray
+  ✓ it treats triggers without conditions or binding as available
+  ✓ it gates triggers on switches, events, and variables
+  ✓ it supports negated conditions
+  ✓ it gates triggers on party items
+  ✓ it applies completion writes to the world state
+  ✓ it persists one-shot completion by map and marker
+  ✓ it does not persist completion for reusable triggers
+  ✓ it restores completion without re-applying writes
+  ✓ it builds triggers with conditions, sets, and identity through the factory
+  ✓ it rejects event cues that cannot occupy one terminal cell
+  ✓ it rejects event cue colors outside Symfony Console syntax
+
+   PASS  Tests\Unit\GraphicalSpriteDefinitionTest
+  ✓ it holds only immutable sprite intent without reading assets or sto… 0.01s  
+  ✓ it accepts portable UTF-8 asset names and the full supported geometry range with ('Hero.png', 1, 4096, …)
+  ✓ it accepts portable UTF-8 asset names and the full supported geometry range with ('Graphics/Héro art', 4096, 1, …)
+  ✓ it accepts portable UTF-8 asset names and the full supported geometry range with ('Graphics/like..but-not-traversal.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('/Hero.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('//server/Hero.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('C:/Hero.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('C:Hero.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Graphics\Hero.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('https://example.com/Hero.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('data:image/png;base64,abc', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('../Hero.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Graphics/../Hero.png', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Graphics/..', 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with (Binary String: 0x4865726f002e706e67, 32, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Hero.png', 0, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Hero.png', -1, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Hero.png', 4097, 48, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Hero.png', 32, 0, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Hero.png', 32, -1, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Hero.png', 32, 4097, …)
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Hero.png', 32, 48, …) #1
+  ✓ it keeps graphical definitions and S4 presentation under the same structural validation with ('Hero.png', 32, 48, …) #2
+
+   PASS  Tests\Unit\GraphicalSpriteProjectorTest
+  ✓ it stops at an absent definition without asking for identity positi… 0.02s  
+  ✓ it uses the supplied Camera transform for any provider rather than reproducing its formula
+  ✓ it inherits real Camera centering and viewport resizing
+  ✓ it inherits scrolling without mutating provider or Camera state or filtering off-grid cells
+  ✓ it uses the same finite fractional-to-cell truncation as terminal Camera rendering
+  ✓ it rejects invalid projected ranges before a float can wrap into a protocol cell with ('x', NAN)
+  ✓ it rejects invalid projected ranges before a float can wrap into a protocol cell with ('y', NAN)
+  ✓ it rejects invalid projected ranges before a float can wrap into a protocol cell with ('x', INF)
+  ✓ it rejects invalid projected ranges before a float can wrap into a protocol cell with ('y', -INF)
+  ✓ it rejects invalid projected ranges before a float can wrap into a protocol cell with ('x', 2147483648.0)
+  ✓ it rejects invalid projected ranges before a float can wrap into a protocol cell with ('y', -2147483649.0)
+  ✓ it rejects invalid projected ranges before a float can wrap into a protocol cell with ('x', 1.0E+30)
+  ✓ it rejects invalid projected ranges before a float can wrap into a protocol cell with ('y', -1.0E+30)
+
+   PASS  Tests\Unit\InputBindingsTest
+  ✓ it lists the rebindable actions with their keys                      0.01s  
+  ✓ it rebinds an action immediately and writes it back
+  ✓ it uses rebound directional actions for virtual axes
+  ✓ it refuses to rebind the way out of a screen
+  ✓ it reports an unknown action rather than inventing a binding
+  ✓ it keeps a key that drives more than one action
+  ✓ it describes an action with nothing bound to it
+
+   PASS  Tests\Unit\InputLatencyTest
+  ✓ it measures FIFO backlog without discarding repeats or deliberate t… 0.01s  
+  ✓ it measures FIFO backlog without discarding repeats or deliberate taps with dataset "discrete confirm behind directional traffic"
+  ✓ it measures FIFO backlog without discarding repeats or deliberate taps with dataset "bindings stay ordered"
+  ✓ it retains terminal FIFO and current previous semantics under the s… 0.01s  
+  ✓ it correlates a real process event from parsing through keyboard di… 0.05s  
+  ✓ it queues a changed styled frame in the input iteration and suppres… 0.01s  
+  ✓ it does not read a diagnostic clock when disabled
+
+   PASS  Tests\Unit\InputManagerTest
+  ✓ it carries expanded v2 identities through the client source manager… 0.02s  
+  ✓ it carries expanded v2 identities through the client source manager and case-sensitive PHP bindings with ('C', 'c')
+  ✓ it carries expanded v2 identities through the client source manager and case-sensitive PHP bindings with ('m', 'M')
+  ✓ it carries expanded v2 identities through the client source manager and case-sensitive PHP bindings with ('M', 'm')
+  ✓ it carries expanded v2 identities through the client source manager and case-sensitive PHP bindings with ('t', 'T')
+  ✓ it carries expanded v2 identities through the client source manager and case-sensitive PHP bindings with ('T', 't')
+  ✓ it carries expanded v2 identities through the client source manager and case-sensitive PHP bindings with ('tab', 'shift_tab')
+  ✓ it carries expanded v2 identities through the client source manager and case-sensitive PHP bindings with ('shift_tab', 'tab')
+  ✓ it carries expanded v2 identities through the client source manager and case-sensitive PHP bindings with ('f5', 'f4')
+  ✓ it maps macOS home and end escape sequences                          0.01s  
+  ✓ it preserves the existing VT100 key mappings used on Linux terminal… 0.02s  
+  ✓ it maps carriage return to enter
+  ✓ it treats an empty non-blocking stream as no input
+  ✓ it consumes only one key sequence per poll and buffers the remaining bytes
+  ✓ it defaults to terminal input and preserves explicit source installation across init
+  ✓ it keeps pressed, down, repeat, release, and any-key semantics source independent
+  ✓ it normalizes special-key pressed queries consistently with key-down queries
+  ✓ it preserves edge-triggered project bindings and case-sensitive axes
+  ✓ it dispatches normalized keyboard events including repeated keys
+  ✓ it clears current and previous state on source switching without draining the new source
+  ✓ it delegates reset flags and clears both normalized key states with (false)
+  ✓ it delegates reset flags and clears both normalized key states with (true)
+  ✓ it feeds renderer keys into the unchanged Input facade and PHP bindings with ('up', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (UP, 'up'), Ichiloto\Engine\IO\Enumerations\AxisName Enum (VERTICAL, 'Vertical'), …)
+  ✓ it feeds renderer keys into the unchanged Input facade and PHP bindings with ('w', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (w, 'w'), Ichiloto\Engine\IO\Enumerations\AxisName Enum (VERTICAL, 'Vertical'), …)
+  ✓ it feeds renderer keys into the unchanged Input facade and PHP bindings with ('a', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (a, 'a'), Ichiloto\Engine\IO\Enumerations\AxisName Enum (HORIZONTAL, 'Horizontal'), …)
+  ✓ it feeds renderer keys into the unchanged Input facade and PHP bindings with ('enter', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (ENTER, 'enter'), Ichiloto\Engine\IO\Enumerations\AxisName Enum (VERTICAL, 'Vertical'), …)
+
+   PASS  Tests\Unit\InventoryTest
+  ✓ it removes one unit from a stack instead of deleting the whole stac… 0.02s  
+  ✓ it removes the stack only once its quantity reaches zero
+  ✓ it keeps processing the remaining items after removing from one stack
+  ✓ it ignores removals of items that are not in the inventory
+
+   PASS  Tests\Unit\ItemConsumptionTest
+  ✓ it marks items consumable by default                                 0.01s  
+  ✓ it honours an explicit non-consumable item
+  ✓ it keeps equipment non-consumable
+  ✓ it reduces the party stock when a battler uses an item in battle
+  ✓ it drops the stack from the inventory once the last one is used in battle
+  ✓ it does nothing when the stack is already empty
+  ✓ it never consumes a non-consumable item in battle
+  ✓ it still decrements when the action has no inventory to consume through
+  ✓ it does not consume stock when the user is knocked out
+
+   PASS  Tests\Unit\ItemStoreTest
+  ✓ it loads clones so party items never alias the catalog singletons    0.01s  
+  ✓ it instantiates runtime item grants by stable catalog name
+  ✓ it resolves stable id current display name and declared alias to one owned definition
+  ✓ it fails unknown inventory references with the consumer context
+
+   PASS  Tests\Unit\KnowledgeProgressTest
+  ✓ it validates project-owned subjects variants noncombat records and…  0.01s  
+  ✓ it rejects malformed identities unresolved references and private author truth
+  ✓ it uses one service for battle discovery noncombat observations reports and outcomes
+  ✓ it round-trips bounded stable progress without authored display text or hidden denominators
+  ✓ it withdraws an unlocked report through the shared operation boundary
+  ✓ it keeps the historical Bestiary API as a view over stable knowledge progress
+
+   PASS  Tests\Unit\MagicMenuTargetingTest
+  ✓ it opens one-ally target selection before spending MP or applying e… 0.01s  
+  ✓ it commits the selected target through the field-skill executor
+  ✓ it cancels target selection without changing party resources
+
+   PASS  Tests\Unit\MainMenuSettingsManagerTest
+  ✓ it updates and persists the selection color for menus and battle     0.01s  
+  ✓ it updates dialogue speed on both supported config paths
+  ✓ it updates notification duration without leaving the field
+  ✓ it toggles music and sfx from the in-game config menu
+  ✓ it adjusts master volume without leaving the field
+  ✓ it shows the nearest step for a volume the project set off-step
+
+   PASS  Tests\Unit\MapManagerSplitMapTest
+  ✓ it isolates authored map variables from split-map loader state       0.01s  
+
+   PASS  Tests\Unit\MapStateTest
+  ✓ it draws each place where it actually is                             0.01s  
+  ✓ it names only the places the party has been to
+  ✓ it leaves out what the party has no way of knowing about
+  ✓ it draws the doors between the places
+  ✓ it draws a compass so the layout reads as a map
+  ✓ it says so plainly when the player is somewhere off the map
+  ✓ it draws nothing wider than the panel it was given
+
+   PASS  Tests\Unit\MenuHighlightingTest
+  ✓ it highlights the active main-menu entry                             0.01s  
+  ✓ it highlights the active shop command entry
+  ✓ it highlights the active shop item entry
+  ✓ it highlights character records while keeping their window chrome neutral
+
+   PASS  Tests\Unit\MessageCatalogTest
+  ✓ it substitutes positional placeholders                               0.01s  
+  ✓ it leaves unmatched placeholders untouched
+  ✓ it returns the message unchanged when there is nothing to substitute
+  ✓ it replaces double-digit placeholders before single-digit ones
+  ✓ it accepts numeric arguments
+  ✓ it falls back to the default when no project config is loaded
+[?7h[?25h[?12h[?7h[?25h[?12h[1;1H        [2;1H        [3;1H        
+   PASS  Tests\Unit\ModalFieldRestorationTest
+  ✓ it erases a blocking modal before resuming and redrawing the scene   0.01s  
+  ✓ it restores the field after non-blocking story dialogue is dismissed
+  ✓ it composites map NPCs player and HUD on every field restoration
+  ✓ it recomposites every field layer after the camera scrolls
+  ✓ it rebuilds dynamic field layers once when world state makes them dirty
+
+   PASS  Tests\Unit\ModalHighlightingTest
+  ✓ it uses the configured selection color for modal buttons             0.01s  
+  ✓ it uses the configured selection color for select modal options
+[?7h[?25h[?12h[?7h[?25h[?12h[?7h[?25h[?12h[?7h[?25h[?12h[?7h[?25h[?12h[?7h[?25h[?12h[?7h[?25h[?12h[?7h[?25h[?12h
+   PASS  Tests\Unit\ModalLifecycleTest
+  ✓ it erases the centered alert footprint rather than an obsolete orig… 0.01s  
+  ✓ it renders every row of a wrapped alert over an existing field frame
+  ✓ it composes a blocking modal after lower live layers update          0.03s  
+  ✓ it does not redraw a modal after input dismisses it in the same frame
+  ✓ it uses the same buffered footprint for select modal rendering and erasure
+  ✓ it retains authored dialogue placement while sharing buffered erasure
+  ✓ it measures wrapped dialogue before bottom anchoring it inside the screen
+  ✓ it paginates dialogue that cannot fit its bounded text box
+  ✓ it grows a window footprint before rendering content beyond its authored minimum
+  ✓ it erases the complete authoritative footprint after a window grows
+
+   PASS  Tests\Unit\ModalWrappingTest
+  ✓ it wraps a message too long for the box instead of cutting it off    0.01s  
+  ✓ it grows the box to hold every wrapped line
+  ✓ it renders the tail of the message that used to be clipped
+  ✓ it places each wrapped line on its own row
+  ✓ it keeps authored line breaks as their own lines
+  ✓ it leaves a message that already fits alone
+  ✓ it breaks a word longer than the box rather than overflowing it
+  ✓ it wraps a select modal prompt and grows it to fit
+  ✓ it wraps typed dialogue to the window content width without clipping an edge character
+  ✓ it derives usable window width from borders and configured padding
+
+   PASS  Tests\Unit\NotificationTest
+  ✓ it slides notifications using the configured entry and exit directi… 0.01s  
+  ✓ it starts fully off-screen when sliding in from the right
+  ✓ it resumes the scene only after an animated notification is fully erased
+  ✓ it renders and erases notifications through the canonical console buffer
+
+   PASS  Tests\Unit\NotificationTimingPolicyTest
+  ✓ it uses the standard notification timing profile by default          0.01s  
+  ✓ it applies project timing overrides and the player duration scale globally
+  ✓ it suppresses notification slides when reduced motion is enabled
+
+   PASS  Tests\Unit\PartyTest
+  ✓ it swaps party members and updates the leader order                  0.01s  
+  ✓ it throws when asked to swap an invalid party slot
+  ✓ it hydrates members from an array without treating the location entry as a member
+  ✓ it falls back to living party members when the frontline is fully knocked out
+
+   PASS  Tests\Unit\PlayerActionStateTest
+  ✓ it keeps authored enemy formations out of the player-party render z… 0.01s  
+  ✓ it queues the player action against the selected target and keeps a queued target marker visible
+  ✓ it shows helpful info for the focused battle command and submenu option
+  ✓ it returns control to the active-time flow when there is no enemy phase to hand to
+  ✓ it advances active-time rounds whenever the flow cycles
+  ✓ it queues Guard immediately for a ready active-time battler
+  ✓ it queues an authored enemy action in active-time battles
+
+   PASS  Tests\Unit\PlayerGraphicalSpriteTest
+  ✓ it keeps existing constructor calls terminal-only without adding th… 0.01s  
+  ✓ it preserves terminal configuration and resolves graphical art from the existing heading with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (NORTH, 'North'), 'north')
+  ✓ it preserves terminal configuration and resolves graphical art from the existing heading with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (EAST, 'East'), 'east')
+  ✓ it preserves terminal configuration and resolves graphical art from the existing heading with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (SOUTH, 'South'), 'south')
+  ✓ it preserves terminal configuration and resolves graphical art from the existing heading with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (WEST, 'West'), 'west')
+  ✓ it preserves terminal configuration and resolves graphical art from the existing heading with (Ichiloto\Engine\Core\Enumerations\MovementHeading Enum (NONE, 'None'), 'south')
+  ✓ it uses south for NONE and changes direction without moving or maintaining graphical-facing state
+  ✓ it returns a defensive logical position independent of terminal widths overhang and Camera state with (['@'])
+  ✓ it returns a defensive logical position independent of terminal widths overhang and Camera state with (['🚶'])
+  ✓ it returns a defensive logical position independent of terminal widths overhang and Camera state with (['<---wide--->', 'second row'])
+  ✓ it projects without changing Player Camera Console cursor output or transport state
+  ✓ it presents a real Player through the shared client with immutable frames and duplicate suppression
+  ✓ it observes a real blocked move as changed facing and unchanged graphical position
+
+   PASS  Tests\Unit\PlayerPresentationConfigTest
+  ✓ it shares project loading with new-game terminal art and treats abs… 0.01s  
+  ✓ it loads current project art for new and restored Players without serializing graphical data
+  ✓ it loads sheet presentation for new and restored players without modifying terminal art or saves
+  ✓ it animates only successful player steps and rests on blocked movement or facing changes
+  ✓ it fails clearly on malformed optional project graphical configuration with (null)
+  ✓ it fails clearly on malformed optional project graphical configuration with (false)
+  ✓ it fails clearly on malformed optional project graphical configuration with ('sprite.png')
+  ✓ it fails clearly on malformed optional project graphical configuration with ([])
+  ✓ it fails clearly on malformed optional project graphical configuration with ([[]])
+  ✓ it collects only the active field Player and never overlays unrelated scenes or menus
+  ✓ it defaults to v2 world sprite and opaque above-sprite prompt composition
+  ✓ it composes real field Player movement facing masking and duplicate detection in the runtime
+  ✓ it keeps the graphical Player during an ordinary dialogue event without admitting menu overlays
+
+   PASS  Tests\Unit\PlayerRenderAlignmentTest
+  ✓ it anchors every sprite to its own tile regardless of width          0.01s  
+  ✓ it erases the full width a wide sprite covers
+  ✓ it measures the same width the console will advance
+
+   PASS  Tests\Unit\PlayerSpriteFacingTest
+  ✓ it keeps all four directional sprites distinct                       0.01s  
+  ✓ it resolves each unambiguous heading from its own sprite
+  ✓ it keeps composite sprites distinct on terminals that cannot compose them
+  ✓ it still reports genuinely duplicated sprites
+  ✓ it never collapses a composite sprite into another direction when stabilizing
+  ✓ it measures every directional sprite as a stable two columns
+  ✓ it spawns facing the heading its map names
+  ✓ it still accepts spawn data that spells out the art
+
+   PASS  Tests\Unit\PlayerSpriteSetTest
+  ✓ it keeps plain ascii sprites untouched                               0.01s  
+  ✓ it keeps single-code-point emoji sprites untouched
+  ✓ it keeps base plus variation selector sprites untouched
+  ✓ it strips skin-tone modifiers from sprites
+  ✓ it reduces zwj sequences to their base glyph
+  ✓ it resolves headings for sanitized sprites
+  ✓ it preserves composite emoji sprites when the project opts in
+  ✓ it keeps east and west distinguishable with the composite emoji opt-in
+  ✓ it sanitizes composite emoji without the opt-in
+  ✓ it resolves a named heading to the configured sprite
+  ✓ it reads a heading out of spawn data that names one
+  ✓ it treats sprite art as art, never as a heading name
+  ✓ it resolves a heading from spawn data that names it
+
+   PASS  Tests\Unit\PresentationFrameTest
+  ✓ it encodes typed text and sprites using the existing FRAME envelope  0.01s  
+  ✓ it allows empty atomic replacements and PHP integer frame limits
+  ✓ it orders sprites by layer and preserves author order for ties
+  ✓ it rejects invalid sprite structure without filesystem access with (['']) #1
+  ✓ it rejects invalid sprite structure without filesystem access with ([Binary String: 0x626164006964])
+  ✓ it rejects invalid sprite structure without filesystem access with (['']) #2
+  ✓ it rejects invalid sprite structure without filesystem access with (['/tmp/test.png'])
+  ✓ it rejects invalid sprite structure without filesystem access with (['C:/test.png'])
+  ✓ it rejects invalid sprite structure without filesystem access with (['C:test.png'])
+  ✓ it rejects invalid sprite structure without filesystem access with (['\server\test.png'])
+  ✓ it rejects invalid sprite structure without filesystem access with (['../test.png'])
+  ✓ it rejects invalid sprite structure without filesystem access with (['sub/../test.png'])
+  ✓ it rejects invalid sprite structure without filesystem access with (['sub\..\test.png'])
+  ✓ it rejects invalid sprite structure without filesystem access with ([Binary String: 0x626164002e706e67])
+  ✓ it rejects invalid sprite structure without filesystem access with (['https://example.com/test.png'])
+  ✓ it rejects invalid sprite structure without filesystem access with ([0])
+  ✓ it rejects invalid sprite structure without filesystem access with ([-1])
+  ✓ it rejects invalid sprite structure without filesystem access with ([4097]) #1
+  ✓ it rejects invalid sprite structure without filesystem access with ([4097]) #2
+  ✓ it rejects invalid sprite structure without filesystem access with ([2147483648]) #1
+  ✓ it rejects invalid sprite structure without filesystem access with ([-2147483649])
+  ✓ it rejects invalid sprite structure without filesystem access with ([2147483648]) #2
+  ✓ it accepts signed coordinate and layer limits and leaves PNG validation to the renderer
+  ✓ it rejects invalid frame text and identifiers with (-1, [])
+  ✓ it rejects invalid frame text and identifiers with (1, ['x'])
+  ✓ it rejects invalid frame text and identifiers with (1, [123])
+  ✓ it rejects invalid frame text and identifiers with (1, ['[31mx'])
+  ✓ it rejects invalid frame text and identifiers with (1, ['a b'])
+  ✓ it rejects invalid frame text and identifiers with (1, ['ab'])
+  ✓ it rejects invalid frame text and identifiers with (1, ['a\rb'])
+  ✓ it rejects invalid frame text and identifiers with (1, [Binary String: 0x00])
+  ✓ it rejects invalid frame text and identifiers with (1, [''])
+  ✓ it rejects invalid frame text and identifiers with (1, [''])
+  ✓ it rejects invalid frame text and identifiers with (1, ['xxxxxxxxxxxxxxxxxxxxxxxxxxxxx…xxxxxx'])
+  ✓ it rejects invalid frame text and identifiers with (1, ['', '', '', …])
+  ✓ it measures renderer text in Unicode scalars rather than bytes or terminal columns
+  ✓ it rejects duplicate IDs non-list collections and untyped sprite entries
+  ✓ it accepts the sprite count limit and rejects overflow
+  ✓ it keeps frame and sprite data immutable even when callers supply array references
+
+   PASS  Tests\Unit\ProgressTest
+  ✓ it hydrates achievements from data entries                           0.01s  
+  ✓ it requires an achievement id
+  ✓ it defaults achievement fields
+  ✓ it records sightings and defeats
+  ✓ it counts a defeat as a sighting for unseen enemies
+  ✓ it ignores blank enemy names
+  ✓ it round-trips the bestiary through toArray and fromArray
+  ✓ it ignores malformed persisted bestiary entries
+
+   PASS  Tests\Unit\QuantitySelectorTest
+  ✓ it clamps quantities to the workflow bounds                          0.01s  
+  ✓ it provides one fine and coarse axis contract for stack-based menus
+  ✓ it does not report a change when an axis adjustment is already at a bound
+  ✓ it rejects invalid quantity-selection contracts with dataset "negative minimum"
+  ✓ it rejects invalid quantity-selection contracts with dataset "maximum below minimum"
+  ✓ it rejects invalid quantity-selection contracts with dataset "non-positive coarse step"
+  ✓ it uses the shared selector in both shops and field-item consumption
+
+   PASS  Tests\Unit\QuestTest
+  ✓ it hydrates a quest from its data-file entry                         0.01s  
+  ✓ it rejects quests without ids or objectives
+  ✓ it shows current item display names for stable-id and legacy-alias rewards
+  ✓ it derives objective descriptions from their type
+  ✓ it reveals more specific objective text through existing world conditions
+  ✓ it rejects objectives with unknown types or blank targets
+  ✓ it accepts a quest once
+  ✓ it tracks per-objective progress
+  ✓ it moves completed quests out of the active list
+  ✓ it round-trips through toArray and fromArray
+  ✓ it refreshes collect progress through a declared alias after an item label change
+  ✓ it ignores malformed persisted entries
+  ✓ it marks a quest optional from its data-file entry
+  ✓ it offers a side quest and honours the answer
+  ✓ it never re-offers a quest already in the journal
+  ✓ it accepts a main-story quest without asking
+  ✓ it grants an optional quest outright when the author asks it to
+
+   PASS  Tests\Unit\RegionMapTest
+  ✓ it reads each map name, region, and where its doors lead             0.01s  
+  ✓ it takes the direction of a place from where its door sits
+  ✓ it groups a region and leaves other regions out of it
+  ✓ it places each part of the region where it actually is
+  ✓ it keeps the same shape wherever in the region the player stands
+  ✓ it honours a position the project pins a place to
+  ✓ it still places a room no door reaches from here
+  ✓ it never puts two places on the same spot
+  ✓ it reports the regions a region leads out to, once each
+  ✓ it has nothing to place for a map it has never heard of
+  ✓ it reads no maps at all when a project has none
+
+   PASS  Tests\Unit\RendererClientTest
+  ✓ it delegates renderer lifecycle and sends without implementing proc… 0.01s  
+  ✓ it routes keys and non-input events separately without stealing either stream with ('ready')
+  ✓ it routes keys and non-input events separately without stealing either stream with ('close_requested')
+  ✓ it routes keys and non-input events separately without stealing either stream with ('error')
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('up', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (UP, 'up'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('down', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (DOWN, 'down'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('left', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (LEFT, 'left'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('right', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (RIGHT, 'right'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('w', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (w, 'w'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('a', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (a, 'a'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('s', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (s, 's'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('d', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (d, 'd'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('W', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (W, 'W'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('A', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (A, 'A'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('S', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (S, 'S'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('D', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (D, 'D'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('enter', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (ENTER, 'enter'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('space', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (SPACE, 'space'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('escape', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (ESCAPE, 'escape'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('q', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (q, 'q'))
+  ✓ it maps renderer wire keys through the existing KeyCode vocabulary with ('Q', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (Q, 'Q'))
+  ✓ it rejects unsupported renderer keys at the input boundary, not in the wire parser
+  ✓ it resets gameplay keys without deleting lifecycle or error events or stopping the renderer with (false)
+  ✓ it resets gameplay keys without deleting lifecycle or error events or stopping the renderer with (true)
+  ✓ it rejects queue overflow explicitly and preserves all previously accepted events with ([1], [Ichiloto\Engine\Rendering\Transport\RendererEvent]) #1
+  ✓ it rejects queue overflow explicitly and preserves all previously accepted events with ([1], [Ichiloto\Engine\Rendering\Transport\RendererEvent]) #2
+  ✓ it rejects queue overflow explicitly and preserves all previously accepted events with ([1], [Ichiloto\Engine\Rendering\Transport\RendererEvent]) #3
+  ✓ it propagates fatal transport failures without erasing already queued events
+  ✓ it does not overflow the key queue while deliberately draining reset input
+  ✓ it validates broker limits and refuses to discard unread events for a new session
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+stty: stdin isn't a terminal
+
+   PASS  Tests\Unit\RendererLaunchTest
+  ✓ it reads normalized launch intent and preserves invalid identities…  0.01s  
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('', 'terminal')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with (' ', 'terminal')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('terminal', 'terminal')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('gpui', 'gpui')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('GPUI', 'gpui')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with (' GpUi', 'gpui')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('0', '0')
+  ✓ it reads normalized launch intent and preserves invalid identities for validation with ('foo', 'foo')
+  ✓ it registers exactly the stable identities and constructs GPUI through its injected resolver
+  ✓ it rejects unknown and duplicate renderer identities
+  ✓ it resolves only an executable packaged for the requested platform
+  ✓ it fails clearly for missing malformed or unusable installed manifests with (null)
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('null')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":2,"renderers":{}}')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{}}')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{"gp…ng"}}}')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{"gp…de"}}}') #1
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{"gp…th"}}}')
+  ✓ it fails clearly for missing malformed or unusable installed manifests with ('{"version":1,"renderers":{"gp…de"}}}') #2
+  ✓ it rejects non-executable files and links outside the package root
+  ✓ it automatically attaches one runtime before deciding terminal input ownership
+  ✓ it keeps absent or terminal intent on the existing terminal input l… 0.02s  
+  ✓ it keeps absent or terminal intent on the existing terminal input l… 0.02s  
+  ✓ it keeps absent or terminal intent on the existing terminal input l… 0.02s  
+  ✓ it honors explicit runtime attachment without consulting even invalid launch intent with ('terminal')
+  ✓ it honors explicit runtime attachment without consulting even invalid launch intent with ('gpui')
+  ✓ it honors explicit runtime attachment without consulting even invalid launch intent with ('unknown')
+  ✓ it fails selection before touching input and never rereads a failed intent as terminal with ('gpui')
+  ✓ it fails selection before touching input and never rereads a failed intent as terminal with ('foo')
+  ✓ it fails selection before touching input and never rereads a failed intent as terminal with ('0')
+
+   PASS  Tests\Unit\RendererPresentationTest
+  ✓ it sequences only changed successfully queued frames and suppresses… 0.02s  
+  ✓ it compares immutable sprite values strictly and includes their removal in frame state
+  ✓ it normalizes layers for comparison but treats changed equal-layer order as visible state
+  ✓ it rejects mismatched session geometry without sending or consuming a sequence with (Ichiloto\Engine\IO\Console\ConsoleFrameSnapshot) #1
+  ✓ it rejects mismatched session geometry without sending or consuming a sequence with (Ichiloto\Engine\IO\Console\ConsoleFrameSnapshot) #2
+  ✓ it propagates send pressure without suppressing retries or advancing sequence state
+  ✓ it shares input and lifecycle state without polling consuming or shutting down the client with (false)
+  ✓ it shares input and lifecycle state without polling consuming or shutting down the client with (true)
+  ✓ it fails explicitly on sequence exhaustion while still suppressing an identical frame
+sh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+sh: /dev/tty: Device not configured
+
+   PASS  Tests\Unit\RendererRuntimeTest
+  ✓ it opts in exactly once and shares input and presentation on one se… 0.01s  
+  ✓ it selects renderer-only game output while preserving frames and silent cleanup
+  ✓ it runs a real PHP-only peer through explicit v1 and v2 runtime lif… 0.05s  
+  ✓ it runs a real PHP-only peer through explicit v1 and v2 runtime lif… 0.05s  
+  ✓ it preserves input and shuts down once when startup fails after a child was started
+  ✓ it keeps game startup failure and cleanup from borrowing or painting the terminal
+  ✓ it services changed frame bytes before returning to the game frame…  0.05s  
+  ✓ it keeps presentation delivery bounded when a complete frame exceed… 0.05s  
+  ✓ it does not poll the transport twice just to drain already pumped lifecycle events
+  ✓ it propagates transport failures and diagnostic-bearing renderer errors with (null)
+  ✓ it propagates transport failures and diagnostic-bearing renderer errors with ('{"protocol":1,"type":"error",…mage"}')
+  ✓ it keeps native close outside input and unwinds waits persistently
+  ✓ it lets real Game quit on native close without updating gameplay or confirming
+  ✓ it keeps the Game grid fixed and restores resources on ordinary quit without touching stdin modes
+  ✓ it does not start a renderer for terminal-only Game and rejects late or repeated attachment
+  ✓ it rejects fixed-grid mismatch and never captures unfinished composition
+  ✓ it honors explicit grid dimensions even when they equal the legacy…  0.02s  
+  ✓ it honors explicit grid dimensions even when they equal the legacy…  0.02s  
+  ✓ it retains legacy terminal auto sizing when dimensions were not exp… 0.04s  
+  ✓ it presents the same field ownership from real Game renders and blocked ticks without capturing partial frames
+  ✓ it keeps scenario and temporary music ownership identical during terminal and renderer waits with dataset "terminal"
+  ✓ it keeps scenario and temporary music ownership identical during terminal and renderer waits with dataset "renderer"
+  ✓ it cleans up scenario audio exactly once when native close interrupts a held field cue
+
+   PASS  Tests\Unit\RendererTransportTest
+  ✓ it uses v2 for hello ready frame key error and shutdown on the same… 0.09s  
+  ✓ it receives v2 native close and drains the peer without an unnecess… 0.14s  
+  ✓ it rejects mixed application sends without consuming outbound capac… 0.09s  
+  ✓ it rejects mixed application sends without consuming outbound capac… 0.06s  
+  ✓ it rejects mixed events after ready in either session version with…  0.05s  
+  ✓ it rejects mixed events after ready in either session version with…  0.05s  
+  ✓ it accepts only the pre-session v1 error exception during v2 startu… 0.05s  
+  ✓ it accepts only the pre-session v1 error exception during v2 startu… 0.05s  
+  ✓ it accepts only the pre-session v1 error exception during v2 startu… 0.05s  
+  ✓ it accepts only the pre-session v1 error exception during v2 startu… 0.05s  
+  ✓ it starts a direct child, validates hello, and releases it on idemp… 0.10s  
+  ✓ it rejects send before start, double start, and manual lifecycle me… 0.05s  
+  ✓ it preserves ready and key delivered in one startup read             0.05s  
+  ✓ it surfaces typed events in order and ignores blank lines without a… 0.11s  
+  ✓ it rejects startup errors, timeouts, and early exit with diagnostic… 0.09s  
+  ✓ it rejects startup errors, timeouts, and early exit with diagnostic… 0.19s  
+  ✓ it rejects startup errors, timeouts, and early exit with diagnostic… 0.09s  
+  ✓ it reports an unavailable executable as a startup failure
+  ✓ it buffers chunked handshake and key lines until complete            0.17s  
+  ✓ it rejects protocol violations after startup and permits repeated c… 0.08s  
+  ✓ it rejects protocol violations after startup and permits repeated c… 0.05s  
+  ✓ it rejects protocol violations after startup and permits repeated c… 0.05s  
+  ✓ it rejects protocol violations after startup and permits repeated c… 0.05s  
+  ✓ it rejects protocol violations after startup and permits repeated c… 0.05s  
+  ✓ it rejects protocol violations after startup and permits repeated c… 0.05s  
+  ✓ it rejects protocol violations after startup and permits repeated c… 0.05s  
+  ✓ it rejects a truncated EOF line and collects the final stderr tail…  0.05s  
+  ✓ it surfaces the final complete event before a nonzero exit exceptio… 0.05s  
+  ✓ it detects an unexpected clean child exit                            0.05s  
+  ✓ it preserves close_requested at process exit without deciding that…  0.05s  
+  ✓ it drains heavy stderr fairly into a bounded diagnostic tail         0.05s  
+  ✓ it writes large queued messages through real pipe backpressure with… 0.26s  
+  ✓ it writes large queued messages through real pipe backpressure with… 0.27s  
+  ✓ it reports a full outbound queue without changing already accepted…  0.06s  
+  ✓ it rejects unencodable and overlarge outbound messages before queui… 0.05s  
+  ✓ it bounds pending events and reports overflow instead of silently d… 0.05s  
+  ✓ it forces bounded cleanup when shutdown is ignored or stdin is not…  0.26s  
+  ✓ it forces bounded cleanup when shutdown is ignored or stdin is not…  0.24s  
+  ✓ it reports nonzero shutdown while keeping further shutdown calls id… 0.10s  
+  ✓ it rejects negative or nonfinite waits and configuration deadlines with (-1.0)
+  ✓ it rejects negative or nonfinite waits and configuration deadlines with (INF)
+  ✓ it rejects negative or nonfinite waits and configuration deadlines with (NAN)
+  ✓ it validates process argv and session geometry at the boundary
+  ✓ it rejects invalid event envelopes and required field types with ('garbage')
+  ✓ it rejects invalid event envelopes and required field types with ('[]')
+  ✓ it rejects invalid event envelopes and required field types with ('{"type":"ready"}')
+  ✓ it rejects invalid event envelopes and required field types with ('{"protocol":"1","type":"ready"}')
+  ✓ it rejects invalid event envelopes and required field types with ('{"protocol":1,"type":"unknown"}')
+  ✓ it rejects invalid event envelopes and required field types with ('{"protocol":1,"type":"key","key":3}')
+  ✓ it rejects invalid event envelopes and required field types with ('{"protocol":1,"type":"error"}')
+  ✓ it rejects invalid event envelopes and required field types with ('{"protocol":1,"type":"error",…false}')
+  ✓ it preserves the exact remainder across zero and short writes
+  ✓ it reports failed writes without consuming their pending bytes
+  ✓ it fails startup when ready and error arrive in the same handshake…  0.05s  
+  ✓ it bounds event memory as well as event count                        0.05s  
+  ✓ it does not block a runtime poll on TERM grace when a malformed pee… 0.37s  
+  ✓ it drains a native-close style exit without sending shutdown to a c… 0.17s  
+  ✓ it performs best-effort destructor cleanup without leaving the chil… 0.09s  
+  ✓ it flushes a full application queue before shutdown and retains the… 0.08s  
+  ✓ it reports unsent bytes and exit diagnostics when the child exits u… 0.17s  
+
+   PASS  Tests\Unit\SaveCompatibilityTest
+  ✓ it writes the v1 envelope through normal quick and rotating autosav… 0.22s  
+  ✓ it runs schema migration before project content migration without rewriting the source
+  ✓ it offers content migrations a post-resolution phase only after actors hydrate
+  ✓ it reports missing schema and content migration steps
+  ✓ it rejects future schema future content and wrong-project saves readably
+  ✓ it resolves map aliases in current visited and one-shot event identities
+  ✓ it resolves actor aliases before reconstructing current project definitions
+  ✓ it rejects tombstoned saved identities and invalid alias graphs
+  ✓ it persists only persistent character states with remaining duration through character and party serialization
+  ✓ it applies persistent-state aliases during complete save loading and fails on tombstones
+
+   PASS  Tests\Unit\SaveManagerTest
+  ✓ it loads binary .iedata save files and resolves slot summaries       0.01s  
+  ✓ it marks incompatible save slots instead of crashing the slot list
+  ✓ it marks slots as incompatible when nested payload unserialization fails
+  ✓ it returns the latest loadable save file when newer incompatible saves exist
+
+   PASS  Tests\Unit\SaveSlotWindowTest
+  ✓ it highlights save metadata while keeping structural window chrome…  0.01s  
+  ✓ it removes every selection style when a reusable slot window loses focus
+
+   PASS  Tests\Unit\SceneAudioTest
+  ✓ it reads the title theme from the project config                     0.01s  
+  ✓ it declares no title theme when the config has none
+  ✓ it treats a blank configured track as none
+  ✓ it reads the game-over theme from the project config
+  ✓ it reads the battle theme from the project config
+  ✓ it lets a battle override the project battle theme through its settings
+  ✓ it reads the victory theme from the project config
+  ✓ it declares no victory theme when the config has none
+  ✓ it lets a battle override the project victory theme through its settings
+  ✓ it plays the victory theme when the party wins
+  ✓ it leaves the battle music alone when no victory theme is configured
+  ✓ it derives the game scene theme from the current map
+  ✓ it plays a declared map theme and remembers it
+  ✓ it keeps the current music when a map declares no theme
+  ✓ it selects a map theme from world-state variants before using its default
+  ✓ it starts the incoming scene music on transition and silences scenes without one
+  ✓ it routes the global audio helpers through the current audio manager
+  ✓ it quietly ignores the global audio helpers when audio is not booted
+  ✓ it lets a troop declare its own battle theme
+  ✓ it plays configured system sounds through the sound effect pipeline
+
+   PASS  Tests\Unit\ScreenTransitionTest
+  ✓ it reads its style and duration from the project config              0.01s  
+  ✓ it stays off unless a project opts in
+  ✓ it stays off when the project names a style that does not exist
+  ✓ it draws nothing when a project turns transitions off
+  ✓ it draws nothing for a player who asked for reduced motion
+  ✓ it covers the screen in heavier shades and uncovers in lighter ones
+  ✓ it redraws the view it revealed
+  ✓ it sweeps a wipe across the full width
+  ✓ it advances transition frames cooperatively without sleeping
+
+   PASS  Tests\Unit\SettingsCatalogTest
+  ✓ it defines each setting exactly once                                 0.01s  
+  ✓ it returns the selected settings in the order asked for, skipping unknown keys
+  ✓ it gives both surfaces the same setting object
+  ✓ it reads and writes a setting through its config paths
+  ✓ it writes dialogue speed to both paths a project may read
+  ✓ it reads and writes the player notification duration profile
+  ✓ it lets a player choose a screen transition
+
+   PASS  Tests\Unit\ShopTest
+  ✓ it rejects a sale when the party owns fewer items than offered       0.01s  
+  ✓ it rejects selling key items to the shop
+  ✓ it credits an integer payout for a valid sale
+
+   PASS  Tests\Unit\SkillLearningTest
+  ✓ it files a learned spell in the spellbook, not the ability book      0.01s  
+  ✓ it files a learned special skill in the ability book
+  ✓ it reports an already known skill as not newly learned
+  ✓ it serializes a character who has learned magic
+  ✓ it round-trips learned skills through the save payload
+  ✓ it refuses to file magic in the ability book
+  ✓ it refuses to add magic as a learned ability
+  ✓ it serializes an ability book holding a plain skill kind
+
+   PASS  Tests\Unit\SkillTest
+  ✓ basic skills → it can create a Basic Skill                           0.01s  
+  ✓ basic skills → it can deal HP damage
+  ✓ basic skills → it can deal MP damage
+  ✓ basic skills → it deals at least 1 HP damage when the formula yields a negative value
+  ✓ basic skills → it drains at least 1 MP when the formula yields a negative value
+  ✓ basic skills → it can recover HP
+  ✓ magic skills → it can create a Magic Skill
+  ✓ magic skills → it infers restorative magic effect types from recove… 0.01s  
+  ✓ magic skills → it allows explicit magic effect types to override inferred ones
+  ✓ special skills → it can create a Special Skill
+
+   PASS  Tests\Unit\SleepAudioTest
+  ✓ it plays the configured sleep theme while the party rests            0.01s  
+  ✓ it lets an inn declare its own rest theme
+  ✓ it leaves the music alone when no sleep theme is configured
+  ✓ it restores the track that was playing before the rest
+  ✓ it returns to silence when nothing was playing before the rest
+  ✓ it does not touch the music when the rest never interrupted it
+  ✓ it reads the inn theme from trigger data
+  ✓ it exposes the current background music for callers that interrupt it
+
+   PASS  Tests\Unit\SpellbookTest
+  ✓ it sorts learned spells in ascending and descending order            0.01s  
+  ✓ it learns a ready spell and consumes shared costs
+  ✓ it filters field-usable spells from the learned list
+
+   PASS  Tests\Unit\SpriteSheetTest
+  ✓ it uses each directions actual populated frames without cropping em… 0.01s  
+  ✓ it uses each directions actual populated frames without cropping empty cells with ('east', 21, 5)
+  ✓ it uses each directions actual populated frames without cropping empty cells with ('north', 17, 4)
+  ✓ it uses each directions actual populated frames without cropping empty cells with ('west', 21, 5)
+  ✓ it rejects invalid source rectangle geometry before transport with ([-1, 0, 256, …])
+  ✓ it rejects invalid source rectangle geometry before transport with ([0, -1, 256, …])
+  ✓ it rejects invalid source rectangle geometry before transport with ([0, 0, 0, …])
+  ✓ it rejects invalid source rectangle geometry before transport with ([0, 0, 256, …])
+  ✓ it rejects invalid source rectangle geometry before transport with ([0, 0, -1, …])
+  ✓ it rejects invalid source rectangle geometry before transport with ([4294967295, 0, 1, …])
+  ✓ it rejects invalid source rectangle geometry before transport with ([0, 4294967295, 1, …])
+  ✓ it rejects invalid source rectangle geometry before transport with ([0, 0, 9223372036854775807, …])
+  ✓ it rejects invalid sheet metadata without reading image files with ('mode', 'atlas')
+  ✓ it rejects invalid sheet metadata without reading image files with ('frameWidth', 0)
+  ✓ it rejects invalid sheet metadata without reading image files with ('frameHeight', -1)
+  ✓ it rejects invalid sheet metadata without reading image files with ('frameWidth', '256')
+  ✓ it rejects invalid sheet metadata without reading image files with ('width', 0)
+  ✓ it rejects invalid sheet metadata without reading image files with ('height', 4097)
+  ✓ it rejects invalid sheet metadata without reading image files with ('idleFrame', 17)
+  ✓ it rejects invalid sheet metadata without reading image files with ('frameDurationMs', 0)
+  ✓ it rejects invalid sheet metadata without reading image files with ('stepDurationMs', 60001)
+  ✓ it rejects invalid sheet metadata without reading image files with ('anchor', 'feet')
+  ✓ it rejects invalid sheet metadata without reading image files with ('directions', [])
+  ✓ it rejects invalid sheet metadata without reading image files with ('typo', 1)
+  ✓ it rejects invalid per-direction grid data with ('asset', '../north.png')
+  ✓ it rejects invalid per-direction grid data with ('columns', 0)
+  ✓ it rejects invalid per-direction grid data with ('rows', 0)
+  ✓ it rejects invalid per-direction grid data with ('frames', 0)
+  ✓ it rejects invalid per-direction grid data with ('frames', 21)
+  ✓ it rejects invalid per-direction grid data with ('frames', 17.0)
+  ✓ it rejects invalid per-direction grid data with ('columns', 9223372036854775807)
+  ✓ it rejects invalid per-direction grid data with ('rows', 9223372036854775807)
+  ✓ it rejects invalid per-direction grid data with ('unknown', true)
+  ✓ it defaults a directly constructed sheet sprite to its authored resting crop
+  ✓ it advances all populated frames using elapsed movement time and wraps without selecting blanks with ('north')
+  ✓ it advances all populated frames using elapsed movement time and wraps without selecting blanks with ('east')
+  ✓ it advances all populated frames using elapsed movement time and wraps without selecting blanks with ('south')
+  ✓ it advances all populated frames using elapsed movement time and wraps without selecting blanks with ('west')
+  ✓ it settles to the resting frame and restarts on heading changes without accumulating idle time
+  ✓ it produces identical animation state for equal elapsed time regardless of update subdivision
+  ✓ it rejects invalid animation deltas with (-0.1)
+  ✓ it rejects invalid animation deltas with (INF)
+  ✓ it rejects invalid animation deltas with (NAN)
+
+   PASS  Tests\Unit\SpriteSheetTransportTest
+  ✓ it keeps legacy hello and whole-image sprite shapes unchanged        0.01s  
+  ✓ it negotiates source rectangles on either transport version and preserves frame-only changes with (Ichiloto\Engine\Rendering\Transport\RendererProtocolVersion Enum (V1, 1))
+  ✓ it negotiates source rectangles on either transport version and preserves frame-only changes with (Ichiloto\Engine\Rendering\Transport\RendererProtocolVersion Enum (V2, 2))
+  ✓ it rejects cropped presentation unless the capability was requested and acknowledged with (false)
+  ✓ it rejects cropped presentation unless the capability was requested and acknowledged with (true)
+  ✓ it rejects missing acknowledgments in both real pipe transport and…  0.05s  
+  ✓ it rejects missing acknowledgments in both real pipe transport and…  0.05s  
+  ✓ it completes source-rectangle request and acknowledgment over actua… 0.05s  
+  ✓ it completes source-rectangle request and acknowledgment over actua… 0.05s  
+  ✓ it rejects malformed capability acknowledgments with ('null')
+  ✓ it rejects malformed capability acknowledgments with ('{}')
+  ✓ it rejects malformed capability acknowledgments with ('true')
+  ✓ it rejects malformed capability acknowledgments with ('[1]')
+  ✓ it rejects malformed capability acknowledgments with ('["bad name"]')
+  ✓ it rejects malformed capability acknowledgments with ('["sprite_source_rect","sprite…rect"]')
+  ✓ it rejects malformed or unsupported capability requests with ([null])
+  ✓ it rejects malformed or unsupported capability requests with ([[]])
+  ✓ it rejects malformed or unsupported capability requests with (['unknown'])
+  ✓ it rejects malformed or unsupported capability requests with (['sprite_source_rect', 'sprite_source_rect'])
+  ✓ it rejects malformed or unsupported capability requests with (['sprite_source_rect'])
+
+   PASS  Tests\Unit\StatStageTest
+  ✓ it clamps stages to plus and minus four                              0.02s  
+  ✓ it applies twenty-five percent per stage
+  ✓ it feeds staged stats into the battle view
+  ✓ it applies player stages before the player cap and exposes final metadata
+  ✓ it restores persistent values after a debuff is removed
+  ✓ it uses the explicit enemy cap after enemy stages
+  ✓ it describes its stage shift
+  ✓ it resets every stage at once
+
+   PASS  Tests\Unit\StateTest
+  ✓ it hydrates states from data entries                                 0.01s  
+  ✓ it inflicts and cures states
+  ✓ it respects immunity through state resistances
+  ✓ it never inflicts at zero chance
+  ✓ it ticks HP formulas with a damage floor of one
+  ✓ it expires timed states after their duration
+  ✓ it keeps only persistent states after battle
+  ✓ it resolves elemental affinities case-insensitively with a neutral default
+  ✓ it raises and drops guard, and never carries it out of battle
+  ✓ it learns level-up skills directly and never twice
+  ✓ it tracks remaining turns on instances
+
+   PASS  Tests\Unit\StatusViewPictographLayoutTest
+  ✓ it keeps legacy plain equipment pictographs inside the status compo… 0.02s  
+
+   PASS  Tests\Unit\StyledConsolePresentationTest
+  ✓ it extracts authored canonical colour without ANSI in renderer text… 0.01s  
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "standard blue identity"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "bright blue identity"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "indexed base blue identity"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "literal dark blue is not brightened"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "bright code"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "legacy bright"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "background"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "bright background"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "indexed bounds"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "indexed bounds reversed"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "rgb"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "reset"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "reset foreground"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "reset background"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "reset intensity"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "blink enum"
+  ✓ it extracts authored canonical colour without ANSI in renderer text with dataset "ignored attributes"
+  ✓ it extracts Symfony true colour and keeps independently reset background
+  ✓ it fails clearly on malformed canonical extended colour with ('38')
+  ✓ it fails clearly on malformed canonical extended colour with ('38;5')
+  ✓ it fails clearly on malformed canonical extended colour with ('38;5;256')
+  ✓ it fails clearly on malformed canonical extended colour with ('48;2;0;0')
+  ✓ it fails clearly on malformed canonical extended colour with ('38;2;1;;3')
+  ✓ it fails clearly on malformed canonical extended colour with ('48;3;1')
+  ✓ it retains exact colour identity and validates colour boundaries
+  ✓ it validates strict runs layers frame limits and detached immutable lists
+  ✓ it preserves sparse opaque blanks and underlay while excluding the Player only graphically
+  ✓ it tracks identical glyph writes nested scopes and multirow wide provenance
+  ✓ it uses the existing scalar fallback and preserves following cell alignment
+  ✓ it rolls back layer state atomically and clears it on resize clear and recomposition
+  ✓ it queues colour-only changes transactionally and compares layer identity order priority and sprites
+  ✓ it reserves UI layers only in automatic runtime composition
+
+   PASS  Tests\Unit\SummonCutsceneTest
+  ✓ it hydrates summon cutscene definitions from source arrays           0.01s  
+  ✓ it compiles summon cutscenes into runtime playback segments
+  ✓ it loads folder-based summon assets and compiles them when needed
+  ✓ it round-trips codex fields through the definition
+  ✓ it keeps an omitted wielder policy omitted through source round-trip
+  ✓ it advances summon playback by elapsed time without dropping crossed cues
+  ✓ it keeps inspection, seeking, pausing, stepping, looping and restart deterministic
+  ✓ it keeps the blocking summon player source-compatible through the shared session
+
+   PASS  Tests\Unit\SummonWielderPolicyTest
+  ✓ it has no wielder policy when the data declares none                 0.01s  
+  ✓ it preserves open behavior when availability is omitted
+  ✓ it locks a summon until all declared world conditions hold
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "scalar block"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "missing conditions"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "empty conditions"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "unknown type"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "missing name"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "non-string type"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "non-string name"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "invalid variable operator"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "invalid item quantity"
+  ✓ it fails closed for malformed and unknown availability conditions with dataset "invalid quest status"
+  ✓ it allows any character when the mode is all
+  ✓ it restricts eligibility to named characters
+  ✓ it restricts eligibility to named roles
+  ✓ it enforces exclusive tenancy across the party
+  ✓ it reassigns exclusive ownership atomically after validation
+  ✓ it rejects duplicate exclusive ownership as controlled corrupt state
+  ✓ it preserves a legal locked assignment but prevents assignment before unlock
+  ✓ it fails invalid wielder modes and tenancy closed with dataset "mode"
+  ✓ it fails invalid wielder modes and tenancy closed with dataset "tenancy"
+  ✓ it fails invalid wielder modes and tenancy closed with dataset "empty roles"
+  ✓ it fails invalid wielder modes and tenancy closed with dataset "empty characters"
+  ✓ it fails invalid wielder modes and tenancy closed with dataset "malformed roles"
+  ✓ it fails invalid wielder modes and tenancy closed with dataset "malformed characters"
+  ✓ it does not reinterpret a malformed declared policy as open access with dataset "scalar policy"
+  ✓ it does not reinterpret a malformed declared policy as open access with dataset "non-string mode"
+  ✓ it does not reinterpret a malformed declared policy as open access with dataset "non-string tenancy"
+  ✓ it allows shared tenancy for multiple members at once
+  ✓ it refuses assignment to ineligible characters
+  ✓ it round-trips summon assignments through character serialization
+  ✓ it keeps assignment idempotent and case-insensitive
+  ✓ it rejects malformed summon ownership during character hydration with dataset "scalar container"
+  ✓ it rejects malformed summon ownership during character hydration with dataset "associative container"
+  ✓ it rejects malformed summon ownership during character hydration with dataset "non-string id"
+  ✓ it rejects malformed summon ownership during character hydration with dataset "empty id"
+  ✓ it rejects malformed summon ownership during character hydration with dataset "normalized duplicate"
+
+   PASS  Tests\Unit\TerminalInputSourceTest
+  ✓ it preserves supported terminal key mappings with ('a', Ichiloto\En… 0.01s  
+  ✓ it preserves supported terminal key mappings with ('w', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (w, 'w'))
+  ✓ it preserves supported terminal key mappings with ('W', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (W, 'W'))
+  ✓ it preserves supported terminal key mappings with ('[A', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (UP, 'up'))
+  ✓ it preserves supported terminal key mappings with ('[B', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (DOWN, 'down'))
+  ✓ it preserves supported terminal key mappings with ('[C', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (RIGHT, 'right'))
+  ✓ it preserves supported terminal key mappings with ('[D', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (LEFT, 'left'))
+  ✓ it preserves supported terminal key mappings with ('\r', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (ENTER, 'enter'))
+  ✓ it preserves supported terminal key mappings with ('', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (ENTER, 'enter'))
+  ✓ it preserves supported terminal key mappings with (' ', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (SPACE, 'space'))
+  ✓ it preserves supported terminal key mappings with ('', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (ESCAPE, 'escape'))
+  ✓ it preserves supported terminal key mappings with (' ', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (TAB, 'tab'))
+  ✓ it preserves supported terminal key mappings with ('[Z', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (SHIFT_TAB, 'shift_tab'))
+  ✓ it preserves supported terminal key mappings with (Binary String: 0x08, Ichiloto\Engine\IO\Enumerations\KeyCode Enum (BACKSPACE, 'backspace'))
+  ✓ it preserves supported terminal key mappings with ('', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (BACKSPACE, 'backspace'))
+  ✓ it preserves supported terminal key mappings with ('[1~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (HOME, 'home'))
+  ✓ it preserves supported terminal key mappings with ('[H', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (HOME, 'home'))
+  ✓ it preserves supported terminal key mappings with ('OH', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (HOME, 'home'))
+  ✓ it preserves supported terminal key mappings with ('[7~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (HOME, 'home'))
+  ✓ it preserves supported terminal key mappings with ('[2~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (INSERT, 'insert'))
+  ✓ it preserves supported terminal key mappings with ('[3~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (DELETE, 'delete'))
+  ✓ it preserves supported terminal key mappings with ('[8~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (END, 'end'))
+  ✓ it preserves supported terminal key mappings with ('[F', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (END, 'end'))
+  ✓ it preserves supported terminal key mappings with ('OF', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (END, 'end'))
+  ✓ it preserves supported terminal key mappings with ('[4~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (END, 'end'))
+  ✓ it preserves supported terminal key mappings with ('[5~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (PAGE_UP, 'page_up'))
+  ✓ it preserves supported terminal key mappings with ('[6~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (PAGE_DOWN, 'page_down'))
+  ✓ it preserves supported terminal key mappings with ('[10~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F0, 'f0'))
+  ✓ it preserves supported terminal key mappings with ('[11~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F1, 'f1'))
+  ✓ it preserves supported terminal key mappings with ('[12~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F2, 'f2'))
+  ✓ it preserves supported terminal key mappings with ('[13~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F3, 'f3'))
+  ✓ it preserves supported terminal key mappings with ('[14~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F4, 'f4'))
+  ✓ it preserves supported terminal key mappings with ('[15~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F5, 'f5'))
+  ✓ it preserves supported terminal key mappings with ('[17~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F6, 'f6'))
+  ✓ it preserves supported terminal key mappings with ('[18~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F7, 'f7'))
+  ✓ it preserves supported terminal key mappings with ('[19~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F8, 'f8'))
+  ✓ it preserves supported terminal key mappings with ('[20~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F9, 'f9'))
+  ✓ it preserves supported terminal key mappings with ('[21~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F10, 'f10'))
+  ✓ it preserves supported terminal key mappings with ('[23~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F11, 'f11'))
+  ✓ it preserves supported terminal key mappings with ('[24~', Ichiloto\Engine\IO\Enumerations\KeyCode Enum (F12, 'f12'))
+  ✓ it buffers concatenated terminal sequences in order and consumes on… 0.01s  
+  ✓ it clears cached terminal bytes without draining unread bytes unless requested with (false)
+  ✓ it clears cached terminal bytes without draining unread bytes unless requested with (true)
+  ✓ it returns null without blocking an empty pipe and restores its blocking mode
+  ✓ it completes an escape sequence split across terminal reads
+  ✓ it bounds draining a busy input stream and accepts an exactly full drain budget with (false)
+  ✓ it bounds draining a busy input stream and accepts an exactly full drain budget with (true)
+
+   PASS  Tests\Unit\TerminalTextTest
+  ✓ it measures colored and emoji text without counting ansi sequences   0.02s  
+  ✓ it pads ansi colored text using visible width
+  ✓ it wraps styled text by visible width without losing the highlighted key
+  ✓ it slices visible symbols without breaking ansi styling
+  ✓ it treats symfony formatter tags as zero-width styling
+  ✓ it keeps cell styles bounded across repeated selective colour resets
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "foreground reset keeps background and underline"
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "background reset keeps bold foreground"
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "normal intensity clears bold and faint only"
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "double underline reset"
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "compound full reset then foreground"
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "empty parameter resets then foreground"
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "rgb zeros are components not resets"
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "indexed zero is not a reset"
+  ✓ it preserves unrelated terminal attributes when resetting one group with dataset "all selective resets return to plain"
+  ✓ it preserves unknown and malformed controls rather than silently losing terminal semantics
+  ✓ it distinguishes plain text pictographs from explicit emoji presentation
+  ✓ it stabilizes astral pictograph widths and respects explicit text presentation
+  ✓ it preserves explicit variation selectors
+  ✓ it makes ambiguous astral pictographs explicitly two cells
+  ✓ it reduces zwj sequences and skin tones to their base glyph
+  ✓ it stabilizes whole strings while preserving stable content and ansi styling
+  ✓ it keeps padded columns aligned around unstable glyphs
+
+   PASS  Tests\Unit\TimersTest
+  ✓ it runs a one-shot timer once, when it comes due                     0.01s  
+  ✓ it reschedules a repeating timer
+  ✓ it cancels a timer before it fires
+  ✓ it keeps running the other timers when one throws
+  ✓ it ticks the world while waiting instead of sleeping through it      0.05s  
+  ✓ it reports progress to a caller animating through a wait             0.05s  
+  ✓ it returns immediately for a wait of no time at all
+
+   PASS  Tests\Unit\TitleOptionsSettingsManagerTest
+  ✓ it updates and persists the title volume setting                     0.02s  
+  ✓ it clamps volume at its ends and wraps short choice lists
+  ✓ it updates title text speed on both supported dialogue paths
+  ✓ it exposes the same notification duration profiles before starting a game
+
+   PASS  Tests\Unit\TitleOptionsTest
+  ✓ it changes a setting from the title screen                           0.01s  
+  ✓ it changes a setting the other way
+  ✓ it toggles a switch from the title screen
+  ✓ it lists settings the overlay can actually act on
+[?7h[?25h[?12h[?7h[?25h[?12h[?7h[?25h[?12h[?7h[?25h[?12h
+   PASS  Tests\Unit\TransientPresentationTest
+  ✓ it presents real action stat popups with their colour during the ho… 0.01s  
+  ✓ it presents real action stat popups with their colour during the hold and not after clear with (100, 52, 20, …)
+  ✓ it presents real action stat popups with their colour during the hold and not after clear with (100, 100, 52, …)
+  ✓ it presents an announcement before its shared action pause clears it
+  ✓ it presents each authored animation frame before advancing           0.04s  
+  ✓ it presents each summon frame and retains PHP cue order              0.04s  
+  ✓ it presents transition cover above all UI and sprites before it is…  0.11s  
+  ✓ it presents battle intro frames before the next intro clear          0.01s  
+  ✓ it presents fresh direct modal select and typewriter content in a s… 0.03s  
+  ✓ it presents fresh direct modal select and typewriter content in a s… 0.03s  
+  ✓ it presents fresh direct modal select and typewriter content in a s… 0.03s  
+  ✓ it presents final animation callback state after background updates without another simulation tick
+  ✓ it derives UIManager layers from existing priorities and safely nests direct modal rendering
+  ✓ it wraps the existing notification renderer above PHP UI without ch… 0.01s  
+
+   PASS  Tests\Unit\WorldConditionEvaluatorTest
+  ✓ it passes an empty condition list                                    0.05s  
+  ✓ it publishes the complete stable condition vocabulary
+  ✓ it evaluates switch, event, and variable conditions
+  ✓ it requires every condition in the list to hold
+  ✓ it inverts negated conditions
+  ✓ it separates plain item conditions from key-item conditions
+  ✓ it honours item quantity thresholds
+  ✓ it keeps item and key-item conditions stable across display-name changes
+  ✓ it fails closed for unknown condition types even when they are negated
+
+  Tests:    1 skipped, 1337 passed (4954 assertions)
+  Duration: 8.84s

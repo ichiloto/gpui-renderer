@@ -64,6 +64,14 @@ pub struct Hello {
     pub title: String,
     pub asset_root: PathBuf,
     pub grid: Grid,
+    #[serde(default)]
+    pub required_capabilities: Vec<Capability>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Capability {
+    SpriteSourceRect,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -216,6 +224,9 @@ fn validate_sprites(sprites: &[Sprite]) -> Result<(), String> {
         if sprite.width == 0 || sprite.height == 0 || sprite.width > 4096 || sprite.height > 4096 {
             return Err("sprite dimensions must be between 1 and 4096 logical pixels".into());
         }
+        if let Some(rect) = sprite.source_rect {
+            rect.validate()?;
+        }
     }
     Ok(())
 }
@@ -231,6 +242,42 @@ pub struct Sprite {
     pub height: u32,
     pub anchor: Anchor,
     pub layer: i32,
+    #[serde(default, rename = "sourceRect", deserialize_with = "source_rect")]
+    pub source_rect: Option<SourceRect>,
+}
+
+fn source_rect<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<SourceRect>, D::Error> {
+    // Omission is the legacy whole image; an explicit null is not a rectangle.
+    SourceRect::deserialize(d).map(Some)
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct SourceRect {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+}
+
+impl SourceRect {
+    pub fn validate(self) -> Result<(), String> {
+        if self.width == 0 || self.height == 0 {
+            return Err("sourceRect width and height must be positive integers".into());
+        }
+        if self.x.checked_add(self.width).is_none() || self.y.checked_add(self.height).is_none() {
+            return Err("sourceRect extent overflows image coordinates".into());
+        }
+        Ok(())
+    }
+
+    pub fn validate_image(self, width: u32, height: u32) -> Result<(), String> {
+        self.validate()?;
+        if self.x + self.width > width || self.y + self.height > height {
+            return Err("sourceRect exceeds the decoded PNG bounds".into());
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
@@ -279,6 +326,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if hello.title.is_empty() || hello.title.chars().any(char::is_control) {
             return Err("title must be nonempty and contain no control characters".into());
         }
+        if hello.required_capabilities.len() > 1 {
+            return Err("requiredCapabilities must not contain duplicates".into());
+        }
     }
     Ok(Incoming { version, message })
 }
@@ -286,10 +336,17 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Event {
-    Ready,
-    Key { key: String },
+    Ready {
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        capabilities: Vec<Capability>,
+    },
+    Key {
+        key: String,
+    },
     CloseRequested,
-    Error { message: String },
+    Error {
+        message: String,
+    },
 }
 
 #[derive(Serialize)]
@@ -492,6 +549,137 @@ mod tests {
         ));
     }
     #[test]
+    fn source_rect_requires_a_complete_strict_integer_object() {
+        let good = r#"{"x":0,"y":1,"width":16,"height":24}"#;
+        let make = |rect: &str| {
+            FRAME.replace(
+                "\"layer\":100",
+                &format!("\"layer\":100,\"sourceRect\":{rect}"),
+            )
+        };
+        let Message::Frame(frame) = parse(make(good).as_bytes()).unwrap().message else {
+            panic!()
+        };
+        assert_eq!(
+            frame.sprites[0].source_rect,
+            Some(SourceRect {
+                x: 0,
+                y: 1,
+                width: 16,
+                height: 24
+            })
+        );
+        frame.validate(grid()).unwrap();
+        for bad in [
+            "null",
+            "[]",
+            "{}",
+            r#"{"x":0,"y":0,"width":1,"height":1,"extra":0}"#,
+        ] {
+            assert!(parse(make(bad).as_bytes()).is_err(), "{bad}");
+        }
+        for field in ["x", "y", "width", "height"] {
+            for value in [
+                "-1",
+                "1.5",
+                "1.0",
+                "1e0",
+                "4294967296",
+                "1e309",
+                "NaN",
+                "null",
+                "true",
+                "\"1\"",
+            ] {
+                let mut rect = serde_json::json!({"x":0,"y":0,"width":1,"height":1});
+                rect.as_object_mut().unwrap().remove(field);
+                let mut text = serde_json::to_string(&rect).unwrap();
+                text.pop();
+                text.push_str(&format!(",\"{field}\":{value}}}"));
+                assert!(parse(make(&text).as_bytes()).is_err(), "{field}={value}");
+            }
+        }
+        for rect in [
+            SourceRect {
+                x: 0,
+                y: 0,
+                width: 0,
+                height: 1,
+            },
+            SourceRect {
+                x: 0,
+                y: 0,
+                width: 1,
+                height: 0,
+            },
+            SourceRect {
+                x: u32::MAX,
+                y: 0,
+                width: 1,
+                height: 1,
+            },
+            SourceRect {
+                x: 0,
+                y: u32::MAX,
+                width: 1,
+                height: 1,
+            },
+        ] {
+            assert!(rect.validate().is_err());
+        }
+    }
+
+    #[test]
+    fn capability_request_is_strict_and_legacy_ready_has_no_new_fields() {
+        for version in [1, 2] {
+            let mut hello: serde_json::Value = serde_json::from_str(HELLO).unwrap();
+            hello["protocol"] = version.into();
+            for caps in [
+                serde_json::json!(["sprite_source_rect"]),
+                serde_json::json!([]),
+            ] {
+                hello["requiredCapabilities"] = caps.clone();
+                let Message::Hello(parsed) =
+                    parse(&serde_json::to_vec(&hello).unwrap()).unwrap().message
+                else {
+                    panic!()
+                };
+                let event = Event::Ready {
+                    capabilities: parsed.required_capabilities,
+                };
+                let mut bytes = vec![];
+                write_event(
+                    &mut bytes,
+                    if version == 1 {
+                        Version::V1
+                    } else {
+                        Version::V2
+                    },
+                    &event,
+                )
+                .unwrap();
+                let expected = if caps.as_array().unwrap().is_empty() {
+                    serde_json::json!({"protocol":version,"type":"ready"})
+                } else {
+                    serde_json::json!({"protocol":version,"type":"ready","capabilities":caps})
+                };
+                assert_eq!(
+                    serde_json::from_slice::<serde_json::Value>(&bytes).unwrap(),
+                    expected
+                );
+            }
+            for caps in [
+                serde_json::json!(["unknown"]),
+                serde_json::json!(["sprite_source_rect", "sprite_source_rect"]),
+                serde_json::Value::Null,
+                serde_json::json!("sprite_source_rect"),
+            ] {
+                hello["requiredCapabilities"] = caps;
+                assert!(parse(&serde_json::to_vec(&hello).unwrap()).is_err());
+            }
+        }
+    }
+    #[test]
     fn unsupported_version() {
         assert!(
             parse(HELLO.replace("\"protocol\":1", "\"protocol\":3").as_bytes())
@@ -548,7 +736,9 @@ mod tests {
     #[test]
     fn events_are_single_json_lines() {
         for event in [
-            Event::Ready,
+            Event::Ready {
+                capabilities: vec![],
+            },
             Event::CloseRequested,
             Event::Error {
                 message: "bad\ninput".into(),
@@ -764,7 +954,9 @@ mod tests {
     fn every_event_preserves_both_protocol_versions() {
         for version in [Version::V1, Version::V2] {
             for event in [
-                Event::Ready,
+                Event::Ready {
+                    capabilities: vec![],
+                },
                 Event::Key { key: "C".into() },
                 Event::CloseRequested,
                 Event::Error {

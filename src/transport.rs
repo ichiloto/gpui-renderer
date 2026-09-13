@@ -1,6 +1,6 @@
 use crate::assets::AssetRoot;
 use crate::diagnostics::Diagnostics;
-use crate::protocol::{self, Hello, Incoming, Message, Version};
+use crate::protocol::{self, Capability, Hello, Incoming, Message, Sprite, Version};
 use crate::state::PreparedFrame;
 use std::io::{BufRead, Read};
 
@@ -52,6 +52,7 @@ impl Session {
                     .initialized
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
+                validate_capabilities(&frame.sprites, hello)?;
                 Ok(Update::Frame(PreparedFrame::prepare(
                     frame, hello.grid, assets,
                 )?))
@@ -61,6 +62,7 @@ impl Session {
                     .initialized
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
+                validate_capabilities(&frame.sprites, hello)?;
                 Ok(Update::Frame(PreparedFrame::prepare_v2(
                     frame, hello.grid, assets,
                 )?))
@@ -68,6 +70,17 @@ impl Session {
             Message::Shutdown => Ok(Update::Shutdown),
         }
     }
+}
+
+fn validate_capabilities(sprites: &[Sprite], hello: &Hello) -> Result<(), String> {
+    if sprites.iter().any(|sprite| sprite.source_rect.is_some())
+        && !hello
+            .required_capabilities
+            .contains(&Capability::SpriteSourceRect)
+    {
+        return Err("sourceRect requires negotiated sprite_source_rect capability".into());
+    }
+    Ok(())
 }
 
 pub fn start_reader(diagnostics: Diagnostics) -> async_channel::Receiver<Update> {
@@ -436,6 +449,43 @@ mod tests {
     }
     fn hello(version: u32) -> Vec<u8> {
         serde_json::to_vec(&serde_json::json!({"protocol":version,"type":"hello","title":"Session","assetRoot":std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures"),"grid":{"columns":80,"rows":24,"cellWidth":16,"cellHeight":24}})).unwrap()
+    }
+    #[test]
+    fn source_rect_is_opt_in_for_both_versions_and_rejection_does_not_end_session() {
+        for version in [1, 2] {
+            for enabled in [false, true] {
+                let mut hello: serde_json::Value = serde_json::from_slice(&hello(version)).unwrap();
+                if enabled {
+                    hello["requiredCapabilities"] = serde_json::json!(["sprite_source_rect"]);
+                }
+                let mut session = Session::default();
+                session
+                    .prepare(protocol::parse(&serde_json::to_vec(&hello).unwrap()).unwrap())
+                    .unwrap();
+                let mut frame = serde_json::json!({"protocol":version,"type":"frame","frame":1,"sprites":[{
+                    "id":"player","asset":"test-sprite.png","x":8,"y":4,"width":32,"height":48,
+                    "anchor":"bottom_center","layer":100,"sourceRect":{"x":0,"y":0,"width":16,"height":24}
+                }]});
+                frame[if version == 1 { "text" } else { "textLayers" }] = serde_json::json!([]);
+                let cropped =
+                    session.prepare(protocol::parse(&serde_json::to_vec(&frame).unwrap()).unwrap());
+                assert_eq!(cropped.is_ok(), enabled);
+                if let Err(error) = cropped {
+                    assert!(error.contains("negotiated"));
+                }
+                frame["sprites"][0]
+                    .as_object_mut()
+                    .unwrap()
+                    .remove("sourceRect");
+                let Update::Frame(full) = session
+                    .prepare(protocol::parse(&serde_json::to_vec(&frame).unwrap()).unwrap())
+                    .unwrap()
+                else {
+                    panic!()
+                };
+                assert!(full.sprites[0].sprite.source_rect.is_none());
+            }
+        }
     }
     #[test]
     fn failed_hello_does_not_select_session_then_v2_can_initialize() {

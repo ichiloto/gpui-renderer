@@ -1,0 +1,1082 @@
+{
+  "source": "/tmp/ichiloto-garden-output/normalized/logs/latency.ndjson",
+  "source_sha256": "8fbb32c2dc9f31ae39dac7ef77254d39499874004018add40b7e9cd17b80c5e8",
+  "measurement_scope": "complete session",
+  "engine_pid": 4807,
+  "host_offset_bounds_ns": [
+    182481411181041,
+    182481411181082
+  ],
+  "anchors": [
+    {
+      "diagnostic": "clock_anchor",
+      "stage": "start",
+      "clock": "CLOCK_UPTIME_RAW",
+      "pid": 4815,
+      "elapsed_before_ns": 125,
+      "host_ns": 182481411181208,
+      "elapsed_after_ns": 209
+    },
+    {
+      "diagnostic": "clock_anchor",
+      "stage": "shutdown",
+      "clock": "CLOCK_UPTIME_RAW",
+      "pid": 4815,
+      "elapsed_before_ns": 3978850584,
+      "host_ns": 182485390031666,
+      "elapsed_after_ns": 3978850625
+    }
+  ],
+  "boundary": "CPU observations only; callback/paint end do not establish GPU completion or visible FPS",
+  "renderer_dropped": [
+    0
+  ],
+  "engine_dropped": [],
+  "trailing_stderr": "",
+  "ordinary_stderr": [],
+  "geometry": [
+    {
+      "diagnostic": "geometry",
+      "stage": "initial_window",
+      "at_ns": 90198834,
+      "values": [
+        [
+          "display_id",
+          1.0
+        ],
+        [
+          "screen_x",
+          0.0
+        ],
+        [
+          "screen_y",
+          0.0
+        ],
+        [
+          "screen_width",
+          1920.0
+        ],
+        [
+          "screen_height",
+          1200.0
+        ],
+        [
+          "work_x",
+          0.0
+        ],
+        [
+          "work_y",
+          79.0
+        ],
+        [
+          "work_width",
+          1920.0
+        ],
+        [
+          "work_height",
+          1091.0
+        ],
+        [
+          "available_content_width",
+          1920.0
+        ],
+        [
+          "available_content_height",
+          1059.0
+        ],
+        [
+          "logical_width",
+          1350.0
+        ],
+        [
+          "logical_height",
+          720.0
+        ],
+        [
+          "content_width",
+          1350.0
+        ],
+        [
+          "content_height",
+          720.0
+        ],
+        [
+          "outer_width",
+          1350.0
+        ],
+        [
+          "outer_height",
+          752.0
+        ],
+        [
+          "display_relative_left",
+          285.0
+        ],
+        [
+          "display_relative_top",
+          199.0
+        ],
+        [
+          "scale",
+          1.0
+        ]
+      ]
+    },
+    {
+      "diagnostic": "geometry",
+      "stage": "text_metrics",
+      "at_ns": 162953584,
+      "values": [
+        [
+          "cell_width",
+          10.0
+        ],
+        [
+          "cell_height",
+          20.0
+        ],
+        [
+          "advance_per_em",
+          0.60205078125
+        ],
+        [
+          "line_per_em",
+          0.6923828125
+        ],
+        [
+          "logical_font_size",
+          15.779399871826172
+        ]
+      ]
+    },
+    {
+      "diagnostic": "geometry",
+      "stage": "viewport",
+      "at_ns": 162959292,
+      "values": [
+        [
+          "outer_left",
+          285.0
+        ],
+        [
+          "outer_top",
+          199.0
+        ],
+        [
+          "outer_width",
+          1350.0
+        ],
+        [
+          "outer_height",
+          752.0
+        ],
+        [
+          "width",
+          1350.0
+        ],
+        [
+          "height",
+          720.0
+        ],
+        [
+          "scale",
+          1.0
+        ],
+        [
+          "offset_x",
+          0.0
+        ],
+        [
+          "offset_y",
+          0.0
+        ],
+        [
+          "presented_width",
+          1350.0
+        ],
+        [
+          "presented_height",
+          720.0
+        ]
+      ]
+    }
+  ],
+  "frames": 36,
+  "renderer_stages": {
+    "received": 36,
+    "accepted": 36,
+    "submit_begin": 36,
+    "submit_end": 36,
+    "dequeued": 36,
+    "replace_begin": 36,
+    "replaced": 36
+  },
+  "incomplete_callback_sequences": [],
+  "has_paint_observations": false,
+  "renderer_durations": {
+    "received_to_accepted": {
+      "n": 36,
+      "median_ms": 0.47379150000000003,
+      "p95_ms": 0.559542,
+      "max_ms": 7.487792
+    },
+    "accepted_to_replaced": {
+      "n": 36,
+      "median_ms": 0.0215835,
+      "p95_ms": 0.026166,
+      "max_ms": 0.070834
+    },
+    "submit_begin_to_submit_end": {
+      "n": 36,
+      "median_ms": 0.0035205,
+      "p95_ms": 0.007542,
+      "max_ms": 0.055125
+    },
+    "dequeued_to_replaced": {
+      "n": 36,
+      "median_ms": 0.0085215,
+      "p95_ms": 0.011208,
+      "max_ms": 0.012834
+    }
+  },
+  "engine_durations": {
+    "transport.encode": {
+      "n": 37,
+      "median_ms": 0.073125,
+      "p95_ms": 0.082666,
+      "max_ms": 0.084042
+    },
+    "game.update.end": {
+      "n": 48,
+      "median_ms": 0.08612500000000001,
+      "p95_ms": 0.123667,
+      "max_ms": 0.397292
+    },
+    "probe.update": {
+      "n": 48,
+      "median_ms": 0.0876255,
+      "p95_ms": 0.125334,
+      "max_ms": 0.398917
+    },
+    "presentation.sprites": {
+      "n": 48,
+      "median_ms": 0.0130625,
+      "p95_ms": 0.021208,
+      "max_ms": 0.228959
+    },
+    "console.cells": {
+      "n": 48,
+      "median_ms": 7.037437499999999,
+      "p95_ms": 14.157375,
+      "max_ms": 15.734542
+    },
+    "console.runs": {
+      "n": 96,
+      "median_ms": 0.382292,
+      "p95_ms": 1.074167,
+      "max_ms": 1.480292
+    },
+    "presentation.snapshot": {
+      "n": 48,
+      "median_ms": 7.9244164999999995,
+      "p95_ms": 15.396125,
+      "max_ms": 17.107708
+    },
+    "presentation.message": {
+      "n": 48,
+      "median_ms": 0.08302100000000001,
+      "p95_ms": 0.128916,
+      "max_ms": 0.133959
+    },
+    "presentation.compare": {
+      "n": 48,
+      "median_ms": 0.0010834999999999998,
+      "p95_ms": 0.069291,
+      "max_ms": 0.070334
+    },
+    "presentation.end": {
+      "n": 48,
+      "median_ms": 8.5222295,
+      "p95_ms": 16.27875,
+      "max_ms": 18.081459
+    },
+    "game.render.end": {
+      "n": 48,
+      "median_ms": 9.372229,
+      "p95_ms": 17.514083,
+      "max_ms": 19.465083
+    },
+    "probe.field.recompose": {
+      "n": 36,
+      "median_ms": 31.298416500000002,
+      "p95_ms": 37.561625,
+      "max_ms": 37.91625
+    }
+  },
+  "phase_durations": {
+    "startup_or_shutdown": {
+      "transport.encode": {
+        "n": 1,
+        "median_ms": 0.005583,
+        "p95_ms": 0.005583,
+        "max_ms": 0.005583
+      }
+    },
+    "idle": {
+      "game.update.end": {
+        "n": 12,
+        "median_ms": 0.0909585,
+        "p95_ms": 0.397292,
+        "max_ms": 0.397292
+      },
+      "probe.update": {
+        "n": 12,
+        "median_ms": 0.092917,
+        "p95_ms": 0.398917,
+        "max_ms": 0.398917
+      },
+      "presentation.sprites": {
+        "n": 12,
+        "median_ms": 0.0188545,
+        "p95_ms": 0.228959,
+        "max_ms": 0.228959
+      },
+      "console.cells": {
+        "n": 12,
+        "median_ms": 13.223728999999999,
+        "p95_ms": 15.734542,
+        "max_ms": 15.734542
+      },
+      "console.runs": {
+        "n": 24,
+        "median_ms": 0.422417,
+        "p95_ms": 1.193208,
+        "max_ms": 1.480292
+      },
+      "presentation.snapshot": {
+        "n": 12,
+        "median_ms": 14.467354499999999,
+        "p95_ms": 17.107708,
+        "max_ms": 17.107708
+      },
+      "presentation.message": {
+        "n": 12,
+        "median_ms": 0.1200835,
+        "p95_ms": 0.133959,
+        "max_ms": 0.133959
+      },
+      "presentation.compare": {
+        "n": 12,
+        "median_ms": 0.06475,
+        "p95_ms": 0.070334,
+        "max_ms": 0.070334
+      },
+      "transport.encode": {
+        "n": 1,
+        "median_ms": 0.082666,
+        "p95_ms": 0.082666,
+        "max_ms": 0.082666
+      },
+      "presentation.end": {
+        "n": 12,
+        "median_ms": 15.3501875,
+        "p95_ms": 18.081459,
+        "max_ms": 18.081459
+      },
+      "game.render.end": {
+        "n": 12,
+        "median_ms": 16.389021,
+        "p95_ms": 19.465083,
+        "max_ms": 19.465083
+      }
+    },
+    "pan": {
+      "game.update.end": {
+        "n": 36,
+        "median_ms": 0.0841665,
+        "p95_ms": 0.123667,
+        "max_ms": 0.124209
+      },
+      "probe.update": {
+        "n": 36,
+        "median_ms": 0.085625,
+        "p95_ms": 0.125334,
+        "max_ms": 0.126083
+      },
+      "probe.field.recompose": {
+        "n": 36,
+        "median_ms": 31.298416500000002,
+        "p95_ms": 37.561625,
+        "max_ms": 37.91625
+      },
+      "presentation.sprites": {
+        "n": 36,
+        "median_ms": 0.012542,
+        "p95_ms": 0.015917,
+        "max_ms": 0.017042
+      },
+      "console.cells": {
+        "n": 36,
+        "median_ms": 6.6835629999999995,
+        "p95_ms": 8.788708,
+        "max_ms": 8.799125
+      },
+      "console.runs": {
+        "n": 72,
+        "median_ms": 0.374,
+        "p95_ms": 0.771708,
+        "max_ms": 0.795209
+      },
+      "presentation.snapshot": {
+        "n": 36,
+        "median_ms": 7.5442295,
+        "p95_ms": 9.658458,
+        "max_ms": 9.6715
+      },
+      "presentation.message": {
+        "n": 36,
+        "median_ms": 0.0802505,
+        "p95_ms": 0.089458,
+        "max_ms": 0.089459
+      },
+      "presentation.compare": {
+        "n": 36,
+        "median_ms": 0.0010414999999999999,
+        "p95_ms": 0.001458,
+        "max_ms": 0.05
+      },
+      "presentation.end": {
+        "n": 36,
+        "median_ms": 8.149125,
+        "p95_ms": 10.30375,
+        "max_ms": 10.322458
+      },
+      "game.render.end": {
+        "n": 36,
+        "median_ms": 9.127396000000001,
+        "p95_ms": 10.97475,
+        "max_ms": 11.014334
+      },
+      "transport.encode": {
+        "n": 35,
+        "median_ms": 0.073125,
+        "p95_ms": 0.080125,
+        "max_ms": 0.084042
+      }
+    }
+  },
+  "frame_rows": [
+    {
+      "sequence": 1,
+      "frame": 1,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 7.487792,
+      "accepted_to_replaced_ms": 0.023,
+      "submit_begin_to_submit_end_ms": 0.004334,
+      "dequeued_to_replaced_ms": 0.004292
+    },
+    {
+      "sequence": 2,
+      "frame": 2,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.549292,
+      "accepted_to_replaced_ms": 0.022541,
+      "submit_begin_to_submit_end_ms": 0.00425,
+      "dequeued_to_replaced_ms": 0.009625
+    },
+    {
+      "sequence": 3,
+      "frame": 3,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.502833,
+      "accepted_to_replaced_ms": 0.021542,
+      "submit_begin_to_submit_end_ms": 0.003834,
+      "dequeued_to_replaced_ms": 0.009333
+    },
+    {
+      "sequence": 4,
+      "frame": 4,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.478625,
+      "accepted_to_replaced_ms": 0.026166,
+      "submit_begin_to_submit_end_ms": 0.003416,
+      "dequeued_to_replaced_ms": 0.009416
+    },
+    {
+      "sequence": 5,
+      "frame": 5,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.498958,
+      "accepted_to_replaced_ms": 0.018709,
+      "submit_begin_to_submit_end_ms": 0.003042,
+      "dequeued_to_replaced_ms": 0.008709
+    },
+    {
+      "sequence": 6,
+      "frame": 6,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.464041,
+      "accepted_to_replaced_ms": 0.018584,
+      "submit_begin_to_submit_end_ms": 0.003625,
+      "dequeued_to_replaced_ms": 0.008459
+    },
+    {
+      "sequence": 7,
+      "frame": 7,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.516208,
+      "accepted_to_replaced_ms": 0.022917,
+      "submit_begin_to_submit_end_ms": 0.005208,
+      "dequeued_to_replaced_ms": 0.01025
+    },
+    {
+      "sequence": 8,
+      "frame": 8,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.559542,
+      "accepted_to_replaced_ms": 0.0235,
+      "submit_begin_to_submit_end_ms": 0.005167,
+      "dequeued_to_replaced_ms": 0.01075
+    },
+    {
+      "sequence": 9,
+      "frame": 9,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.541333,
+      "accepted_to_replaced_ms": 0.024584,
+      "submit_begin_to_submit_end_ms": 0.0055,
+      "dequeued_to_replaced_ms": 0.010292
+    },
+    {
+      "sequence": 10,
+      "frame": 10,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.487208,
+      "accepted_to_replaced_ms": 0.070834,
+      "submit_begin_to_submit_end_ms": 0.055125,
+      "dequeued_to_replaced_ms": 0.009875
+    },
+    {
+      "sequence": 11,
+      "frame": 11,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.418792,
+      "accepted_to_replaced_ms": 0.016542,
+      "submit_begin_to_submit_end_ms": 0.002958,
+      "dequeued_to_replaced_ms": 0.00775
+    },
+    {
+      "sequence": 12,
+      "frame": 12,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.419834,
+      "accepted_to_replaced_ms": 0.018958,
+      "submit_begin_to_submit_end_ms": 0.002458,
+      "dequeued_to_replaced_ms": 0.00725
+    },
+    {
+      "sequence": 13,
+      "frame": 13,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.422042,
+      "accepted_to_replaced_ms": 0.019292,
+      "submit_begin_to_submit_end_ms": 0.002542,
+      "dequeued_to_replaced_ms": 0.00725
+    },
+    {
+      "sequence": 14,
+      "frame": 14,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.466125,
+      "accepted_to_replaced_ms": 0.024459,
+      "submit_begin_to_submit_end_ms": 0.007542,
+      "dequeued_to_replaced_ms": 0.009375
+    },
+    {
+      "sequence": 15,
+      "frame": 15,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.434208,
+      "accepted_to_replaced_ms": 0.018417,
+      "submit_begin_to_submit_end_ms": 0.004834,
+      "dequeued_to_replaced_ms": 0.007833
+    },
+    {
+      "sequence": 16,
+      "frame": 16,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.432125,
+      "accepted_to_replaced_ms": 0.019875,
+      "submit_begin_to_submit_end_ms": 0.002333,
+      "dequeued_to_replaced_ms": 0.00775
+    },
+    {
+      "sequence": 17,
+      "frame": 17,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.48675,
+      "accepted_to_replaced_ms": 0.026083,
+      "submit_begin_to_submit_end_ms": 0.005,
+      "dequeued_to_replaced_ms": 0.011208
+    },
+    {
+      "sequence": 18,
+      "frame": 18,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.534583,
+      "accepted_to_replaced_ms": 0.023917,
+      "submit_begin_to_submit_end_ms": 0.005,
+      "dequeued_to_replaced_ms": 0.0105
+    },
+    {
+      "sequence": 19,
+      "frame": 19,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.460125,
+      "accepted_to_replaced_ms": 0.021958,
+      "submit_begin_to_submit_end_ms": 0.00275,
+      "dequeued_to_replaced_ms": 0.008208
+    },
+    {
+      "sequence": 20,
+      "frame": 20,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.508625,
+      "accepted_to_replaced_ms": 0.023584,
+      "submit_begin_to_submit_end_ms": 0.003333,
+      "dequeued_to_replaced_ms": 0.0095
+    },
+    {
+      "sequence": 21,
+      "frame": 21,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.449833,
+      "accepted_to_replaced_ms": 0.017042,
+      "submit_begin_to_submit_end_ms": 0.003375,
+      "dequeued_to_replaced_ms": 0.007417
+    },
+    {
+      "sequence": 22,
+      "frame": 22,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.427834,
+      "accepted_to_replaced_ms": 0.01775,
+      "submit_begin_to_submit_end_ms": 0.004542,
+      "dequeued_to_replaced_ms": 0.007375
+    },
+    {
+      "sequence": 23,
+      "frame": 23,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.450292,
+      "accepted_to_replaced_ms": 0.024292,
+      "submit_begin_to_submit_end_ms": 0.002917,
+      "dequeued_to_replaced_ms": 0.012834
+    },
+    {
+      "sequence": 24,
+      "frame": 24,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.446125,
+      "accepted_to_replaced_ms": 0.018,
+      "submit_begin_to_submit_end_ms": 0.00375,
+      "dequeued_to_replaced_ms": 0.007875
+    },
+    {
+      "sequence": 25,
+      "frame": 25,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.469458,
+      "accepted_to_replaced_ms": 0.017875,
+      "submit_begin_to_submit_end_ms": 0.0045,
+      "dequeued_to_replaced_ms": 0.007541
+    },
+    {
+      "sequence": 26,
+      "frame": 26,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.455667,
+      "accepted_to_replaced_ms": 0.015833,
+      "submit_begin_to_submit_end_ms": 0.002625,
+      "dequeued_to_replaced_ms": 0.007625
+    },
+    {
+      "sequence": 27,
+      "frame": 27,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.490917,
+      "accepted_to_replaced_ms": 0.022125,
+      "submit_begin_to_submit_end_ms": 0.00325,
+      "dequeued_to_replaced_ms": 0.00875
+    },
+    {
+      "sequence": 28,
+      "frame": 28,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.50775,
+      "accepted_to_replaced_ms": 0.022709,
+      "submit_begin_to_submit_end_ms": 0.004125,
+      "dequeued_to_replaced_ms": 0.010792
+    },
+    {
+      "sequence": 29,
+      "frame": 29,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.468667,
+      "accepted_to_replaced_ms": 0.017292,
+      "submit_begin_to_submit_end_ms": 0.002959,
+      "dequeued_to_replaced_ms": 0.007959
+    },
+    {
+      "sequence": 30,
+      "frame": 30,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.483292,
+      "accepted_to_replaced_ms": 0.018666,
+      "submit_begin_to_submit_end_ms": 0.003,
+      "dequeued_to_replaced_ms": 0.008416
+    },
+    {
+      "sequence": 31,
+      "frame": 31,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.518667,
+      "accepted_to_replaced_ms": 0.021625,
+      "submit_begin_to_submit_end_ms": 0.004166,
+      "dequeued_to_replaced_ms": 0.009583
+    },
+    {
+      "sequence": 32,
+      "frame": 32,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.496167,
+      "accepted_to_replaced_ms": 0.022583,
+      "submit_begin_to_submit_end_ms": 0.004084,
+      "dequeued_to_replaced_ms": 0.011083
+    },
+    {
+      "sequence": 33,
+      "frame": 33,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.478125,
+      "accepted_to_replaced_ms": 0.022791,
+      "submit_begin_to_submit_end_ms": 0.003292,
+      "dequeued_to_replaced_ms": 0.008375
+    },
+    {
+      "sequence": 34,
+      "frame": 34,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.445458,
+      "accepted_to_replaced_ms": 0.018209,
+      "submit_begin_to_submit_end_ms": 0.003041,
+      "dequeued_to_replaced_ms": 0.008584
+    },
+    {
+      "sequence": 35,
+      "frame": 35,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.416042,
+      "accepted_to_replaced_ms": 0.015833,
+      "submit_begin_to_submit_end_ms": 0.002375,
+      "dequeued_to_replaced_ms": 0.0075
+    },
+    {
+      "sequence": 36,
+      "frame": 36,
+      "stage_counts": {
+        "received": 1,
+        "accepted": 1,
+        "submit_begin": 1,
+        "submit_end": 1,
+        "dequeued": 1,
+        "replace_begin": 1,
+        "replaced": 1
+      },
+      "received_to_accepted_ms": 0.425416,
+      "accepted_to_replaced_ms": 0.016709,
+      "submit_begin_to_submit_end_ms": 0.002583,
+      "dequeued_to_replaced_ms": 0.007917
+    }
+  ]
+}

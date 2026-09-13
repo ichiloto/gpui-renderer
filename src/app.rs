@@ -132,6 +132,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                 let stop = matches!(update, Update::Shutdown | Update::Fatal(_) | Update::Eof);
                 let result = cx.update(|cx| match update {
                     Update::Hello(version, hello) => {
+                        let capabilities = hello.required_capabilities.clone();
                         output.version = version;
                         let grid = hello.grid;
                         let initial = match crate::window_layout::initial_window(
@@ -175,6 +176,8 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         focus,
                                         output: view_output,
                                         last_viewport: None,
+                                        cached_images: vec![],
+                                        logical_font_size: None,
                                     }
                                 })
                             },
@@ -182,7 +185,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                             Ok(handle) => {
                                 window = Some(handle);
                                 cx.activate(true);
-                                output.emit(Event::Ready, cx);
+                                output.emit(Event::Ready { capabilities }, cx);
                             }
                             Err(error) => {
                                 output.fatal(format!("cannot open native window: {error}"), cx)
