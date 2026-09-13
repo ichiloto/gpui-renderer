@@ -1,9 +1,13 @@
 # S8-B: tile batches and Garden scrolling
 
-**Later update, 2026-09-13:** the matching release is now locally installed and
-passes a silent native tile startup/paint check. See the
-[installation receipt](s8-b-installation.md). The holds and uninstalled status
-below describe the original source-validation checkpoint.
+**Closeout, 2026-09-13:** the matching release is installed and the final ordinary
+CLI Garden acceptance pass is complete. Overlay restoration, smaller/larger
+window resizing, authored transfers away and back, and normal close all passed.
+The unchanged checkpoint and error log were verified after the muted session.
+See the [installation and acceptance record](s8-b-installation.md). The holds,
+uninstalled status and pending native checks below describe the original
+source-validation checkpoint. Planning accepted this proof's closeout; additional
+optimization and broader gameplay/platform validation remain deferred.
 
 ## Starting point
 

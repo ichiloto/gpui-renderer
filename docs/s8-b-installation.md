@@ -60,8 +60,7 @@ separate ordinary launch-path validation.
 
 These observations verify native startup, preparation and CPU painting. They
 do not measure GPU completion, FPS, real gameplay, collision or Garden scrolling.
-Ordinary CLI discovery and runtime startup are validated separately by Engine;
-full gameplay acceptance remains a separate workload.
+The ordinary CLI acceptance below is separate from this fixture check.
 
 The reusable [single-window check](../scripts/native-tile-smoke.py) accepts a
 packager-resolved executable and an evidence directory:
@@ -75,3 +74,35 @@ child on failure. [Installation and native receipts](evidence/s8-b-install/)
 retain the hashes, actual ready event, resource records and paint diagnostics.
 The existing frozen fixtures reconstruct the input; its exact capture hash is
 recorded in `installation.json`.
+
+## Final ordinary CLI acceptance
+
+The final agreed pass completed on 2026-09-13 at 15:36 UTC using
+`ichiloto play --renderer=gpui --no-tmux`, the normal installed manifest and a
+private, muted copy of Last Legend. The legitimate checkpoint was copied without
+payload changes and selected through the normal Load Game screen. CUA sent keys
+to the actual native window. No renderer path override, save edit or story-state
+edit was used.
+
+| Check | Result and observation |
+| --- | --- |
+| Overlay restoration | PASS: the four-member menu closed and the entire Garden field, including its bottom rows, terrain and Player, returned before player movement. |
+| Resize | PASS: smaller and larger native windows preserved the same complete, centered viewport and alignment between text, tiles, Player and HUD. |
+| Transfer | PASS: the authored Garden → Apthia → Route Control → Garden route cleared old terrain and restored Garden tiles and Player without stale dialogue. |
+| Normal close | PASS: the native close button ended the ordinary CLI process with exit 0; no owned renderer remained running. |
+
+The checkpoint SHA256 remained
+`7ab48eb3169d75009895da3abcdf187822ab45a82a64423a846db5ab49b88fba`.
+The error log's size and modification time were unchanged; the older explicit
+SIGINT cleanup entry was not counted as an error from this pass. A follow-up
+accessibility query timed out after the app exited; the independent CLI exit
+and app inventory confirmed normal closure.
+
+The [final receipt](evidence/s8-b-install/final-native-closeout.json) records exact
+Engine `379f999`, Console `10dc0b3`, Renderer `4e70b7e` and Game `c05a398` revisions
+and the installed executable hash. Engine accepted this bounded proof and
+published its closeout as
+[`9076188`](https://github.com/ichiloto/engine/commit/907618837ae875aa01c473fc1b9e03c0e15331c6).
+No additional native session or optimization round is required for this slice.
+This does not claim matched scrolling timings, graphical battle/NPC adoption,
+configurable window modes or support on untested platforms.
