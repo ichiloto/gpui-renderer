@@ -1,6 +1,6 @@
 # S8-B: tile batches and Garden scrolling
 
-**Closeout, 2026-09-13:** the matching release is installed and the final ordinary
+**Accepted baseline closeout, 2026-09-13:** the matching release is installed and the final ordinary
 CLI Garden acceptance pass is complete. Overlay restoration, smaller/larger
 window resizing, authored transfers away and back, and normal close all passed.
 The unchanged checkpoint and error log were verified after the muted session.
@@ -8,6 +8,17 @@ See the [installation and acceptance record](s8-b-installation.md). The holds,
 uninstalled status and pending native checks below describe the original
 source-validation checkpoint. Planning accepted this proof's closeout; additional
 optimization and broader gameplay/platform validation remain deferred.
+
+**PR #1 review correction:** source-to-cell sampling was subsequently corrected
+without changing the contract, artwork or GPUI dependency. The corrected candidate
+passes **85 debug tests, 85 release tests, locked offline Clippy with warnings
+as errors, formatting and an optimized build**. Its single silent native fixture
+painted 2 / 4860 / 0 / 2 tiles and exited normally with no protocol errors. See the
+[correction receipt](evidence/s8-b-sampling/native-receipt.json). This fixture
+checks CPU painting/lifecycle, not displayed pixels, FPS or a new gameplay
+acceptance pass; the full Garden pass above remains the earlier baseline receipt.
+The first sandboxed startup could not connect to macOS desktop services; the
+recorded passing run used authorized desktop access.
 
 ## Starting point
 
@@ -69,12 +80,34 @@ can retain additional generations; these cache limits are not a process-RSS
 claim. The UI tracks cached and actively referenced images, retiring obsolete
 GPU entries on the next draw. Invalid frames never replace the accepted state.
 
-Painting rounds both outer guard endpoints to device pixels, then clips to the
-exact unsnapped destination cell. Tests check sampling footprints at fractional
-scales, display scale factors and all viewport corners. The shared transform
-continues to control text, actor crops and terrain. Existing actor sheet
-painting and text/sprite tie ordering are preserved; equal layers put terrain
-before text, then sprites, stably within each type.
+PR #1 review found that outward guard rounding kept atlas neighbours out but
+changed the source-to-cell transform: a 16-pixel tile painted into a 10-pixel
+cell projected its authored edges to -0.6 and 10.6. Removing that rounding alone
+would not fix it because GPUI 0.2.2 also floors origins and ceils sizes internally.
+
+Painting now samples the isolated authored rectangle at the destination's device
+pixel centers, with linear BGRA/alpha filtering and clamped source edges. It paints
+that raster 1:1 inside the exact unsnapped cell mask. A one-device-pixel guard keeps
+filtering and outer image-edge antialiasing outside the mask. Bounds account for
+the actual f32 scale/floor/ceil round trip in GPUI's public painter. No dependency,
+shader, protocol or source-art changes are needed.
+
+The display-sample LRU is keyed by source-region identity, device width/height and
+subpixel X/Y phase. Integer device translations and unchanged frames reuse samples;
+resize, DPI, phase and source changes select new samples. It retains at most
+64 MiB / 32768 images. Paint-time evictions and oversized uncached rasters remain
+alive until the next render boundary before their GPU uploads are retired; this
+in-flight memory is additional to the LRU limit. An empty tile frame also retires
+all display samples. Existing `frame_resources` counters describe source preparation,
+not this display-dependent cache. This correction is not an FPS claim.
+
+The original failing edge-mapping regression reproduced -0.6 before the fix. New
+tests check actual analytic gradient/alpha samples at 16→10, fractional scales,
+display scale factors and all viewport corners, singleton/extreme source aspects,
+cache reuse/invalidation and deferred retirement. The shared transform continues
+to control text, actor crops and terrain. Existing actor sheet painting and
+text/sprite tie ordering are preserved; equal layers put terrain before text,
+then sprites, stably within each type.
 
 Opt-in `frame_resources` diagnostics report tile batch/cell counts, distinct
 decoded images/bytes, prepared region counts/bytes, PNG decodes and region

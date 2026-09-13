@@ -8,6 +8,7 @@ mod render_trace;
 mod renderer;
 mod state;
 mod tile_regions;
+mod tile_sampling;
 mod tiles;
 mod transport;
 mod viewport;

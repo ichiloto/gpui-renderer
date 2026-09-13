@@ -182,7 +182,9 @@ or budget failure rejects the entire frame, preserving the accepted display.
 Terrain has an independent 32768-cell budget and one canvas/layout element per
 batch, while each cell still emits an image primitive. Guarded source regions
 are prepared and cached for reuse, with separate byte/count accounting; they
-isolate linear filtering at fractional scales without per-frame crop work.
+isolate neighbouring atlas tiles. Cached device-pixel samples compensate for
+GPUI's image-bound rounding, preserving the selected artwork's full mapping at
+fractional scales and positions. Unchanged samples are reused across cells/frames.
 See [S8-B implementation and validation](docs/s8-b-validation.md) and the
 [shared exact wire fixtures](fixtures/tile-batches/manifest.json).
 
@@ -481,12 +483,18 @@ the same full-sheet image identity and GPUI atlas upload.
 | Decoded source images per frame (actors + tiles) | 64 MiB / 1024 images |
 | Session decoded-image cache | 64 MiB / 1024 images |
 | Prepared tile regions per frame and in session LRU | 64 MiB / 4096 regions, including guards |
+| Display tile-sample LRU | 64 MiB / 32768 images; paint-time evictions retire at the next render |
 | V2 text layers | 64 |
 | V2 runs across all layers | 32768 |
 | V2 Unicode scalars across all runs, including spaces/overlap | 524288 |
 | V2 text layer ID | 256 UTF-8 bytes |
 
-Validation and complete image preparation happen before displayed-state mutation.
+Validation, PNG decoding and source-region preparation happen before displayed-state
+mutation. Display samples are derived during paint, when device scale and final
+cell position are known. They have a separate LRU; samples evicted while painting
+remain alive until the next render boundary so their GPU slots cannot be reused
+under the current scene. These in-flight samples and GPUI uploads are additional
+memory, not part of a process-wide cache limit.
 
 ## Key identities (both versions)
 

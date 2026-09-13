@@ -178,6 +178,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         last_viewport: None,
                                         cached_images: vec![],
                                         logical_font_size: None,
+                                        tile_samples: Default::default(),
                                     }
                                 })
                             },

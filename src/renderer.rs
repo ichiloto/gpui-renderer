@@ -8,7 +8,7 @@ use gpui::{
     Context, FocusHandle, IntoElement, KeyDownEvent, ObjectFit, Render, RenderImage, Window, div,
     font, img, prelude::*, px, rgb,
 };
-use std::sync::Arc;
+use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 pub struct Renderer {
     pub state: RendererState,
@@ -17,6 +17,7 @@ pub struct Renderer {
     pub last_viewport: Option<gpui::Size<gpui::Pixels>>,
     pub cached_images: Vec<Arc<RenderImage>>,
     pub logical_font_size: Option<f32>,
+    pub tile_samples: Rc<RefCell<crate::tile_sampling::TileSamplingCache>>,
 }
 
 const FONT_FAMILY: &str = if cfg!(target_os = "macos") {
@@ -92,6 +93,19 @@ impl Render for Renderer {
                 }
             }
             self.cached_images.clone_from(&frame.cached_images);
+        }
+        let active_regions = self
+            .state
+            .frame
+            .iter()
+            .flat_map(|frame| &frame.tile_batches)
+            .flat_map(|batch| &batch.regions)
+            .map(|region| region.id)
+            .collect();
+        for retired in self.tile_samples.borrow_mut().begin_frame(&active_regions) {
+            if let Err(error) = window.drop_image(retired) {
+                crate::protocol::diagnostic(format!("cannot retire tile sample: {error}"));
+            }
         }
         let grid = self.state.hello.grid;
         let cw = grid.cell_width as f32;
@@ -181,6 +195,7 @@ impl Render for Renderer {
                             frame.tile_batches[index].clone(),
                             grid,
                             transform,
+                            self.tile_samples.clone(),
                         ));
                     }
                     PaintItem::LegacyText => {
