@@ -18,6 +18,10 @@ cargo build --release --locked
 python3 scripts/native-smoke.py --binary target/release/gpui-renderer
 ```
 
+For a single silent window checking both negotiated capabilities, full-viewport
+terrain and frame clearing, run `scripts/native-tile-smoke.py` with `--binary`
+and `--evidence-dir`. See the [installed-renderer check](docs/s8-b-installation.md).
+
 Use `target/release/gpui-renderer` for ordinary gameplay, internally staged runtime
 bundles and performance validation. `cargo build --locked` produces an unoptimized
 `target/debug/gpui-renderer` for development/debugging; it is not the performance

@@ -1,5 +1,10 @@
 # S8-B: tile batches and Garden scrolling
 
+**Later update, 2026-09-13:** the matching release is now locally installed and
+passes a silent native tile startup/paint check. See the
+[installation receipt](s8-b-installation.md). The holds and uninstalled status
+below describe the original source-validation checkpoint.
+
 ## Starting point
 
 2026-09-13. Renderer `develop` started at
