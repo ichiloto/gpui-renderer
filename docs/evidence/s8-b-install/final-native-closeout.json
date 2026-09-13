@@ -1,0 +1,53 @@
+{
+  "completed_utc": "2026-09-13T15:36:18.139494+00:00",
+  "command": "/usr/local/bin/ichiloto play --renderer=gpui --no-tmux",
+  "project": "/private/tmp/ichiloto-installed-gpui-ordinary",
+  "window_title": "Ichiloto - isolated verification",
+  "revisions": {
+    "engine": "379f999525366659146fff71e267c474b689ef78",
+    "console": "10dc0b3eefe38cdc39ab7f1c3d7a08e0b4be6eea",
+    "renderer": "4e70b7e9cc57750c094475044102287e6e128188",
+    "game": "c05a398e9273ecda10dbba8d1f80b0d43ba94f05"
+  },
+  "installed_binary_sha256": "f3b4f56f289ac1bb60a03c25db1e143f3425617d35b6b3f59e42a8a6ca38e8d7",
+  "checkpoint_sha256_before": "7ab48eb3169d75009895da3abcdf187822ab45a82a64423a846db5ab49b88fba",
+  "checkpoint_sha256_after": "7ab48eb3169d75009895da3abcdf187822ab45a82a64423a846db5ab49b88fba",
+  "preserved_checkpoint_sha256_after": "7ab48eb3169d75009895da3abcdf187822ab45a82a64423a846db5ab49b88fba",
+  "checks": {
+    "overlay": {
+      "result": "PASS",
+      "observation": "Garden at (8,3): opened four-member main menu with Escape; dismissed with c. Entire field including bottom rows, terrain, Player and coordinates restored before movement."
+    },
+    "resize": {
+      "result": "PASS",
+      "observation": "Dragged native window smaller and then larger. Entire same field/HUD remained visible with centered viewport; tile, text and actor stayed aligned. Player remained (8,3)."
+    },
+    "transfer": {
+      "result": "PASS",
+      "observation": "North3 from Garden (8,3) transferred to Apthia (170,57). West9 then North8 transferred to Route Control (4,11). East16 then North5 reached desk (20,6); ordinary Return/dialogue returned to Garden (8,3), facing South. Old terrain cleared on outgoing transfers and Garden tiles/Player restored on return without stale dialogue or tiles."
+    },
+    "normal_close": {
+      "result": "PASS",
+      "observation": "Clicked native close button. Ordinary CLI process returned exit0; CUA inventory confirmed Ichiloto Renderer isRunning=false. Follow-up AX query timed out after app termination; independent exit/status checks confirmed clean closure."
+    }
+  },
+  "cli_exit_code": 0,
+  "closed": true,
+  "audio": {
+    "autosave": false,
+    "master_volume": 0,
+    "music": false,
+    "sfx": false
+  },
+  "error_log": {
+    "size_before": 3454,
+    "size_after": 3454,
+    "mtime_before": 1789312719,
+    "mtime_after": 1789312719,
+    "sha256_after": "821370cedb920cba2f06d8c549479354c2d6bbfa50f9d482d3aee6473ba29b94",
+    "new_entries": false,
+    "prior_entry": "Explicit prior test SIGINT cleanup at 2026-09-13T15:18:39Z; renderer130, separate from this normal close."
+  },
+  "evidence": "Direct CUA screenshots and input observations in Renderer task 01a08d8a-a3b6-7c30-a495-2df481d05137; exec session48882 exit0.",
+  "limits": "One final ordinary CLI acceptance pass only. No benchmarking, GPU/FPS measurement, source/code changes, art changes, save payload edits, flag injection or save actions."
+}

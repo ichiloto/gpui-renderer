@@ -1,0 +1,18 @@
+{
+  "installed_at_utc": "20260913T143459Z",
+  "source_commit": "40000860fa9202eef215e886d9857bf56d63686f",
+  "source": "website/gpui-renderer/target/release/gpui-renderer",
+  "installed_path": "engine/resources/renderers/installed/gpui/darwin-arm64/Ichiloto Renderer.app/Contents/MacOS/gpui-renderer",
+  "old_binary_sha256": "20a38d04d44f7eb0dd3469dadabdc2b7cf567487bac14db34bd73608bfa6a584",
+  "installed_binary_sha256": "f3b4f56f289ac1bb60a03c25db1e143f3425617d35b6b3f59e42a8a6ca38e8d7",
+  "backup_directory": "engine/resources/renderers/installed/.backups/gpui-20260913T143459Z",
+  "manifest_sha256": "fdca1e7a7bd4b77abc5c11309480a8cdf670e5f792647c52d6ff30eb53ef51f3",
+  "preserved_bundle_files": {
+    "Contents/Info.plist": "b4026f99fdb6afea8f2922d3a1c0ea4a15980b251704d27b0ceec7a48385ff07"
+  },
+  "executable_mode": "0o755",
+  "input_sha256": "29bb319a361c6a1bd9c2afc528692688d37649c844739e52325c242ad417eb77",
+  "manifest_unchanged": true,
+  "release_tests_passed": 81,
+  "source_receipt_verified": "docs/evidence/s8-b/source-SHA256SUMS"
+}

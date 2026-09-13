@@ -1,0 +1,100 @@
+[
+  {
+    "source": "/tmp/ichiloto-graphical-size-tests.log",
+    "source_sha256": "8cb96683d12a2bf9e41b1ed24add1c3bc9fd1373dde5a4da6024f4d3ca642fef",
+    "evidence": "focused-tests.txt",
+    "sha256": "537c21107e8f8286a403710ae770f3bfd53172125a7b7bc4c0f386d8b3b5e801",
+    "normalization": "Remove ANSI SGR display escapes and trailing blank lines only."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-full-tests.log",
+    "source_sha256": "af5fc5d2a50a0778183304511b97fd081823888d0f4c927b947f125c10169570",
+    "evidence": "engine-tests.txt",
+    "sha256": "d14532e19d473892a15c5711ce0b10eab562d0033ae0809e5e26ec3e2c855326",
+    "normalization": "Remove ANSI SGR display escapes and trailing blank lines only."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-phpstan.log",
+    "source_sha256": "a6b1c0e09f14fa1bdf20effbabe5fa20807fd45f519c2e2c1c4c903b3d9c79b0",
+    "evidence": "phpstan.txt",
+    "sha256": "a4b86c9cd4ceab9dfccd0142e782c2d6bdc9f56398be2b278f5701a9284d5634",
+    "normalization": "Remove ANSI SGR display escapes and trailing blank lines only."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/last-legend.php",
+    "source_sha256": "e4f9bcef775a789ddf67d30786835d3062f27a0df5d03d3a3a54385b96351062",
+    "evidence": "native-driver.php",
+    "sha256": "e4f9bcef775a789ddf67d30786835d3062f27a0df5d03d3a3a54385b96351062",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/run.sh",
+    "source_sha256": "860622131e2fce11ef537d865740925d7afd3f26ab7033388c59d13eb57fdc1a",
+    "evidence": "native-launch.sh",
+    "sha256": "860622131e2fce11ef537d865740925d7afd3f26ab7033388c59d13eb57fdc1a",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/geometry.ndjson",
+    "source_sha256": "2725b1c3cd93da8c68b09805f7cf14858058550a95caac9c3fe3963380bcee30",
+    "evidence": "native-phases.ndjson",
+    "sha256": "2725b1c3cd93da8c68b09805f7cf14858058550a95caac9c3fe3963380bcee30",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/Users/andrewmasiye/Development/php/games/engines/ichiloto/2.0/engine/docs/rendering/battle-viewport-validation.md",
+    "source_sha256": "17e1d9b936e150473d2c5557845dda06a15908469bac71028a2ac57074455054",
+    "evidence": "native-coordinator-report.md",
+    "sha256": "17e1d9b936e150473d2c5557845dda06a15908469bac71028a2ac57074455054",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/logs/latency.ndjson",
+    "source_sha256": "d22ad5799386e4e654d2f0445c168d3a91d542eea84ed3cb1ddee12460feaee9",
+    "evidence": "native-renderer-stderr.ndjson",
+    "sha256": "a0f3f17fbcd46212253bb3cc60b0f05e34c4689db9b20757a2f8fdf4b39fc233",
+    "normalization": "Select complete Engine renderer.stderr records in source order, preserving each record text. Reassemble text fields before parsing native lines."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/parent-size",
+    "source_sha256": "97093f410d77d9804a6b816250c071971a3f5fb9ea4afb9483f1211090715307",
+    "evidence": "closure-parent-size",
+    "sha256": "97093f410d77d9804a6b816250c071971a3f5fb9ea4afb9483f1211090715307",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/exit-status",
+    "source_sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "evidence": "closure-exit-status",
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/stderr.log",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence": "closure-stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/logs/error.log",
+    "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidence": "closure-logs-error.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/stty-before",
+    "source_sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1",
+    "evidence": "closure-stty-before",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1",
+    "normalization": "None; exact bytes."
+  },
+  {
+    "source": "/tmp/ichiloto-geometry-native/stty-after",
+    "source_sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1",
+    "evidence": "closure-stty-after",
+    "sha256": "d9bc25e3960dd2509c91858628073160678c6c4f02fbafdc3a23e135e090c3e1",
+    "normalization": "None; exact bytes."
+  }
+]

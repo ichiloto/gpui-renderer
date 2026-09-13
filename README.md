@@ -18,6 +18,10 @@ cargo build --release --locked
 python3 scripts/native-smoke.py --binary target/release/gpui-renderer
 ```
 
+For a single silent window checking both negotiated capabilities, full-viewport
+terrain and frame clearing, run `scripts/native-tile-smoke.py` with `--binary`
+and `--evidence-dir`. See the [installed-renderer check](docs/s8-b-installation.md).
+
 Use `target/release/gpui-renderer` for ordinary gameplay, internally staged runtime
 bundles and performance validation. `cargo build --locked` produces an unoptimized
 `target/debug/gpui-renderer` for development/debugging; it is not the performance
@@ -27,6 +31,10 @@ same source compiled in release mode. This is a build-profile comparison, not a
 scheduling or gameplay change; see [the measured investigation](docs/burst-investigation.md).
 Packagers should preserve the native bundle/resources and stage the optimized
 executable through their existing installation boundary, verifying its hash.
+
+Engine's GPUI launch now retains the shared presentation buffer while skipping
+physical terminal drawing. The [Garden of Roads comparison](docs/garden-performance.md)
+records that improvement, the shared style-processing fix, and validation limits.
 
 The native smoke suite opens **sequential silent windows** on a graphical desktop.
 It tests both versions and IPC/lifecycle failures; it does not synthesize keyboard
@@ -62,6 +70,19 @@ below. `assetRoot` must be absolute and canonicalize to an existing directory; t
 must be nonempty without control characters. A successful hello opens one resizable
 native window, then emits `ready`. The version is latched before opening it, so even
 a window-creation error uses that version. A second hello cannot open another window.
+
+Sprite-sheet cropping is explicitly negotiated on either version. Add
+`"requiredCapabilities":["sprite_source_rect"]` to hello. A successful opted-in
+ready includes `"capabilities":["sprite_source_rect"]`; the caller must verify
+that acknowledgment before sending crops. Missing or empty requirements keep the
+legacy ready shape, with no capabilities field. Unknown or duplicate requirements
+are rejected. Older renderers reject the new hello field; callers must also reject
+a missing acknowledgment, never silently fall back to drawing the whole sheet.
+
+Graphical terrain uses the v2-only `tile_batches` capability. Automatic Engine
+startup requests both capabilities before any later map transfer. Every
+`tileBatches` field, including an empty array, requires acknowledgment; v1
+rejects this capability. See the [frozen tile contract](docs/tile-batches.md).
 
 Before a successfully validated hello, errors use the legacy `protocol:1` envelope,
 **including errors for invalid v2 hellos**. That is a pre-session exception, not
@@ -131,16 +152,41 @@ rectangle using the explicit foreground or default text colour. A space paints j
 the background. Cells absent from runs are transparent to lower layers. Overlapping
 runs execute in their array order, so later cells replace earlier cells.
 
-For v2, text layers and sprites share one ascending numeric order:
+For v2, tile batches, text layers and sprites share one ascending numeric order:
 
 1. Lower layers paint before higher layers.
-2. Equal-layer text layers paint first, preserving their frame array order.
-3. Equal-layer sprites paint second, preserving their frame array order.
+2. Equal-layer tile batches paint first, preserving batch and cell array order.
+3. Equal-layer text layers paint next, preserving their frame array order.
+4. Equal-layer sprites paint last, preserving their frame array order.
 
 Use distinct layers for specific cross-type occlusion. Values such as world `0`,
 sprite `100` and UI `1000` are caller policy, never hardcoded gameplay rules.
-`textLayers:[]` removes all previous text layers. Together with `sprites:[]`, it
+`textLayers:[]` removes all previous text layers. Together with `sprites:[]` and
+omitted or empty `tileBatches`, it
 clears the entire snapshot to the default surface background.
+
+### Tile batches
+
+With `tile_batches` negotiated, v2 frames may include:
+
+```json
+"tileBatches":[{"id":"terrain","asset":"Field.png","layer":-100,"sources":[{"x":0,"y":0,"width":16,"height":32}],"cells":[{"column":8,"row":3,"source":0}]}]
+```
+
+Cells are already Camera-projected, unsigned grid coordinates. Each fills one
+session cell; `source` indexes image-pixel rectangles in the batch catalog.
+There is no map interpretation or terrain animation in Rust. Omission and `[]`
+clear previous tiles; explicit null is invalid. A malformed batch, invalid crop
+or budget failure rejects the entire frame, preserving the accepted display.
+
+Terrain has an independent 32768-cell budget and one canvas/layout element per
+batch, while each cell still emits an image primitive. Guarded source regions
+are prepared and cached for reuse, with separate byte/count accounting; they
+isolate neighbouring atlas tiles. Cached device-pixel samples compensate for
+GPUI's image-bound rounding, preserving the selected artwork's full mapping at
+fractional scales and positions. Unchanged samples are reused across cells/frames.
+See [S8-B implementation and validation](docs/s8-b-validation.md) and the
+[shared exact wire fixtures](fixtures/tile-batches/manifest.json).
 
 ### Structured colour
 
@@ -155,29 +201,57 @@ integers 0..255. Unknown kinds/fields, missing fields, negative/fractional value
 strings and out-of-range numbers are errors. No alpha channel or CSS/ANSI strings.
 Default foreground is **#D9E1E8**, default background **#111820** (both opaque).
 
-ANSI16 uses this deterministic VGA-style palette. ANSI256 indices 0..15 reuse it:
+ANSI16 uses this renderer-owned dark-terminal palette. ANSI256 indices 0..15
+reuse it. Indices 1..15 exceed 4.5:1 contrast against the default background;
+index 0 stays literal black. Bright variants remain lighter than normal variants.
 
 | Index | RGB | Index | RGB |
 | --- | --- | --- | --- |
-| 0 | #000000 | 8 | #808080 |
-| 1 | #800000 | 9 | #FF0000 |
-| 2 | #008000 | 10 | #00FF00 |
-| 3 | #808000 | 11 | #FFFF00 |
-| 4 | #000080 | 12 | #0000FF |
-| 5 | #800080 | 13 | #FF00FF |
-| 6 | #008080 | 14 | #00FFFF |
-| 7 | #C0C0C0 | 15 | #FFFFFF |
+| 0 | #000000 | 8 | #7F8C9A |
+| 1 | #E06C75 | 9 | #FF8C95 |
+| 2 | #98C379 | 10 | #B3E38F |
+| 3 | #E5C07B | 11 | #FFDFA3 |
+| 4 | #61AFEF | 12 | #8CCAFF |
+| 5 | #C678DD | 13 | #E5A3F5 |
+| 6 | #56B6C2 | 14 | #83DCE5 |
+| 7 | #C5CED8 | 15 | #FFFFFF |
 
 ANSI256 indices 16..231 use the standard xterm 6×6×6 cube with component levels
 `[0,95,135,175,215,255]`: for `n=index-16`, red index `n/36`, green `(n/6)%6`,
 blue `n%6` (integer division). Indices 232..255 are grayscale `8+10*(index-232)`.
+Explicit RGB remains literal. An explicit background uses the same colour mapping
+as foreground, including opaque spaces; colours are never changed in response to
+adjacent pixels. The palette target concerns the default background, not every
+possible authored foreground/background combination. PNG pixels are not tinted.
 
 ## Sprite geometry and safety
 
-The sprite DTO is unchanged across versions: nonempty unique `id`, relative PNG
+The shared sprite DTO uses nonempty unique `id`, relative PNG
 `asset`, signed 32-bit cell coordinates `x/y`, positive logical pixel `width/height`,
 `anchor:"bottom_center"` and signed 32-bit `layer`. Off-grid sprites are valid and
-clipped to the presentation surface. No source rectangles, tint, effects or animation.
+clipped to the presentation surface. Tint, effects and animation state are not
+part of this renderer.
+
+With `sprite_source_rect` negotiated, an optional `sourceRect` selects image pixels:
+
+```json
+{"id":"player","asset":"South.png","x":8,"y":4,"width":32,"height":48,"anchor":"bottom_center","layer":100,"sourceRect":{"x":256,"y":0,"width":256,"height":256}}
+```
+
+Source `x/y` are nonnegative integers; source `width/height` are positive integers.
+All four fields must fit unsigned 32-bit integers, their sums must not overflow,
+and the rectangle must fit the actual decoded PNG. Fractions, floating-point
+notation, non-finite values, strings, missing members, unknown members and explicit
+`sourceRect:null` are rejected. Crops without negotiated capability are rejected.
+Any invalid crop rejects the complete frame and preserves the last snapshot.
+
+Omitting `sourceRect` retains the existing full-image drawing behavior, including
+GPUI's contain fit. A supplied rectangle fills the destination `width/height`;
+these dimensions, cell coordinates, bottom-center anchor and layer are independent
+of sheet dimensions. The full sheet is scaled/translated behind a destination-sized
+GPU clip mask. Actor sheets use no CPU cropping or generated frame images.
+PHP chooses each rectangle and owns animation timing; Rust has no animation clock.
+See [S8-A renderer validation](docs/s8-a-validation.md).
 
 ```text
 feetX = (x + 0.5) * cellWidth
@@ -191,7 +265,24 @@ The viewport transform below places the grid inside native content, below the
 titlebar. Larger sprites never change cell pitch; font advance never controls cell
 positions. Retina backing scale applies equally to text and images.
 
+All rendered text, including dialogue, menus and HUDs over graphical maps, uses
+the same metrics-based sizing. Public GPUI font metrics measure the selected
+Menlo/monospace font's character advance and ascent + descent per em. Font size
+fits within 95% of cell width/height, with an em cap at cell height; the existing
+cell pitch and full-cell line height stay fixed. The logical size is cached once
+per session and multiplied by the shared viewport scale. Missing/invalid metrics
+retain the previous bounded fallback. Optional tracing emits `text_metrics` with
+the measured advance, line extent and chosen size. See [readability validation](docs/readability-validation.md).
+
 ## Logical grid and native viewport
+
+Engine's graphical default uses the complete battle layout: **135 columns × 36
+rows**, independently of the launching terminal. At the registered 10 × 20 cell
+size this gives a 1350 × 720 logical surface, shared by fields, menus and battles.
+Large maps scroll inside that area; opening a menu or battle does not resize it.
+Explicit developer dimensions still override the default. Engine selects these
+dimensions before the session; GPUI does not infer them from visible content.
+See [battle viewport validation](docs/battle-viewport-validation.md).
 
 The hello fixes the logical surface for the entire session:
 `logicalWidth = columns * cellWidth`, `logicalHeight = rows * cellHeight`.
@@ -366,8 +457,17 @@ Asset paths canonicalize beneath canonical `assetRoot`. Absolute replacements,
 paths and symlinks escaping the root are rejected. In-root parent traversal/symlinks
 can resolve successfully. Files must decode as PNG regardless of suffix. The root
 and filesystem are trusted host configuration; concurrent hostile filesystem mutation
-is outside the contract. PNGs decode off the UI thread and are reused within a frame;
-persistent cross-frame caching is deferred. Choose a suitably narrow asset root.
+is outside the contract. PNGs decode off the UI thread. A session LRU cache reuses
+full decoded sheets across frames, keyed by canonical path and file length/mtime.
+Metadata changes reload the image; same-length edits with preserved timestamps
+require a new session. Choose a suitably narrow asset root.
+
+The cache holds at most 64 MiB / 1024 images. Prepared snapshots retain their cache
+generation while queued or displayed; these retained generations and the in-progress
+decode are additional bounded memory, not part of a process-wide 64 MiB promise.
+Old atlas entries are retired when the UI draws a newer cache generation, preserving
+the previous visible scene until its replacement is drawn. Crop-only changes reuse
+the same full-sheet image identity and GPUI atlas upload.
 
 | Resource | Maximum |
 | --- | --- |
@@ -376,15 +476,25 @@ persistent cross-frame caching is deferred. Choose a suitably narrow asset root.
 | Cell | 256 × 256 logical pixels, positive |
 | Grid extent | 16384 logical pixels per axis |
 | Sprites per frame | 1024 |
+| Tile batches / cells per frame | 64 / 32768, independent of actors |
+| Tile source catalog | 1..256 per batch, 4096 per frame |
 | PNG source and displayed dimensions | 4096 × 4096 |
 | Encoded PNG | 16 MiB |
-| Decoded images per frame | 64 MiB |
+| Decoded source images per frame (actors + tiles) | 64 MiB / 1024 images |
+| Session decoded-image cache | 64 MiB / 1024 images |
+| Prepared tile regions per frame and in session LRU | 64 MiB / 4096 regions, including guards |
+| Display tile-sample LRU | 64 MiB / 32768 images; paint-time evictions retire at the next render |
 | V2 text layers | 64 |
 | V2 runs across all layers | 32768 |
 | V2 Unicode scalars across all runs, including spaces/overlap | 524288 |
 | V2 text layer ID | 256 UTF-8 bytes |
 
-Validation and complete image preparation happen before displayed-state mutation.
+Validation, PNG decoding and source-region preparation happen before displayed-state
+mutation. Display samples are derived during paint, when device scale and final
+cell position are known. They have a separate LRU; samples evicted while painting
+remain alive until the next render boundary so their GPU slots cannot be reused
+under the current scene. These in-flight samples and GPUI uploads are additional
+memory, not part of a process-wide cache limit.
 
 ## Key identities (both versions)
 
