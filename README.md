@@ -75,6 +75,11 @@ legacy ready shape, with no capabilities field. Unknown or duplicate requirement
 are rejected. Older renderers reject the new hello field; callers must also reject
 a missing acknowledgment, never silently fall back to drawing the whole sheet.
 
+Graphical terrain uses the v2-only `tile_batches` capability. Automatic Engine
+startup requests both capabilities before any later map transfer. Every
+`tileBatches` field, including an empty array, requires acknowledgment; v1
+rejects this capability. See the [frozen tile contract](docs/tile-batches.md).
+
 Before a successfully validated hello, errors use the legacy `protocol:1` envelope,
 **including errors for invalid v2 hellos**. That is a pre-session exception, not
 negotiation or downgrade. Once initialized, every `ready`, `key`, `close_requested`
@@ -143,16 +148,39 @@ rectangle using the explicit foreground or default text colour. A space paints j
 the background. Cells absent from runs are transparent to lower layers. Overlapping
 runs execute in their array order, so later cells replace earlier cells.
 
-For v2, text layers and sprites share one ascending numeric order:
+For v2, tile batches, text layers and sprites share one ascending numeric order:
 
 1. Lower layers paint before higher layers.
-2. Equal-layer text layers paint first, preserving their frame array order.
-3. Equal-layer sprites paint second, preserving their frame array order.
+2. Equal-layer tile batches paint first, preserving batch and cell array order.
+3. Equal-layer text layers paint next, preserving their frame array order.
+4. Equal-layer sprites paint last, preserving their frame array order.
 
 Use distinct layers for specific cross-type occlusion. Values such as world `0`,
 sprite `100` and UI `1000` are caller policy, never hardcoded gameplay rules.
-`textLayers:[]` removes all previous text layers. Together with `sprites:[]`, it
+`textLayers:[]` removes all previous text layers. Together with `sprites:[]` and
+omitted or empty `tileBatches`, it
 clears the entire snapshot to the default surface background.
+
+### Tile batches
+
+With `tile_batches` negotiated, v2 frames may include:
+
+```json
+"tileBatches":[{"id":"terrain","asset":"Field.png","layer":-100,"sources":[{"x":0,"y":0,"width":16,"height":32}],"cells":[{"column":8,"row":3,"source":0}]}]
+```
+
+Cells are already Camera-projected, unsigned grid coordinates. Each fills one
+session cell; `source` indexes image-pixel rectangles in the batch catalog.
+There is no map interpretation or terrain animation in Rust. Omission and `[]`
+clear previous tiles; explicit null is invalid. A malformed batch, invalid crop
+or budget failure rejects the entire frame, preserving the accepted display.
+
+Terrain has an independent 32768-cell budget and one canvas/layout element per
+batch, while each cell still emits an image primitive. Guarded source regions
+are prepared and cached for reuse, with separate byte/count accounting; they
+isolate linear filtering at fractional scales without per-frame crop work.
+See [S8-B implementation and validation](docs/s8-b-validation.md) and the
+[shared exact wire fixtures](fixtures/tile-batches/manifest.json).
 
 ### Structured colour
 
@@ -215,8 +243,8 @@ Omitting `sourceRect` retains the existing full-image drawing behavior, includin
 GPUI's contain fit. A supplied rectangle fills the destination `width/height`;
 these dimensions, cell coordinates, bottom-center anchor and layer are independent
 of sheet dimensions. The full sheet is scaled/translated behind a destination-sized
-GPU clip mask. No CPU cropping, generated frame images, animation timer or frame
-selection exists in Rust. PHP chooses each rectangle and owns animation timing.
+GPU clip mask. Actor sheets use no CPU cropping or generated frame images.
+PHP chooses each rectangle and owns animation timing; Rust has no animation clock.
 See [S8-A renderer validation](docs/s8-a-validation.md).
 
 ```text
@@ -442,10 +470,13 @@ the same full-sheet image identity and GPUI atlas upload.
 | Cell | 256 × 256 logical pixels, positive |
 | Grid extent | 16384 logical pixels per axis |
 | Sprites per frame | 1024 |
+| Tile batches / cells per frame | 64 / 32768, independent of actors |
+| Tile source catalog | 1..256 per batch, 4096 per frame |
 | PNG source and displayed dimensions | 4096 × 4096 |
 | Encoded PNG | 16 MiB |
-| Decoded images per frame | 64 MiB |
+| Decoded source images per frame (actors + tiles) | 64 MiB / 1024 images |
 | Session decoded-image cache | 64 MiB / 1024 images |
+| Prepared tile regions per frame and in session LRU | 64 MiB / 4096 regions, including guards |
 | V2 text layers | 64 |
 | V2 runs across all layers | 32768 |
 | V2 Unicode scalars across all runs, including spaces/overlap | 524288 |

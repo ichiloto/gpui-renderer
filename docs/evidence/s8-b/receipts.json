@@ -1,0 +1,14 @@
+{
+  "baseline_commit": "89c829f",
+  "baseline_binary_sha256": "20a38d04d44f7eb0dd3469dadabdc2b7cf567487bac14db34bd73608bfa6a584",
+  "candidate_binary_sha256": "f3b4f56f289ac1bb60a03c25db1e143f3425617d35b6b3f59e42a8a6ca38e8d7",
+  "candidate_installed": false,
+  "debug_tests_passed": 81,
+  "release_tests_passed": 81,
+  "clippy": "passed",
+  "format": "passed",
+  "release_build": "passed",
+  "native_status": "held pending Engine viewport PR86 and coordinated Engine/Game readiness",
+  "fixture_manifest_sha256": "417e64826ea4e736acc02639fbb8b0b266b0e5ea619a29f41d08f6951eee3312",
+  "fixture_checksums_sha256": "9b3a4a5a24f23f01331a52b3a5fdae031e314ae60dd273b426e6df787eb4cc63"
+}

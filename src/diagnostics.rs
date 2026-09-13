@@ -47,6 +47,13 @@ enum Record {
         #[serde(skip_serializing_if = "Option::is_none")]
         queue_capacity: Option<usize>,
     },
+    FrameResources {
+        sequence: u64,
+        protocol: u32,
+        frame: u64,
+        #[serde(flatten)]
+        resources: crate::state::FrameResources,
+    },
     Key {
         id: u64,
         stage: &'static str,
@@ -211,6 +218,21 @@ impl Diagnostics {
             && let Some(at_ns) = self.now()
         {
             self.frame_record(trace, stage, at_ns);
+        }
+    }
+
+    pub fn frame_resources(
+        &self,
+        trace: Option<FrameTrace>,
+        resources: crate::state::FrameResources,
+    ) {
+        if let Some(trace) = trace {
+            self.record(Record::FrameResources {
+                sequence: trace.sequence,
+                protocol: trace.protocol,
+                frame: trace.frame,
+                resources,
+            });
         }
     }
 

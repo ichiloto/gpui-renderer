@@ -68,10 +68,11 @@ pub struct Hello {
     pub required_capabilities: Vec<Capability>,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum Capability {
     SpriteSourceRect,
+    TileBatches,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -136,6 +137,11 @@ pub const MAX_TEXT_LAYERS: usize = 64;
 pub const MAX_TEXT_RUNS: usize = 32768;
 pub const MAX_TEXT_SCALARS: usize = 524288;
 pub const MAX_LAYER_ID_BYTES: usize = 256;
+pub const MAX_TILE_BATCHES: usize = 64;
+pub const MAX_BATCH_SOURCES: usize = 256;
+pub const MAX_TILE_SOURCES: usize = 4096;
+pub const MAX_TILE_CELLS: usize = 32768;
+pub const MAX_TILE_ASSET_BYTES: usize = 4096;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -143,6 +149,81 @@ pub struct FrameV2 {
     pub frame: u64,
     pub text_layers: Vec<TextLayer>,
     pub sprites: Vec<Sprite>,
+    // Preserve presence for capability gating; omission and [] both clear.
+    #[serde(default, deserialize_with = "tile_batches")]
+    pub tile_batches: Option<Vec<TileBatch>>,
+}
+
+fn tile_batches<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> Result<Option<Vec<TileBatch>>, D::Error> {
+    Vec::deserialize(d).map(Some)
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct TileBatch {
+    pub id: String,
+    pub asset: PathBuf,
+    pub layer: i32,
+    pub sources: Vec<SourceRect>,
+    pub cells: Vec<TileCell>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct TileCell {
+    pub column: u32,
+    pub row: u32,
+    pub source: u32,
+}
+
+fn validate_tiles(batches: &[TileBatch], grid: Grid) -> Result<(), String> {
+    if batches.len() > MAX_TILE_BATCHES {
+        return Err("frame exceeds 64 tile batches".into());
+    }
+    let mut ids = std::collections::HashSet::new();
+    let mut source_count = 0;
+    let mut cell_count = 0;
+    for batch in batches {
+        if batch.id.is_empty() || batch.id.len() > MAX_LAYER_ID_BYTES || !ids.insert(&batch.id) {
+            return Err(
+                "tile batch ids must be nonempty, unique, and at most 256 UTF-8 bytes".into(),
+            );
+        }
+        if batch.asset.as_os_str().is_empty()
+            || batch.asset.is_absolute()
+            || batch.asset.as_os_str().len() > MAX_TILE_ASSET_BYTES
+        {
+            return Err(
+                "tile asset must be a nonempty relative path of at most 4096 UTF-8 bytes".into(),
+            );
+        }
+        source_count += batch.sources.len();
+        cell_count += batch.cells.len();
+        if batch.sources.is_empty() || batch.sources.len() > MAX_BATCH_SOURCES {
+            return Err("tile batch requires 1..256 sources".into());
+        }
+        if source_count > MAX_TILE_SOURCES || cell_count > MAX_TILE_CELLS {
+            return Err("frame exceeds 4096 tile sources or 32768 tile cells".into());
+        }
+        for rect in &batch.sources {
+            rect.validate()?;
+        }
+        let mut destinations = std::collections::HashSet::new();
+        for cell in &batch.cells {
+            if cell.column >= grid.columns || cell.row >= grid.rows {
+                return Err("tile cell exceeds the configured grid".into());
+            }
+            if cell.source as usize >= batch.sources.len() {
+                return Err("tile source index exceeds the batch catalog".into());
+            }
+            if !destinations.insert((cell.column, cell.row)) {
+                return Err("tile destinations must be unique within a batch".into());
+            }
+        }
+    }
+    Ok(())
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
@@ -208,7 +289,8 @@ impl FrameV2 {
                 }
             }
         }
-        validate_sprites(&self.sprites)
+        validate_sprites(&self.sprites)?;
+        validate_tiles(self.tile_batches.as_deref().unwrap_or_default(), grid)
     }
 }
 
@@ -251,7 +333,7 @@ fn source_rect<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<SourceRe
     SourceRect::deserialize(d).map(Some)
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash)]
 #[serde(deny_unknown_fields)]
 pub struct SourceRect {
     pub x: u32,
@@ -287,6 +369,9 @@ pub enum Anchor {
 }
 
 pub fn parse(line: &[u8]) -> Result<Incoming, String> {
+    if line.len() > MAX_LINE_BYTES {
+        return Err("protocol line exceeds 4 MiB".into());
+    }
     fn decode<F: serde::de::DeserializeOwned>(line: &[u8]) -> Result<WireMessage<F>, String> {
         let envelope: Envelope<F> =
             serde_json::from_slice(line).map_err(|e| format!("invalid protocol message: {e}"))?;
@@ -326,8 +411,12 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if hello.title.is_empty() || hello.title.chars().any(char::is_control) {
             return Err("title must be nonempty and contain no control characters".into());
         }
-        if hello.required_capabilities.len() > 1 {
+        let unique: std::collections::HashSet<_> = hello.required_capabilities.iter().collect();
+        if unique.len() != hello.required_capabilities.len() {
             return Err("requiredCapabilities must not contain duplicates".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::TileBatches) {
+            return Err("tile_batches requires protocol v2".into());
         }
     }
     Ok(Incoming { version, message })
@@ -468,6 +557,170 @@ impl ProtocolWriter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn tile_frame() -> FrameV2 {
+        let Message::FrameV2(frame) = parse(include_bytes!(
+            "../fixtures/tile-batches/valid-tiles-text-player-ui.json"
+        ))
+        .unwrap()
+        .message
+        else {
+            panic!()
+        };
+        frame
+    }
+
+    #[test]
+    fn tile_budgets_are_aggregate_and_independent_of_actor_budget() {
+        let grid = Grid {
+            columns: 512,
+            rows: 256,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut frame = tile_frame();
+        let batch = frame.tile_batches.as_ref().unwrap()[0].clone();
+        let sprite = frame.sprites[0].clone();
+        frame.sprites = (0..1024)
+            .map(|i| Sprite {
+                id: format!("actor-{i}"),
+                ..sprite.clone()
+            })
+            .collect();
+        frame.tile_batches.as_mut().unwrap()[0].cells = (0..MAX_TILE_CELLS)
+            .map(|i| TileCell {
+                column: (i % 512) as u32,
+                row: (i / 512) as u32,
+                source: 0,
+            })
+            .collect();
+        frame.validate(grid).unwrap();
+        frame.tile_batches.as_mut().unwrap()[0]
+            .cells
+            .push(TileCell {
+                column: 0,
+                row: 64,
+                source: 0,
+            });
+        assert!(frame.validate(grid).unwrap_err().contains("32768"));
+        frame.tile_batches = Some(vec![batch.clone()]);
+        frame.sprites.push(Sprite {
+            id: "extra".into(),
+            ..sprite
+        });
+        assert!(frame.validate(grid).unwrap_err().contains("1024"));
+        frame.sprites.clear();
+        let mut empty = batch;
+        empty.cells.clear();
+        frame.tile_batches = Some(
+            (0..64)
+                .map(|i| TileBatch {
+                    id: format!("batch-{i}"),
+                    ..empty.clone()
+                })
+                .collect(),
+        );
+        frame.validate(grid).unwrap();
+        frame.tile_batches.as_mut().unwrap().push(TileBatch {
+            id: "extra".into(),
+            ..empty.clone()
+        });
+        assert!(frame.validate(grid).unwrap_err().contains("64 tile"));
+        empty.sources = vec![empty.sources[0]; 256];
+        frame.tile_batches = Some(
+            (0..16)
+                .map(|i| TileBatch {
+                    id: format!("batch-{i}"),
+                    ..empty.clone()
+                })
+                .collect(),
+        );
+        frame.validate(grid).unwrap();
+        frame.tile_batches.as_mut().unwrap().push(TileBatch {
+            id: "extra".into(),
+            ..empty.clone()
+        });
+        assert!(frame.validate(grid).unwrap_err().contains("4096"));
+        empty.sources.push(empty.sources[0]);
+        frame.tile_batches = Some(vec![empty]);
+        assert!(frame.validate(grid).unwrap_err().contains("1..256"));
+    }
+
+    #[test]
+    fn tile_integer_types_reject_fraction_exponent_boolean_and_missing_fields() {
+        let base = include_str!("../fixtures/tile-batches/valid-tiles-text-player-ui.json");
+        for bad in [
+            "1.0",
+            "1e0",
+            "1.5",
+            "-1",
+            "4294967296",
+            "true",
+            "null",
+            "\"1\"",
+        ] {
+            for field in ["column", "row", "source"] {
+                let wire =
+                    base.replacen(&format!("\"{field}\":0"), &format!("\"{field}\":{bad}"), 1);
+                assert!(parse(wire.as_bytes()).is_err(), "{field} {bad}");
+            }
+        }
+        let mut frame = tile_frame();
+        let batch = &mut frame.tile_batches.as_mut().unwrap()[0];
+        batch.id = "é".repeat(128);
+        batch.asset = PathBuf::from("a".repeat(4096));
+        frame
+            .validate(Grid {
+                columns: 135,
+                rows: 36,
+                cell_width: 10,
+                cell_height: 20,
+            })
+            .unwrap();
+        frame.tile_batches.as_mut().unwrap()[0].asset = PathBuf::from("a".repeat(4097));
+        assert!(frame.validate(grid()).is_err());
+    }
+
+    #[test]
+    fn tile_capability_negotiation_is_v2_only_and_duplicates_are_invalid() {
+        let hello = include_str!("../fixtures/tile-batches/hello.json");
+        assert!(parse(hello.as_bytes()).is_ok());
+        assert!(parse(hello.replace("\"protocol\":2", "\"protocol\":1").as_bytes()).is_err());
+        assert!(
+            parse(
+                hello
+                    .replace("sprite_source_rect", "tile_batches")
+                    .as_bytes()
+            )
+            .is_err()
+        );
+        assert!(parse(hello.replace("tile_batches", "future_tiles").as_bytes()).is_err());
+        for caps in [
+            vec![Capability::TileBatches],
+            vec![Capability::SpriteSourceRect, Capability::TileBatches],
+        ] {
+            let mut bytes = vec![];
+            write_event(
+                &mut bytes,
+                Version::V2,
+                &Event::Ready {
+                    capabilities: caps.clone(),
+                },
+            )
+            .unwrap();
+            let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+            assert_eq!(value["capabilities"], serde_json::to_value(caps).unwrap());
+        }
+    }
+
+    #[test]
+    fn total_line_byte_limit_applies_to_tile_frames_before_decoding() {
+        let mut wire = include_bytes!("../fixtures/tile-batches/valid-full-viewport.json").to_vec();
+        wire.resize(MAX_LINE_BYTES, b' ');
+        assert!(parse(&wire).is_ok());
+        wire.push(b' ');
+        assert!(parse(&wire).unwrap_err().contains("4 MiB"));
+    }
 
     #[test]
     fn traced_output_preserves_schema_and_only_marks_success_after_flush() {

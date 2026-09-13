@@ -7,6 +7,8 @@ mod protocol;
 mod render_trace;
 mod renderer;
 mod state;
+mod tile_regions;
+mod tiles;
 mod transport;
 mod viewport;
 mod window_layout;

@@ -1,0 +1,90 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.93s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6, proc-macro-error2 v2.0.1
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests src/main.rs (target/debug/deps/gpui_renderer-900791fbd26e628a)
+
+running 81 tests
+test color::tests::palette_cube_grayscale_and_rgb_are_deterministic ... ok
+test color::tests::dark_terminal_palette_is_readable_and_bright_variants_remain_distinct ... ok
+test assets::tests::rejects_absolute_and_parent_traversal ... ok
+test assets::tests::rejects_file_and_directory_symlink_escape ... ok
+test diagnostics::tests::disabled_diagnostics_never_create_a_trace ... ok
+test assets::tests::cache_evicts_least_recent_images_with_byte_and_count_bounds ... ok
+test diagnostics::tests::worker_submits_complete_json_lines_to_the_shared_stderr_sink ... ok
+test color::tests::tagged_colours_are_strict ... ok
+test input::tests::modifiers_never_degrade_chords ... ok
+test input::tests::native_gpui_shift_and_key_char_case ... ok
+test input::tests::every_letter_and_standalone_identity ... ok
+test diagnostics::tests::clock_anchor_pairs_host_time_with_a_bounded_relative_interval ... ok
+test diagnostics::tests::stage_identity_repeat_and_monotonic_times_survive_async_recording ... ok
+test assets::tests::fixture_png_decodes_transparency_and_bgra ... ok
+test protocol::tests::events_are_single_json_lines ... ok
+test protocol::tests::cross_version_fields_and_unknown_fields_rejected ... ok
+test assets::tests::root_and_regular_file_validation ... ok
+test assets::tests::cache_reuses_canonical_assets_and_reloads_changed_metadata ... ok
+test protocol::tests::malformed_frame_rejected ... ok
+test protocol::tests::capability_request_is_strict_and_legacy_ready_has_no_new_fields ... ok
+test protocol::tests::every_event_preserves_both_protocol_versions ... ok
+test protocol::tests::shutdown_parsing ... ok
+test protocol::tests::runs_must_fit_and_reject_controls ... ok
+test protocol::tests::all_v2_fields_are_required_and_typed ... ok
+test protocol::tests::layer_ids_are_nonempty_unique_bounded_utf8 ... ok
+test protocol::tests::invalid_grid_dimensions ... ok
+test protocol::tests::unsupported_version ... ok
+test protocol::tests::tile_capability_negotiation_is_v2_only_and_duplicates_are_invalid ... ok
+test protocol::tests::v2_hello_and_frame_with_explicit_null_styles ... ok
+test protocol::tests::valid_frame_and_anchor ... ok
+test protocol::tests::valid_hello ... ok
+test renderer::tests::bottom_center_places_feet_on_target_cell ... ok
+test renderer::tests::bottom_center_tracks_the_same_cell_at_every_scale_and_offset ... ok
+test renderer::tests::font_metric_fallback_and_extreme_values_remain_bounded ... ok
+test renderer::tests::measured_font_fills_cells_without_changing_pitch_or_resize_geometry ... ok
+test renderer::tests::sheet_crop_and_bottom_center_remain_aligned_across_resize ... ok
+test protocol::tests::traced_output_preserves_schema_and_only_marks_success_after_flush ... ok
+test renderer::tests::styled_glyph_and_explicit_space_keep_scaled_cell_pitch_and_opaque_colours ... ok
+test protocol::tests::tile_integer_types_reject_fraction_exponent_boolean_and_missing_fields ... ok
+test protocol::tests::source_rect_requires_a_complete_strict_integer_object ... ok
+test state::tests::crop_bounds_use_the_decoded_image_and_rejection_preserves_snapshot ... ok
+test state::tests::empty_v2_replacement_clears_every_layer_and_sprite ... ok
+test state::tests::distinct_crops_share_full_sheet_across_frames_and_keep_layering ... ok
+test state::tests::full_frames_clear_previous_text_and_sprites ... ok
+test state::tests::invalid_v2_style_geometry_or_asset_preserves_last_accepted_frame ... ok
+test state::tests::rejected_frame_preserves_last_snapshot ... ok
+test state::tests::layers_are_ascending_and_ties_stable ... ok
+test state::tests::same_number_style_only_replacement_preserves_all_presentation_intent ... ok
+test state::tests::short_rows_are_allowed_but_overflow_and_controls_are_rejected ... ok
+test diagnostics::tests::blocked_stderr_drops_observations_without_blocking_the_producer ... ok
+test state::tests::text_cells_have_exact_positions_and_opaque_spaces ... ok
+test protocol::tests::v2_resource_boundaries_include_full_current_layouts ... ok
+test state::tests::themed_ansi_backgrounds_and_literal_colours_are_preserved_even_for_spaces ... ok
+test state::tests::unified_plan_orders_world_sprite_ui_and_all_ties_stably ... ok
+test state::tests::v1_negative_sprite_layer_still_paints_after_text ... ok
+test tile_regions::tests::guards_copy_only_selected_pixels_and_alpha_and_reuse_across_cells_frames ... ok
+test tile_regions::tests::region_eviction_is_bounded_and_does_not_invalidate_prepared_snapshots ... ok
+test state::tests::tile_changes_participate_in_complete_snapshot_equality ... ok
+test tiles::tests::viewport_edges_keep_exact_cell_masks_and_samples_inside_isolated_regions ... ok
+test transport::tests::eof_is_distinct_from_shutdown ... ok
+test transport::tests::failed_hello_does_not_select_session_then_v2_can_initialize ... ok
+test transport::tests::frame_before_hello_rejected ... ok
+test transport::tests::malformed_and_mixed_input_recovers_in_v2 ... ok
+test transport::tests::malformed_input_recovers_then_shutdown_stops_reading ... ok
+test protocol::tests::tile_budgets_are_aggregate_and_independent_of_actor_budget ... ok
+test state::tests::terrain_text_sprite_ties_are_stable_and_scene_snapshots_clear_terrain ... ok
+test transport::tests::observed_frames_keep_duplicate_numbers_distinct_and_rejections_unaccepted ... ok
+test transport::tests::second_hello_and_mixed_versions_never_change_or_stop_session ... ok
+test transport::tests::oversized_input_is_drained_without_losing_next_message ... ok
+test viewport::tests::last_legend_fits_at_one_or_scales_uniformly ... ok
+test viewport::tests::minimized_or_invalid_viewports_have_safe_nonnegative_geometry ... ok
+test transport::tests::source_rect_is_opt_in_for_both_versions_and_rejection_does_not_end_session ... ok
+test viewport::tests::scale_never_exceeds_one_across_representative_sizes ... ok
+test viewport::tests::wide_and_tall_surfaces_center_the_unconstrained_axis ... ok
+test window_layout::tests::fitted_outer_frame_centers_inside_work_area_in_screen_relative_coordinates ... ok
+test transport::tests::traced_handoff_preserves_bounded_order_and_reports_receiver_close ... ok
+test protocol::tests::total_line_byte_limit_applies_to_tile_frames_before_decoding ... ok
+test state::tests::full_terrain_viewport_shares_atlas_with_all_1024_actors_and_reuses_regions ... ok
+test transport::tests::cross_language_tile_fixtures_validate_exact_payloads_and_keep_last_display_on_error ... ok
+test state::tests::shared_image_count_budget_includes_terrain_atlases_after_actors ... ok
+test state::tests::decoded_byte_budget_is_shared_between_actor_images_and_tile_atlases ... ok
+
+test result: ok. 81 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.09s
+

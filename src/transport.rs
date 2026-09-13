@@ -63,6 +63,13 @@ impl Session {
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
                 validate_capabilities(&frame.sprites, hello)?;
+                if frame.tile_batches.is_some()
+                    && !hello
+                        .required_capabilities
+                        .contains(&Capability::TileBatches)
+                {
+                    return Err("tileBatches requires negotiated tile_batches capability".into());
+                }
                 Ok(Update::Frame(PreparedFrame::prepare_v2(
                     frame, hello.grid, assets,
                 )?))
@@ -171,6 +178,7 @@ fn read_protocol_observed(
                 if let Update::Frame(frame) = &mut update {
                     frame.observation = observation;
                     diagnostics.frame_stage(observation, "accepted");
+                    diagnostics.frame_resources(observation, frame.resources);
                 }
                 Ok(update)
             })
@@ -185,6 +193,86 @@ fn read_protocol_observed(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cross_language_tile_fixtures_validate_exact_payloads_and_keep_last_display_on_error() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures");
+        let dir = root.join("tile-batches");
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(dir.join("manifest.json")).unwrap()).unwrap();
+        for case in manifest["cases"].as_array().unwrap() {
+            let name = case["file"].as_str().unwrap();
+            let stage = case["stage"].as_str().unwrap();
+            let mut hello: serde_json::Value =
+                serde_json::from_slice(&std::fs::read(dir.join("hello.json")).unwrap()).unwrap();
+            hello["assetRoot"] = serde_json::json!(root);
+            if let Some(caps) = case.get("capabilities") {
+                hello["requiredCapabilities"] = caps.clone();
+            }
+            let mut session = Session::default();
+            let Update::Hello(_, config) = session
+                .prepare(protocol::parse(&serde_json::to_vec(&hello).unwrap()).unwrap())
+                .unwrap()
+            else {
+                panic!()
+            };
+            let assets = AssetRoot::new(&root).unwrap();
+            let mut state = crate::state::RendererState {
+                hello: config.clone(),
+                frame: None,
+            };
+            // A genuine prior display survives parse/session/asset/budget failures.
+            let source = protocol::parse(include_bytes!(
+                "../fixtures/tile-batches/valid-tiles-text-player-ui.json"
+            ))
+            .unwrap();
+            let Message::FrameV2(source) = source.message else {
+                panic!()
+            };
+            state.replace(PreparedFrame::prepare_v2(source, config.grid, &assets).unwrap());
+            let parsed = protocol::parse(&std::fs::read(dir.join(name)).unwrap());
+            if stage == "parse" {
+                assert!(parsed.is_err(), "{name}");
+                continue;
+            }
+            let incoming = parsed.unwrap_or_else(|e| panic!("{name}: {e}"));
+            let Message::FrameV2(ref frame) = incoming.message else {
+                panic!("{name}")
+            };
+            if stage == "frame" {
+                assert!(frame.validate(config.grid).is_err(), "{name}");
+            } else {
+                frame
+                    .validate(config.grid)
+                    .unwrap_or_else(|e| panic!("{name}: {e}"));
+            }
+            let update = session.prepare(incoming);
+            if stage == "accept" {
+                let Update::Frame(frame) = update.unwrap_or_else(|e| panic!("{name}: {e}")) else {
+                    panic!()
+                };
+                state.replace(frame);
+                if name.starts_with("clear-") {
+                    assert!(state.frame.as_ref().unwrap().tile_batches.is_empty());
+                }
+                if name == "valid-full-viewport.json" {
+                    assert_eq!(state.frame.as_ref().unwrap().resources.tile_cells, 4860);
+                }
+            } else {
+                assert!(update.is_err(), "{name}");
+                assert_eq!(
+                    state.frame.as_ref().unwrap().tile_batches.len(),
+                    1,
+                    "{name}"
+                );
+                assert_eq!(
+                    state.frame.as_ref().unwrap().resources.tile_cells,
+                    2,
+                    "{name}"
+                );
+            }
+        }
+    }
 
     #[test]
     fn traced_handoff_preserves_bounded_order_and_reports_receiver_close() {

@@ -1,0 +1,193 @@
+{
+  "hello": "hello.json",
+  "assetRoot": "..",
+  "notes": "Exact wire fixtures. Replace only hello.assetRoot with the parent fixtures directory. stage distinguishes parse, capability-session, structural frame and decoded-image/path validation. Unlisted capabilities use the hello default. All invalid frames must preserve prior accepted display. Source fixture test-sprite.png is 32x48.",
+  "cases": [
+    {
+      "file": "valid-tiles-text-player-ui.json",
+      "stage": "accept"
+    },
+    {
+      "file": "valid-full-viewport.json",
+      "stage": "accept"
+    },
+    {
+      "file": "valid-empty-cells.json",
+      "stage": "accept"
+    },
+    {
+      "file": "clear-empty.json",
+      "stage": "accept"
+    },
+    {
+      "file": "clear-omitted.json",
+      "stage": "accept"
+    },
+    {
+      "file": "valid-overlapping-batches.json",
+      "stage": "accept"
+    },
+    {
+      "file": "unnegotiated-tiles.json",
+      "stage": "session",
+      "capabilities": [
+        "sprite_source_rect"
+      ]
+    },
+    {
+      "file": "unnegotiated-empty.json",
+      "stage": "session",
+      "capabilities": [
+        "sprite_source_rect"
+      ]
+    },
+    {
+      "file": "invalid-batches-null.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-batches-object.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-batches-string.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-extra-batch.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-extra-source.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-extra-cell.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-missing-field-id.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-missing-field-asset.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-missing-field-layer.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-missing-field-sources.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-missing-field-cells.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-empty-id.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-long-id.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-empty-asset.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-absolute-asset.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-missing-asset.json",
+      "stage": "image"
+    },
+    {
+      "file": "invalid-escape-asset.json",
+      "stage": "image"
+    },
+    {
+      "file": "invalid-empty-sources.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-sources-object.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-cells-null.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-layer-float.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-layer-overflow.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-column-outside.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-row-outside.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-source-index.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-column-negative.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-row-float.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-source-string.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-source-overflow.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-zero-width.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-overflow-extent.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-image-bounds.json",
+      "stage": "image"
+    },
+    {
+      "file": "invalid-source-null.json",
+      "stage": "parse"
+    },
+    {
+      "file": "invalid-unused-source-image-bounds.json",
+      "stage": "image"
+    },
+    {
+      "file": "invalid-duplicate-batch-id.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-duplicate-cell.json",
+      "stage": "frame"
+    },
+    {
+      "file": "invalid-v1-tiles.json",
+      "stage": "parse"
+    }
+  ]
+}

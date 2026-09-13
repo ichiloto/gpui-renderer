@@ -4,6 +4,7 @@ use std::collections::VecDeque;
 use std::fs;
 use std::io::{Cursor, Read};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
 pub const MAX_DECODED_BYTES: usize = 64 * 1024 * 1024;
@@ -59,6 +60,8 @@ impl ImageCache {
 pub struct AssetRoot {
     path: PathBuf,
     cache: Arc<Mutex<ImageCache>>,
+    regions: Arc<Mutex<crate::tile_regions::RegionCache>>,
+    decodes: Arc<AtomicU64>,
 }
 
 impl AssetRoot {
@@ -75,6 +78,8 @@ impl AssetRoot {
         Ok(Self {
             path: root,
             cache: Arc::default(),
+            regions: Arc::default(),
+            decodes: Arc::default(),
         })
     }
 
@@ -133,6 +138,7 @@ impl AssetRoot {
             pixel.0.swap(0, 2);
         }
         let image = Arc::new(RenderImage::new(vec![image::Frame::new(pixels)]));
+        self.decodes.fetch_add(1, Ordering::Relaxed);
         self.cache.lock().unwrap().insert(
             CachedImage {
                 path,
@@ -155,6 +161,25 @@ impl AssetRoot {
             .iter()
             .map(|entry| entry.image.clone())
             .collect()
+    }
+
+    pub fn prepare_region(
+        &self,
+        atlas: &Arc<RenderImage>,
+        rect: crate::protocol::SourceRect,
+    ) -> Result<Arc<RenderImage>, String> {
+        self.regions.lock().unwrap().prepare(atlas, rect)
+    }
+
+    pub fn cached_regions(&self) -> Vec<Arc<RenderImage>> {
+        self.regions.lock().unwrap().images()
+    }
+
+    pub fn preparation_totals(&self) -> (u64, u64) {
+        (
+            self.decodes.load(Ordering::Relaxed),
+            self.regions.lock().unwrap().builds,
+        )
     }
 }
 

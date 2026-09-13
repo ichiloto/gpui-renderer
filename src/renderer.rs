@@ -82,11 +82,10 @@ impl Render for Renderer {
             .diagnostics
             .frame_stage(observation, "render_callback");
         if let Some(frame) = &self.state.frame {
+            let retained: std::collections::HashSet<_> =
+                frame.cached_images.iter().map(|image| image.id).collect();
             for previous in &self.cached_images {
-                if !frame
-                    .cached_images
-                    .iter()
-                    .any(|image| image.id == previous.id)
+                if !retained.contains(&previous.id)
                     && let Err(error) = window.drop_image(previous.clone())
                 {
                     crate::protocol::diagnostic(format!("cannot retire cached image: {error}"));
@@ -177,6 +176,13 @@ impl Render for Renderer {
         if let Some(frame) = &self.state.frame {
             for item in &frame.plan {
                 match *item {
+                    PaintItem::Tiles(index) => {
+                        surface = surface.child(crate::tiles::element(
+                            frame.tile_batches[index].clone(),
+                            grid,
+                            transform,
+                        ));
+                    }
                     PaintItem::LegacyText => {
                         for (row, text) in frame.text.iter().enumerate() {
                             for (column, glyph) in text.chars().enumerate() {
