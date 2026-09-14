@@ -176,8 +176,10 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         focus,
                                         output: view_output,
                                         last_viewport: None,
+                                        last_logical_size: None,
                                         cached_images: vec![],
                                         logical_font_size: None,
+                                        canvas_fonts: Default::default(),
                                         tile_samples: Default::default(),
                                     }
                                 })

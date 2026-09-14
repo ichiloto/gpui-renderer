@@ -30,6 +30,7 @@ pub struct PreparedFrame {
     pub cached_images: Vec<Arc<RenderImage>>,
     pub tile_batches: Vec<Arc<PreparedTileBatch>>,
     pub resources: FrameResources,
+    pub canvas: Option<Box<crate::canvas::PreparedCanvas>>,
 }
 
 #[derive(Debug)]
@@ -40,6 +41,9 @@ pub struct PreparedTileBatch {
 
 #[derive(Clone, Copy, Debug, Default, serde::Serialize)]
 pub struct FrameResources {
+    pub canvas_images: usize,
+    pub canvas_indicators: usize,
+    pub canvas_text_layers: usize,
     pub tile_batches: usize,
     pub tile_cells: usize,
     pub decoded_images: usize,
@@ -99,6 +103,21 @@ impl<'a> FrameImages<'a> {
         }
         Ok(image)
     }
+    fn canvas_image(
+        &mut self,
+        image: &crate::canvas_protocol::CanvasImage,
+    ) -> Result<Arc<RenderImage>, String> {
+        let source = self.load(&image.asset)?;
+        let size = source.size(0);
+        let rect = image.source_rect.unwrap_or(crate::protocol::SourceRect {
+            x: 0,
+            y: 0,
+            width: size.width.0 as u32,
+            height: size.height.0 as u32,
+        });
+        rect.validate_image(size.width.0 as u32, size.height.0 as u32)?;
+        self.region(&source, rect)
+    }
     fn finish(mut self) -> (Vec<Arc<RenderImage>>, FrameResources) {
         let after = self.assets.preparation_totals();
         self.resources.png_decodes = after.0 - self.before.0;
@@ -133,6 +152,7 @@ impl PreparedFrame {
         let (cached_images, resources) = images.finish();
         Ok(Self {
             observation: None,
+            canvas: None,
             number: frame.frame,
             text: frame.text,
             text_layers: vec![],
@@ -147,6 +167,18 @@ impl PreparedFrame {
     pub fn prepare_v2(frame: FrameV2, grid: Grid, assets: &AssetRoot) -> Result<Self, String> {
         frame.validate(grid)?;
         let mut images = FrameImages::new(assets);
+        let canvas = frame
+            .canvas
+            .map(|canvas| {
+                crate::canvas::PreparedCanvas::prepare(canvas, |image| images.canvas_image(image))
+            })
+            .transpose()?
+            .map(Box::new);
+        if let Some(canvas) = &canvas {
+            images.resources.canvas_images = canvas.images.len();
+            images.resources.canvas_indicators = canvas.source.indicators.len();
+            images.resources.canvas_text_layers = canvas.source.text_layers.len();
+        }
         let sprites = prepare_sprites(frame.sprites, &mut images)?;
         let mut tile_batches = Vec::new();
         for batch in frame.tile_batches.unwrap_or_default() {
@@ -180,6 +212,7 @@ impl PreparedFrame {
         let (cached_images, resources) = images.finish();
         Ok(Self {
             observation: None,
+            canvas,
             number: frame.frame,
             text: vec![],
             text_layers: frame.text_layers,
@@ -246,6 +279,22 @@ pub struct RendererState {
 }
 
 impl RendererState {
+    pub fn logical_size(&self) -> (f32, f32) {
+        self.frame
+            .as_ref()
+            .and_then(|frame| frame.canvas.as_ref())
+            .map_or_else(
+                || {
+                    let grid = self.hello.grid;
+                    (
+                        (grid.columns * grid.cell_width) as f32,
+                        (grid.rows * grid.cell_height) as f32,
+                    )
+                },
+                |canvas| (canvas.source.width as f32, canvas.source.height as f32),
+            )
+    }
+
     pub fn replace(&mut self, frame: PreparedFrame) {
         self.frame = Some(frame);
     }
@@ -777,6 +826,7 @@ mod tests {
     }
     fn v2() -> FrameV2 {
         FrameV2 {
+            canvas: None,
             tile_batches: None,
             frame: 1,
             text_layers: vec![layer("world", 0), layer("ui", 1000)],
@@ -862,6 +912,7 @@ mod tests {
             [PaintItem::Text(0), PaintItem::Sprite(0), PaintItem::Text(1)]
         );
         let frame = FrameV2 {
+            canvas: None,
             tile_batches: None,
             frame: 1,
             text_layers: vec![
@@ -970,6 +1021,7 @@ mod tests {
         state.replace(
             PreparedFrame::prepare_v2(
                 FrameV2 {
+                    canvas: None,
                     tile_batches: None,
                     frame: 2,
                     text_layers: vec![],

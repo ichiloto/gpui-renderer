@@ -63,6 +63,27 @@ impl Session {
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
                 validate_capabilities(&frame.sprites, hello)?;
+                if let Some(canvas) = &frame.canvas {
+                    if !hello
+                        .required_capabilities
+                        .contains(&Capability::GraphicalCanvas)
+                    {
+                        return Err("canvas requires negotiated graphical_canvas capability".into());
+                    }
+                    if canvas
+                        .images
+                        .iter()
+                        .any(|image| image.source_rect.is_some())
+                        && !hello
+                            .required_capabilities
+                            .contains(&Capability::SpriteSourceRect)
+                    {
+                        return Err(
+                            "canvas sourceRect requires negotiated sprite_source_rect capability"
+                                .into(),
+                        );
+                    }
+                }
                 if frame.tile_batches.is_some()
                     && !hello
                         .required_capabilities

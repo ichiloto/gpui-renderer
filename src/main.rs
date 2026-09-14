@@ -1,5 +1,9 @@
 mod app;
 mod assets;
+mod canvas;
+mod canvas_protocol;
+#[cfg(test)]
+mod canvas_tests;
 mod color;
 mod diagnostics;
 mod input;

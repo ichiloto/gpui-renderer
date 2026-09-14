@@ -1,5 +1,23 @@
 # Ichiloto GPUI renderer
 
+The negotiated v2 `graphical_canvas` extension draws images at explicit graphical
+rectangles, with outlines/underlines and locally positioned text. PHP resolves
+image pivots, contain-fit geometry and presentation state. Native resizing fits
+the complete canvas uniformly and centers it. Existing field sprite/tile grid
+coordinates retain their meaning.
+
+The [G1 wire corpus](fixtures/graphical-canvas/manifest.json) and its
+[hash manifest](fixtures/graphical-canvas/SHA256SUMS) freeze the shared boundary.
+Each accepted canvas fully replaces the previous one; omitting it clears all
+canvas content and resumes the legacy frame. Canvas text uses transparent null
+backgrounds, while explicit colors paint opaque cells. Legacy text backgrounds
+are unchanged. Canvas and nonempty legacy collections cannot share a frame.
+
+Run `scripts/native-tile-smoke.py --canvas --binary <installed-executable>
+--evidence-dir <directory>` for one silent native check. Optional
+`--observe-seconds 45` holds its first frame for inspection, then closes the
+owned window automatically. This synthetic check is not real-game acceptance.
+
 A standalone native presentation and keyboard surface using pinned **GPUI 0.2.2**.
 It supports protocol v1 and v2 sessions. PHP owns actions, input bindings, movement,
 collision, scenes, battle state, camera conversion, timing and saves. Rust receives

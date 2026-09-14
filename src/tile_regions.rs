@@ -46,7 +46,7 @@ impl RegionCache {
         let height = rect.height + 2 * GUARD;
         let bytes = width as usize * height as usize * 4;
         if bytes > MAX_REGION_BYTES {
-            return Err("tile region exceeds 64 MiB prepared-region limit".into());
+            return Err("source region exceeds 64 MiB prepared-region limit".into());
         }
         let source = atlas.as_bytes(0).ok_or("decoded atlas has no pixels")?;
         let mut pixels = image::RgbaImage::new(width, height);

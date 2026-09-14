@@ -1,0 +1,163 @@
+{
+  "binary_sha256": "31521f61fc5d6dcab7231e906612cc5595f6af93c2841afbf1dfc80f11cf07ca",
+  "ready": {
+    "protocol": 2,
+    "type": "ready",
+    "capabilities": [
+      "graphical_canvas",
+      "sprite_source_rect",
+      "tile_batches"
+    ]
+  },
+  "frames_painted": 5,
+  "tile_cells": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "canvas_images": [
+    3,
+    1,
+    1,
+    0,
+    0
+  ],
+  "exit_code": 0,
+  "silent": true,
+  "measurement": "CPU paint callback completion; not GPU completion or FPS",
+  "visual_inspection": {
+    "platform": "macOS Apple Silicon",
+    "whole_and_cropped_images": "passed",
+    "arena_edge_isolation": "passed",
+    "resize_alignment": "passed",
+    "opaque_and_transparent_text": "passed",
+    "outline_and_distinct_underline": "passed",
+    "clearing_pixels": "not captured before automatic close",
+    "clearing_state_and_cpu_paint": "passed",
+    "real_game_acceptance": false
+  },
+  "resources": [
+    {
+      "diagnostic": "frame_resources",
+      "sequence": 1,
+      "protocol": 2,
+      "frame": 1,
+      "canvas_images": 3,
+      "canvas_indicators": 2,
+      "canvas_text_layers": 2,
+      "tile_batches": 0,
+      "tile_cells": 0,
+      "decoded_images": 3,
+      "decoded_bytes": 340076,
+      "prepared_regions": 3,
+      "region_bytes": 349484,
+      "png_decodes": 3,
+      "region_builds": 3
+    },
+    {
+      "diagnostic": "frame_resources",
+      "sequence": 2,
+      "protocol": 2,
+      "frame": 2,
+      "canvas_images": 1,
+      "canvas_indicators": 1,
+      "canvas_text_layers": 1,
+      "tile_batches": 0,
+      "tile_cells": 0,
+      "decoded_images": 1,
+      "decoded_bytes": 6144,
+      "prepared_regions": 1,
+      "region_bytes": 2240,
+      "png_decodes": 0,
+      "region_builds": 0
+    },
+    {
+      "diagnostic": "frame_resources",
+      "sequence": 3,
+      "protocol": 2,
+      "frame": 3,
+      "canvas_images": 1,
+      "canvas_indicators": 0,
+      "canvas_text_layers": 1,
+      "tile_batches": 0,
+      "tile_cells": 0,
+      "decoded_images": 1,
+      "decoded_bytes": 103532,
+      "prepared_regions": 1,
+      "region_bytes": 108780,
+      "png_decodes": 0,
+      "region_builds": 0
+    },
+    {
+      "diagnostic": "frame_resources",
+      "sequence": 4,
+      "protocol": 2,
+      "frame": 4,
+      "canvas_images": 0,
+      "canvas_indicators": 0,
+      "canvas_text_layers": 0,
+      "tile_batches": 0,
+      "tile_cells": 0,
+      "decoded_images": 0,
+      "decoded_bytes": 0,
+      "prepared_regions": 0,
+      "region_bytes": 0,
+      "png_decodes": 0,
+      "region_builds": 0
+    },
+    {
+      "diagnostic": "frame_resources",
+      "sequence": 5,
+      "protocol": 2,
+      "frame": 5,
+      "canvas_images": 0,
+      "canvas_indicators": 0,
+      "canvas_text_layers": 0,
+      "tile_batches": 0,
+      "tile_cells": 0,
+      "decoded_images": 0,
+      "decoded_bytes": 0,
+      "prepared_regions": 0,
+      "region_bytes": 0,
+      "png_decodes": 0,
+      "region_builds": 0
+    }
+  ],
+  "viewport_observations": [
+    {
+      "width": 320.0,
+      "height": 320.0,
+      "logical_width": 1350.0,
+      "logical_height": 720.0,
+      "scale": 0.2370370328426361,
+      "offset_x": 0.0,
+      "offset_y": 74.66667175292969,
+      "presented_width": 320.0,
+      "presented_height": 170.66665649414062
+    },
+    {
+      "width": 1920.0,
+      "height": 1062.0,
+      "logical_width": 1350.0,
+      "logical_height": 720.0,
+      "scale": 1.0,
+      "offset_x": 285.0,
+      "offset_y": 171.0,
+      "presented_width": 1350.0,
+      "presented_height": 720.0
+    },
+    {
+      "width": 1920.0,
+      "height": 1062.0,
+      "logical_width": 320.0,
+      "logical_height": 320.0,
+      "scale": 1.0,
+      "offset_x": 800.0,
+      "offset_y": 371.0,
+      "presented_width": 320.0,
+      "presented_height": 320.0
+    }
+  ]
+}
