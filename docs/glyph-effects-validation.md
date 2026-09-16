@@ -1,8 +1,11 @@
-# Graphical glyph effects candidate
+# Graphical glyph effects validation
 
-Local implementation on top of G1 `68704cb94960920c868efcadb29eb94211ebd754`,
-preserving the existing clipping/opacity and portable-window changes. This does
-not replace the accepted installed G1 executable.
+15 September 2026 validation of the implementation subsequently committed as
+`b44b08a8393ab74c28a0ff5c947274c5cbfca4f1`, including clipping/opacity and portable
+window handling. Current installation and workflow status are maintained in the
+[README](../README.md#availability-and-installation). The earlier G1 executable
+was replaced by this accepted build in the normal Engine installation on
+16 September; the checkpoints below retain their original evidence.
 
 ## Scope and implementation
 
@@ -20,8 +23,9 @@ number atlas, text plate, offset-painted text approximation or private GPUI API
 is used. A missing scalable glyph rejects the complete candidate.
 
 Raster keys are scoped to the immutable session font catalog and include local
-grid/runs/effects and device density. Position, layer identity/order, clip and layer opacity do not change the
-glyph raster. Font discovery is retained; loaded shaping/font/raster contexts are
+grid/runs/effects and device density. Position, layer identity/order, clip and
+layer opacity do not change the glyph raster. Font discovery is retained; loaded
+shaping/font/raster contexts are
 released after each cache-miss batch, avoiding a second unbounded glyph cache.
 Host font appearance can vary. The local-grid contract does not claim exact browser
 font-size/kerning equivalence.
@@ -92,11 +96,10 @@ cargo test --release --locked emitted_game_frames_fit_cold_and_retained_generati
 The directory must contain `hello.json` with an existing real asset root and the
 three `battle-{ordinary,feedback,six-recipient-stress}.frame.json` captures.
 
-The isolated bundle remains `/private/tmp/ichiloto-glyph-candidate-wamzdphv/Ichiloto
-Glyph Check.app`, executable SHA256
-`8f946ccac39d1f6aa50e1edb4712300197ad6bfcea361b221dac060f3a52bbc5`.
-Its sibling `manifest.json` uses the existing package schema and stays confined to
-that temporary root. No canonical installation was replaced.
+Temporary candidate bundles and generated build caches were removed after
+canonical installation. Historical paths in the hashed receipts identify the
+test inputs and are not active launch instructions. Reuse the accepted installed
+executable identified in the README; do not recreate the retired runtime copies.
 
 ## Focused native validation
 
@@ -121,10 +124,11 @@ reported raster builds 1/0/0/0 at frame admission and zero dropped diagnostics.
 Resize-triggered raster preparation is separate from those frame-admission counts.
 The process exited with code 0 and CUA's subsequent app inventory confirmed the
 owned test window was closed. The [native receipt and evidence hashes](evidence/glyph-effects/native/validation.json)
-identify the unchanged candidate/source and preserved installed G1 executable.
+identify the tested candidate/source and the G1 executable preserved during
+that checkpoint, before the later canonical installation.
 
 The reusable silent scenario is `scripts/native-tile-smoke.py --glyphs --binary
-<candidate executable> --evidence-dir <directory>`. It checks negotiation, cached
+<installed executable> --evidence-dir <directory>`. It checks negotiation, cached
 rise/fade/clipping, effects omission and whole-canvas clearing, then closes its
 owned process. With `--glyphs`, `--observe-seconds 45` holds each of the four frames
 for inspection before bounded automatic shutdown.
@@ -139,19 +143,21 @@ switching from rat to bat, grouped outlined rising `CRITICAL / 40 / KO`, victory
 and field return passed. The Game process exited with code 0 and its native
 window was confirmed closed. This is separate from the synthetic renderer check.
 
-The final owner report is
-`/private/tmp/last-legend-ui-acceptance.bSdOGt/ACCEPTANCE.md`, SHA256
+The final Game-owner report had SHA256
 `fc7c65027bd8ab3a3dddeb001f0ce1b43cc237cb48cdfb9d6ccf871b401b970c`.
-It records the supported launch, File1 route, screenshot hashes and preservation
-checks. The Game source, legitimate save and canonical installation remained
-unchanged. Automated terminal fallback/parity checks passed 2 tests/5 assertions;
+Game evidence and configuration were retained in the workspace archive
+`archives/last-legend-spike-20260916.zip` before the temporary runtimes were removed.
+Their former launch paths are obsolete; current playtesting uses the normal Game
+checkout. The Game source, legitimate save and canonical installation remained
+unchanged during this acceptance checkpoint. Automated terminal fallback/parity
+checks passed 2 tests/5 assertions;
 this was not an interactive terminal playtest. No further tests are pending for
 this bounded acceptance.
 
 ## Validation limits
 
-Untimed status-effect popup callers and exhaustive battle-outcome coverage are
-separate follow-ups. Final animated actor/target cursors remain required; the
-acting underline is still a testing marker. Linux/WSLg and native Windows
-builds/execution have not been validated. No canonical installed player package
-was replaced and no publishing occurred.
+This checkpoint did not cover untimed status-effect popup callers, exhaustive
+battle outcomes or the later Engine/Game cursor corrections. Current cursor
+policy is in the [README](../README.md#cursor-presentation). Linux/WSLg and native
+Windows builds/execution have not been validated. Local integration and canonical
+installation do not constitute publication or cross-platform acceptance.

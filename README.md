@@ -6,9 +6,8 @@ image pivots, contain-fit geometry and presentation state. Native resizing fits
 the complete canvas uniformly and centers it. Existing field sprite/tile grid
 coordinates retain their meaning.
 
-The acting underline remains a testing marker. The finished UI requires an
-above-head animated active-actor cursor and animated target cursors; see the
-[recorded cursor requirement](docs/g1-validation.md#subsequent-cursor-requirement).
+Project-owned image cursors use the existing canvas image path; see
+[cursor presentation](#cursor-presentation) for ownership and limits.
 
 The [G1 wire corpus](fixtures/graphical-canvas/manifest.json) and its
 [hash manifest](fixtures/graphical-canvas/SHA256SUMS) freeze the shared boundary.
@@ -42,8 +41,8 @@ PHP continues to resolve motion and fade timing.
 
 This extension has headless macOS validation. Text clipping/fading also passed
 the focused native glyph scenario below, followed by an isolated ordinary Game
-battle playtest on macOS. Linux/WSLg/Windows validation remains pending. It is not
-yet part of the canonical installed player package.
+battle playtest on macOS. Linux/WSLg/Windows validation remains pending. See
+[availability and installation](#availability-and-installation) for current delivery status.
 
 The separately negotiated v2 `canvas_glyph_effects` capability also requires
 `graphical_canvas`. A canvas text layer may then include:
@@ -89,24 +88,51 @@ audio, ANSI parser, terminal emulator or gameplay meaning for layer IDs/numbers.
 
 ## Availability and installation
 
-As audited on 14 September 2026, no published renderer release or Console installer
-is available. Pulling the Engine repository does not install GPUI: its
+This section is the current installation status; dated validation documents and
+receipts describe their original checkpoints, including superseded binaries.
+On 16 September 2026, the accepted implementation from local commit
+`b44b08a8393ab74c28a0ff5c947274c5cbfca4f1` was integrated through `develop` into
+`main`. Its existing optimized executable, SHA256
+`8f946ccac39d1f6aa50e1edb4712300197ad6bfcea361b221dac060f3a52bbc5`, was installed
+in the normal Engine package at
+`resources/renderers/installed/gpui/darwin-arm64/Ichiloto Renderer.app/Contents/MacOS/gpui-renderer`.
+Engine preserved its original app metadata and manifest and verified the package
+resolver. This reused the tested binary without another build or runtime copy.
+
+That local installation is not a published renderer release or a Console
+installer. Pulling the Engine repository does not install GPUI: a clean
 `resources/renderers/` directory contains a README, while generated installed
-packages and manifests are ignored by Git. Player delivery remains unfinished.
-It must supply a compatible, verified platform package without requiring Rust,
-a compiler or a source checkout.
+packages and manifests are ignored by Git. Public player delivery remains
+unfinished; it must supply compatible, verified platform packages without
+requiring Rust, a compiler or a source checkout.
 
 WSL/WSLg runs the Linux renderer with Linux PHP. A native Windows executable is a
 different target, and Engine's native Windows process transport remains a separate
 unsupported boundary. Removing this renderer's platform startup rejection does not
 provide those packages or establish end-to-end platform support.
 
+## Cursor presentation
+
+Engine owns actor/target identity, anchoring, selection and oscillation timing;
+Game owns the cursor images. The intended presentation uses an above-head actor
+cursor and high-contrast animated target cursors pointing down or inward from a
+side. Directional images with authored outlines/glow use existing `CanvasImage`
+placement and opacity. They need no rotation primitive, native animation clock
+or new protocol capability, and avoid font-dependent silhouettes and extra text
+layers. The existing 64-text-layer limit remains unchanged. Renderer draws the
+submitted assets without inferring gameplay meaning from IDs or marker shapes.
+
 ## Developer build and validation
 
 Run these commands from the root of this separate `ichiloto/gpui-renderer`
 repository, alongside [Cargo.toml](Cargo.toml). Engine's `resources/renderers/`
 directory is an installation destination and contains no Rust project. These are
-development and packaging instructions, not player setup steps.
+development and packaging instructions, not player setup steps. Reuse the
+accepted installed executable when source changes do not require a new binary.
+Use repository branches and the normal Game checkout for fixes and playtesting;
+do not accumulate standalone runtime copies. Before a game playtest, verify music
+and sound effects are muted and preserve existing mute choices. The synthetic
+Renderer fixtures below contain no audio.
 
 Rust **1.98.1** is pinned in `rust-toolchain.toml`; commit and use `Cargo.lock`.
 
@@ -122,8 +148,9 @@ For a single silent window checking both negotiated capabilities, full-viewport
 terrain and frame clearing, run `scripts/native-tile-smoke.py` with `--binary`
 and `--evidence-dir`. See the [installed-renderer check](docs/s8-b-installation.md).
 
-Use `target/release/gpui-renderer` for ordinary gameplay, internally staged runtime
-bundles and performance validation. `cargo build --locked` produces an unoptimized
+Ordinary gameplay uses Engine's installed optimized executable. When a new build
+is necessary, `target/release/gpui-renderer` is the packaging and performance
+validation input. `cargo build --locked` produces an unoptimized
 `target/debug/gpui-renderer` for development/debugging; it is not the performance
 baseline. A matched Last Legend investigation found long foreground paint work in
 the debug build and substantially shorter frame handoff/draw intervals with the
@@ -157,9 +184,10 @@ Linux/WSLg and native Windows compilation and desktop execution still require
 validation on those platforms; the renderer has no operating-system startup
 rejection. Native renderer backend support alone does not establish support for
 Engine's process transport or availability of an installed platform package. Upstream
-`block 0.1.6` and `proc-macro-error2 2.0.1` report future-compatibility warnings;
-current builds, Clippy and tests pass. See [S7-R validation](docs/s7-r-validation.md)
-and the historical [S1 validation](docs/s1-validation.md).
+`block 0.1.6` and `proc-macro-error2 2.0.1` report future-compatibility warnings.
+The accepted source passed 106 optimized tests, Clippy and the recorded native
+checks; see [glyph-effects validation](docs/glyph-effects-validation.md), the
+earlier [S7-R validation](docs/s7-r-validation.md) and [S1 validation](docs/s1-validation.md).
 
 ## Session and channel contract
 
@@ -706,9 +734,7 @@ buffered pre-session errors cannot be relabelled after a successful hello. There
 no equality-based redraw suppression; all accepted state (IDs, layers, runs, styles,
 sprites) is replaced and notified intact. The only renderer timer is shutdown drain.
 
-The Engine still sends v1 today. Renderer support alone does not restore game
-colours, UI layering or transient timing; those require the separate S7-E work.
-
-S7-E must opt into a v2 hello and v2 DTOs consistently, produce structured colours
-without ANSI, preserve explicit blank UI cells, and choose layer policy in PHP.
+Engine uses v2 with negotiated graphical capabilities for GPUI; v1 remains a
+compatibility path. PHP supplies structured colors without ANSI, preserves
+explicit blank UI cells and chooses layering and transient timing.
 The renderer does not infer missing UI backgrounds, masks, overlays or game bindings.
