@@ -17,14 +17,17 @@ root = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--binary', type=Path, required=True)
 parser.add_argument('--evidence-dir', type=Path, required=True)
+parser.add_argument('--glyphs', action='store_true', help='Exercise negotiated runtime glyph contours, fades and clearing')
 parser.add_argument('--canvas', action='store_true', help='Exercise the graphical canvas and return to legacy presentation')
-parser.add_argument('--observe-seconds', type=float, default=0, help='Hold the first painted frame for visual inspection (0..45 seconds)')
+parser.add_argument('--observe-seconds', type=float, default=0, help='Hold the first painted frame (each frame with --glyphs) for visual inspection (0..45 seconds)')
 args = parser.parse_args()
 if not 0 <= args.observe_seconds <= 45:
     parser.error('--observe-seconds must be in 0..45')
+if args.canvas and args.glyphs:
+    parser.error('--canvas and --glyphs are separate scenarios')
 binary = args.binary.resolve(strict=True)
 args.evidence_dir.mkdir(parents=True, exist_ok=True)
-fixtures = root / ('fixtures/graphical-canvas' if args.canvas else 'fixtures/tile-batches')
+fixtures = root / ('fixtures/canvas-glyph-effects' if args.glyphs else 'fixtures/graphical-canvas' if args.canvas else 'fixtures/tile-batches')
 hello = json.loads((fixtures / 'hello.json').read_text())
 hello['assetRoot'] = str(root / 'fixtures')
 hello['title'] = 'Ichiloto — renderer startup check (silent)'
@@ -32,7 +35,7 @@ events, diagnostics = [], []
 raw = {'stdout': bytearray(), 'stderr': bytearray()}
 pending = {'stdout': bytearray(), 'stderr': bytearray()}
 inputs = []
-deadline = time.monotonic() + 30 + args.observe_seconds
+deadline = time.monotonic() + 30 + args.observe_seconds * (4 if args.glyphs else 1)
 process = subprocess.Popen(
     [str(binary)], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
     stderr=subprocess.PIPE, bufsize=0,
@@ -79,7 +82,7 @@ def drain():
 def wait_for(predicate):
     while not predicate():
         if time.monotonic() >= deadline:
-            raise TimeoutError('Native tile check exceeded its 20-second deadline')
+            raise TimeoutError('Native check exceeded its bounded deadline')
         drain()
         if any(event.get('type') == 'error' for event in events):
             raise RuntimeError(f'Renderer rejected the fixture: {events}')
@@ -97,8 +100,14 @@ try:
               'valid-reordered-survivor.json', 'clear-canvas-blank.json', 'clear-canvas-omitted.json']
              if args.canvas else ['valid-tiles-text-player-ui.json', 'valid-full-viewport.json',
                                   'clear-empty.json', 'valid-tiles-text-player-ui.json'])
+    if args.glyphs:
+        cases = ['valid-default.json', 'valid-default.json', 'valid-omitted.json', 'valid-clear.json']
     for number, name in enumerate(cases, 1):
         frame = json.loads((fixtures / name).read_text())
+        if args.glyphs and number == 2:
+            frame['canvas']['textLayers'][0]['origin']['y'] -= 20
+            frame['canvas']['textLayers'][0]['opacity'] = 0.5
+            frame['canvas']['textLayers'][0]['clipRect'] = {'x': 35, 'y': 45, 'width': 180, 'height': 92}
         if args.canvas and number == 1:
             # Compose the already validated fixture ingredients into one observable scene.
             acting = json.loads((fixtures / 'valid-selected-acting.json').read_text())
@@ -119,8 +128,8 @@ try:
         wait_for(lambda: any(d.get('diagnostic') == 'frame'
                              and d.get('frame') == number
                              and d.get('stage') == 'paint_end' for d in diagnostics))
-        if number == 1 and args.observe_seconds:
-            print('First frame painted; silent observation window is open.', flush=True)
+        if (number == 1 or args.glyphs) and args.observe_seconds:
+            print(f'Frame {number} painted; silent observation window is open.', flush=True)
             until = time.monotonic() + args.observe_seconds
             while time.monotonic() < until and process.poll() is None:
                 drain()
@@ -139,11 +148,15 @@ try:
     assert not any(pending.values()), 'Incomplete JSON output'
     assert diagnostics[-1] == {'diagnostic': 'summary', 'dropped_records': 0}
     resources = [d for d in diagnostics if d.get('diagnostic') == 'frame_resources']
-    assert [d['tile_cells'] for d in resources] == ([0]*5 if args.canvas else [2, 4860, 0, 2]), resources
+    assert [d['tile_cells'] for d in resources] == ([0]*4 if args.glyphs else [0]*5 if args.canvas else [2, 4860, 0, 2]), resources
     if args.canvas:
         assert [d['canvas_images'] for d in resources] == [3, 1, 1, 0, 0], resources
         assert [d['canvas_indicators'] for d in resources] == [2, 1, 0, 0, 0], resources
         assert [d['canvas_text_layers'] for d in resources] == [2, 1, 1, 0, 0], resources
+    if args.glyphs:
+        glyphs = [dict(d['values']) for d in diagnostics if d.get('diagnostic') == 'geometry' and d.get('stage') == 'glyph_rasters']
+        assert [d['builds'] for d in glyphs] == [1, 0, 0, 0], glyphs
+        assert [d['canvas_text_layers'] for d in resources] == [1, 1, 1, 0], resources
     receipt = {'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
                'ready': ready, 'frames_painted': len(cases),
                'tile_cells': [d['tile_cells'] for d in resources],

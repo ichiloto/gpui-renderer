@@ -1,8 +1,9 @@
 # G1 native canvas validation
 
 14 September 2026. The native canvas slice is implemented and validated on
-macOS/Apple Silicon with published GPUI 0.2.2. Real-game G1 battle acceptance
-remains with Engine/Game and approved Art; this record does not claim it.
+macOS/Apple Silicon with published GPUI 0.2.2. Engine subsequently reported
+completed Game-owned real-battle acceptance and Andrew's playtest approval,
+recorded below separately from the Renderer-owned synthetic evidence.
 
 ## Implemented boundary
 
@@ -74,5 +75,47 @@ The owned process exited normally and its window closed.
 
 The reusable check is `scripts/native-tile-smoke.py --canvas`; the optional
 observation period permits inspection and then automatic shutdown. No game,
-save, audio or gameplay state is used. No FPS/GPU-completion measurement,
-Linux/WSLg validation, real battle outcome or G2 delivery is claimed here.
+save, audio or gameplay state is used. These synthetic checks do not establish
+a real battle outcome, FPS/GPU completion, Linux/WSLg support or G2 delivery.
+
+## Subsequent real-game and author acceptance
+
+The Engine coordinator reported completed Game-owned acceptance using approved
+v3 artwork and the same installed executable recorded above: the arena and all
+five active combatants, target changes, attached damage/KO feedback, enemy
+removal, victory/rewards, field/menu/title clearing and normal GPUI exit zero.
+The same legitimate checkpoint/path also passed the short terminal combat/flow
+comparison with exit zero. All owned processes were closed. These are the
+Game/Engine acceptance results, not an additional Renderer test run.
+
+The initial default-sandbox macOS XPC startup abort was resolved by an approved
+desktop-access launch of the same binary, without a native source workaround.
+Terminal BGM warnings prevent an audio-parity claim; Linux/WSLg remains untested.
+
+Engine relayed Andrew's exact approval from the coordinator conversation:
+
+> Great stuff. Playtest approved. We will need to add adornments and polish later like animation, effects etc... but for now this will do.
+
+This approves the G1 playtest recorded above. Publication remains pending.
+Animation, effects, polish and graphical UI require their separately scoped work;
+this acceptance does not validate those later changes. Local Renderer commit
+`68704cb94960920c868efcadb29eb94211ebd754` and the existing native evidence remain
+preserved.
+
+## Subsequent cursor requirement
+
+During the separately approved ten-file UI asset admission, Engine relayed
+Andrew's requirement that the active actor have a cursor above their head in the
+finished product, with bouncing or spinning animation to follow. Targets also
+require animated cursors. The current acting underline remains acceptable for
+native UI testing; it is not the finished acting marker.
+
+Engine owns explicit acting/target state, placement and animation timing.
+Renderer must not infer those states from marker shapes or labels. No rotation
+primitive or animation asset is included in the current scope. The asset approval
+does not approve the separate `cosmic-text =0.14.2` / `swash =0.2.10` dependency
+proposal. The coordinator subsequently relayed Andrew's separate explicit
+approval of those two exact dependencies. Their local implementation and candidate
+validation are tracked in [glyph effects validation](glyph-effects-validation.md);
+that approval does not authorize replacing the installed executable or publishing.
+The G1 validation evidence remains unchanged.

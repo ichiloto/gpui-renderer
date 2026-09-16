@@ -1,0 +1,115 @@
+{
+  "nativeValidated": true,
+  "scope": "focused synthetic glyph scenario on macOS/Apple Silicon; actual Game playtest remains with Game owner",
+  "candidateSha256": "8f946ccac39d1f6aa50e1edb4712300197ad6bfcea361b221dac060f3a52bbc5",
+  "manifestSha256": "75a19855a5a216c7d208324660a322915a9cb2c3aa9248fe11c8ab41ac2b98b6",
+  "sourceManifestSha256": "e5f15a3718dec9c9fcfb8a533c55e5c90e59d4aeb30102309b4b9067468adadd",
+  "scenarioSha256": "dcc6931967fdce8f218979112dd8dfbcf93e8084ee052361585c20afb4f1b432",
+  "checks": {
+    "negotiatedCapabilities": true,
+    "fourCpuPaintedFrames": true,
+    "frameRasterBuilds": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "centeredAcrossAllObservedViewports": true,
+    "viewportObservations": 66,
+    "visualEffects": true,
+    "visualResize": true,
+    "visualRiseFadeClip": true,
+    "visualPlainReplacement": true,
+    "visualFullClearing": true,
+    "exitCode": 0,
+    "droppedDiagnostics": 0,
+    "silent": true,
+    "ownedWindowClosed": true,
+    "closureEvidence": "Popen exit0 followed by CUA listApps with candidateStillRunning false"
+  },
+  "viewports": {
+    "restored": {
+      "outer_left": 800.0,
+      "outer_top": 440.0,
+      "outer_width": 320.0,
+      "outer_height": 352.0,
+      "width": 320.0,
+      "height": 320.0,
+      "logical_width": 640.0,
+      "logical_height": 360.0,
+      "scale": 0.5,
+      "offset_x": 0.0,
+      "offset_y": 70.0,
+      "presented_width": 320.0,
+      "presented_height": 180.0
+    },
+    "maximized": {
+      "outer_left": 0.0,
+      "outer_top": 30.0,
+      "outer_width": 1920.0,
+      "outer_height": 1094.0,
+      "width": 1920.0,
+      "height": 1062.0,
+      "logical_width": 640.0,
+      "logical_height": 360.0,
+      "scale": 1.0,
+      "offset_x": 640.0,
+      "offset_y": 351.0,
+      "presented_width": 640.0,
+      "presented_height": 360.0
+    }
+  },
+  "visualFiles": {
+    "01-effects.png": {
+      "sha256": "a501779b70035013cc235627bdb7802390c06e98dca9971dc47ba5626d069568",
+      "pixels": [
+        1350,
+        768
+      ],
+      "format": "jpeg"
+    },
+    "02-restored.png": {
+      "sha256": "3e585b88102b81d70a836727ef0e97f139728b67995347edeb7f23e58d1c47db",
+      "pixels": [
+        320,
+        352
+      ],
+      "format": "jpeg"
+    },
+    "03-maximized.png": {
+      "sha256": "a2bd498a43dc385c3c3b1813c43f6f8a3430af15b0bacf4f3c5ca830da0646a0",
+      "pixels": [
+        1348,
+        768
+      ],
+      "format": "jpeg"
+    },
+    "05-plain.png": {
+      "sha256": "20ae263ac7d52e6650a16ef099c28a6a86ce1c8807678c0bc5c2685c2f04f4d3",
+      "pixels": [
+        1348,
+        768
+      ],
+      "format": "jpeg"
+    },
+    "06-cleared.png": {
+      "sha256": "141016a8f35536f18580a7c6f7cabb4e1568f64061ea3aa60f7657f1435183bd",
+      "pixels": [
+        1348,
+        768
+      ],
+      "format": "jpeg"
+    }
+  },
+  "protocolFiles": {
+    "receipt.json": "5336e7446b287ed7a39fc9867d071e38d10070d7abf4e6a4892133baf9bd67db",
+    "input.ndjson": "59589f0005e02d16364c023e4992c1c2ac33389f4452f3e6f3190778e605afda",
+    "stdout.ndjson": "82fcd363d18bb205cda5260c9c36d324c6e4be76118069f7fe3643980d5c605a",
+    "stderr.ndjson": "24e2402f0b0798cf5ac20cd36a88c0b12c3f9671fa5b5e857c86d09101d728dd"
+  },
+  "earlierAttempt": "First bounded smoke run also exited0; CUA full-path app resolution timed out and provided no visual proof. After its closure, one further bounded run selected the existing running bundle identifier from inventory and provided the recorded screenshots.",
+  "preservedInstalledSha256": "31521f61fc5d6dcab7231e906612cc5595f6af93c2841afbf1dfc80f11cf07ca",
+  "publication": "No commit, push, release, or canonical installation replacement.",
+  "limits": "CPU callbacks and native screenshots do not establish GPU timing or Game FPS. Linux/WSLg and Windows remain unvalidated.",
+  "visualMetadata": "Format and dimensions inspected with sips. Original CUA screenshot bytes and filenames preserved; JPEG content has a .png filename."
+}

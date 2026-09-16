@@ -1,11 +1,20 @@
 mod app;
 mod assets;
 mod canvas;
+#[cfg(test)]
+mod canvas_clip_tests;
 mod canvas_protocol;
 #[cfg(test)]
 mod canvas_tests;
 mod color;
 mod diagnostics;
+mod display_cache;
+mod glyph_cache;
+mod glyph_effects;
+mod glyph_pixels;
+mod glyph_raster;
+#[cfg(test)]
+mod glyph_tests;
 mod input;
 mod protocol;
 mod render_trace;

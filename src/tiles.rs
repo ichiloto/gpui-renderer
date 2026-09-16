@@ -1,8 +1,8 @@
 //! One layout element per batch. Each visible cell still emits an image primitive;
 //! this reduces element/layout overhead and is not a claim of one GPU draw call.
+use crate::display_cache::DisplayRasterCache;
 use crate::protocol::Grid;
 use crate::state::PreparedTileBatch;
-use crate::tile_sampling::TileSamplingCache;
 use crate::viewport::{PaintRect, ViewportTransform};
 use gpui::{Bounds, ContentMask, IntoElement, canvas, point, prelude::*, px, size};
 use std::{cell::RefCell, rc::Rc, sync::Arc};
@@ -11,7 +11,7 @@ pub fn element(
     batch: Arc<PreparedTileBatch>,
     grid: Grid,
     transform: ViewportTransform,
-    samples: Rc<RefCell<TileSamplingCache>>,
+    samples: Rc<RefCell<DisplayRasterCache>>,
 ) -> impl IntoElement {
     canvas(
         |_, _, _| (),

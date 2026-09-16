@@ -71,6 +71,33 @@ impl Session {
                         return Err("canvas requires negotiated graphical_canvas capability".into());
                     }
                     if canvas
+                        .text_layers
+                        .iter()
+                        .any(|text| text.glyph_effects.is_some())
+                        && !hello
+                            .required_capabilities
+                            .contains(&Capability::CanvasGlyphEffects)
+                    {
+                        return Err(
+                            "glyphEffects requires negotiated canvas_glyph_effects capability"
+                                .into(),
+                        );
+                    }
+                    if (canvas.images.iter().any(|image| image.clip_rect.is_some())
+                        || canvas
+                            .text_layers
+                            .iter()
+                            .any(|text| text.clip_rect.is_some() || text.opacity.is_some()))
+                        && !hello
+                            .required_capabilities
+                            .contains(&Capability::CanvasClipOpacity)
+                    {
+                        return Err(
+                            "canvas clipRect/text opacity requires negotiated canvas_clip_opacity capability"
+                                .into(),
+                        );
+                    }
+                    if canvas
                         .images
                         .iter()
                         .any(|image| image.source_rect.is_some())

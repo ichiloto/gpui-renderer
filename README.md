@@ -6,12 +6,75 @@ image pivots, contain-fit geometry and presentation state. Native resizing fits
 the complete canvas uniformly and centers it. Existing field sprite/tile grid
 coordinates retain their meaning.
 
+The acting underline remains a testing marker. The finished UI requires an
+above-head animated active-actor cursor and animated target cursors; see the
+[recorded cursor requirement](docs/g1-validation.md#subsequent-cursor-requirement).
+
 The [G1 wire corpus](fixtures/graphical-canvas/manifest.json) and its
 [hash manifest](fixtures/graphical-canvas/SHA256SUMS) freeze the shared boundary.
 Each accepted canvas fully replaces the previous one; omitting it clears all
 canvas content and resumes the legacy frame. Canvas text uses transparent null
 backgrounds, while explicit colors paint opaque cells. Legacy text backgrounds
 are unchanged. Canvas and nonempty legacy collections cannot share a frame.
+
+The additional v2 `canvas_clip_opacity` capability requires `graphical_canvas` in
+the same hello and acknowledgement in ready. It adds optional `clipRect` to canvas
+images and text layers, and optional `opacity` to canvas text layers. See the
+[independent clipping/opacity wire cases](fixtures/canvas-clip-opacity/manifest.json)
+and their [hash manifest](fixtures/canvas-clip-opacity/SHA256SUMS).
+
+`clipRect` is `{ "x": 40, "y": 40, "width": 80, "height": 24 }` in absolute
+canvas logical coordinates. Origins must be finite and nonnegative; dimensions
+must be finite and strictly positive, with the whole rectangle inside the canvas.
+It intersects the existing image destination or text grid without changing its
+position, dimensions or image source mapping. A disjoint or edge-touching clip
+paints nothing. Original destination, text, asset and source validation still
+applies even when hidden. For gauges, keep the image destination at full track
+width and vary only the clipping width; omit a zero-fill image.
+
+Text opacity accepts finite values from 0 through 1 and applies to glyphs and
+explicit cell backgrounds. Omission means full opacity. Presence of either new
+field, including explicit text opacity `1`, requires negotiation; explicit null
+and unknown fields are rejected. Existing image opacity requires only
+`graphical_canvas`. Omitting the fields on a later full frame removes the previous
+clip/fade. Source crops, caches, budgets and legacy text behavior are unchanged;
+PHP continues to resolve motion and fade timing.
+
+This extension has headless macOS validation. Text clipping/fading also passed
+the focused native glyph scenario below, followed by an isolated ordinary Game
+battle playtest on macOS. Linux/WSLg/Windows validation remains pending. It is not
+yet part of the canonical installed player package.
+
+The separately negotiated v2 `canvas_glyph_effects` capability also requires
+`graphical_canvas`. A canvas text layer may then include:
+
+```json
+"glyphEffects":{"outline":{"width":2,"color":{"kind":"rgb","r":8,"g":15,"b":29}},"shadow":{"offsetX":0,"offsetY":2,"sigma":1,"opacity":0.7,"color":{"kind":"rgb","r":8,"g":15,"b":29}}}
+```
+
+Both nested objects and every shown field are required when `glyphEffects` is
+present. Values must be finite: outline width 0..4, shadow offsets -8..8, Gaussian
+sigma 0..4, shadow opacity 0..1. Null and unknown fields are errors. Existing
+`clipRect` and text opacity still independently require `canvas_clip_opacity`.
+The [90-case effects corpus](fixtures/canvas-glyph-effects/manifest.json) and its
+[hash manifest](fixtures/canvas-glyph-effects/SHA256SUMS) freeze this extension.
+
+The original grid, cell pitch, scalar positions, run order and colors remain
+authoritative. The runtime uses system monospace with measured sizing; foreground
+and real contour strokes share the same COSMIC Text/Swash glyphs. Effects expand
+only paint bounds: with `R = outline.width + ceil(3 * shadow.sigma)`, each side's
+padding is `ceil(R + max(0, signed shadow offset toward that side))`. The example
+reserves left/top/right/bottom 5/5/5/7 logical pixels. The entire expanded rectangle
+must fit the canvas even with zero opacity or a tiny clip. `clipRect` intersects
+that expanded footprint. Engine owns placement, motion, timing and whole-block
+removal. No font assets, semantic label parsing or native animation clock are used.
+
+This glyph path uses exact direct dependencies COSMIC Text **0.14.2** and Swash
+**0.2.10**, retaining GPUI **0.2.2**. Text without `glyphEffects` keeps the existing
+GPUI text path. Font appearance can vary between hosts. Effects require scalable
+glyph contours; unavailable system glyphs reject the complete candidate before
+visible replacement instead of substituting an approximation. See
+[glyph implementation and validation](docs/glyph-effects-validation.md).
 
 Run `scripts/native-tile-smoke.py --canvas --binary <installed-executable>
 --evidence-dir <directory>` for one silent native check. Optional
@@ -24,7 +87,26 @@ collision, scenes, battle state, camera conversion, timing and saves. Rust recei
 complete presentation snapshots and forwards key identities. It has no game loop,
 audio, ANSI parser, terminal emulator or gameplay meaning for layer IDs/numbers.
 
-## Build and validate
+## Availability and installation
+
+As audited on 14 September 2026, no published renderer release or Console installer
+is available. Pulling the Engine repository does not install GPUI: its
+`resources/renderers/` directory contains a README, while generated installed
+packages and manifests are ignored by Git. Player delivery remains unfinished.
+It must supply a compatible, verified platform package without requiring Rust,
+a compiler or a source checkout.
+
+WSL/WSLg runs the Linux renderer with Linux PHP. A native Windows executable is a
+different target, and Engine's native Windows process transport remains a separate
+unsupported boundary. Removing this renderer's platform startup rejection does not
+provide those packages or establish end-to-end platform support.
+
+## Developer build and validation
+
+Run these commands from the root of this separate `ichiloto/gpui-renderer`
+repository, alongside [Cargo.toml](Cargo.toml). Engine's `resources/renderers/`
+directory is an installation destination and contains no Rust project. These are
+development and packaging instructions, not player setup steps.
 
 Rust **1.98.1** is pinned in `rust-toolchain.toml`; commit and use `Cargo.lock`.
 
@@ -62,11 +144,19 @@ per-case stdout, stderr and exit status. `--trace` validates enabled diagnostic
 stderr separately from ordinary errors while retaining the same stdout assertions;
 the default smoke run explicitly disables tracing.
 
+Native startup uses one window policy across GPUI backends: request desktop-managed
+maximization, with a centered restore size fitted to GPUI's suggested window bounds.
+The desktop determines the actual content area, including panels, decorations and
+display scaling. The shared viewport transform fits and centers the complete grid
+or graphical canvas on every resize. The window remains movable, restorable and
+resizable. Display bounds are not treated as measurements of usable work area.
+See the [portable window correction and validation](docs/portable-window-validation.md).
+
 Validated on macOS/Apple Silicon, with Xcode/SDK/Metal toolchain installed.
-Initial usable-area fitting is currently implemented on macOS. Other targets keep
-the platform-neutral paint model but explicitly reject native window creation until
-a work-area adapter exists; GPUI 0.2.2's full display bounds are insufficient for
-that guarantee. Cross-target compilation has not been validated here. Upstream
+Linux/WSLg and native Windows compilation and desktop execution still require
+validation on those platforms; the renderer has no operating-system startup
+rejection. Native renderer backend support alone does not establish support for
+Engine's process transport or availability of an installed platform package. Upstream
 `block 0.1.6` and `proc-macro-error2 2.0.1` report future-compatibility warnings;
 current builds, Clippy and tests pass. See [S7-R validation](docs/s7-r-validation.md)
 and the historical [S1 validation](docs/s1-validation.md).
@@ -302,9 +392,11 @@ Explicit developer dimensions still override the default. Engine selects these
 dimensions before the session; GPUI does not infer them from visible content.
 See [battle viewport validation](docs/battle-viewport-validation.md).
 
-The hello fixes the logical surface for the entire session:
+The hello fixes the legacy logical grid for the entire session:
 `logicalWidth = columns * cellWidth`, `logicalHeight = rows * cellHeight`.
-Native window dimensions are independent. Every paint uses the actual
+An active negotiated graphical canvas supplies its own logical width and height;
+omitting it returns to the unchanged legacy grid. Native window dimensions are
+independent. Every paint uses the current logical surface, the actual
 `Window::viewport_size()` and the pure `ViewportTransform` model:
 
 ```text
@@ -317,9 +409,10 @@ offsetY = (viewportHeight - presentedHeight) / 2
 
 Smaller windows scale the complete surface uniformly. Larger windows keep 1×
 rendering centered with letterboxing. Text pitch, font size, line height, opaque
-cell backgrounds, sprite origins/dimensions and bottom-center anchors share this
-transform. The inner surface clips off-grid sprites at the logical grid boundary;
-the outer viewport paints the default background. There are no scrollbars or
+cell backgrounds, sprite origins/dimensions, bottom-center anchors, canvas images
+and indicators share this transform. The inner surface clips off-grid sprites at
+the logical grid boundary; the outer viewport paints the default background.
+There are no scrollbars or
 independent X/Y scaling. Resizing requests a GPUI repaint; it never modifies stored
 frames, negotiates a grid, sends protocol resize events or changes gameplay/camera
 coordinates. A zero-sized viewport paints no surface and retains the focus root.
@@ -327,24 +420,21 @@ Large maps can extend beyond this fixed logical viewport: PHP's camera scrolls t
 visible portion and sends new snapshots. The renderer does not fit an entire map
 unless its caller deliberately sends the entire map as the logical surface.
 
-On macOS, `window_layout.rs` reads `NSScreen.mainScreen` (first screen fallback),
-`frame`, `visibleFrame` and `NSScreenNumber`. It matches that display to GPUI and
-passes its explicit `display_id` when opening. AppKit's
-`contentRectForFrameRect:styleMask:` and `frameRectForContentRect:styleMask:` account
-for the actual normal resizable titlebar. Fitted content is selected first, capped
-at 1× and rounded inward to whole points, then its outer frame is centered in the
-usable work area. The top-left is aligned to whole points to prevent AppKit from
-rounding fractional initial rectangles outward. Centering may differ by less than
-one point due to this alignment. No screen dimensions, Dock/menu sizes or chrome
-constants are guessed.
+`window_layout.rs` uses the same public GPUI path on every backend. It selects the
+primary display (first display fallback), fits centered restore-size hints inside
+that display's `default_bounds()`, and requests `WindowBounds::Maximized`. GPUI
+delegates maximization to the desktop, which supplies the actual content area.
+The player can restore, move and resize the window using normal native controls.
 
-Pinned GPUI's `PlatformDisplay` exposes no usable-area API, and `MacDisplay::bounds`
-discards global display origins. The adapter therefore converts AppKit's global
-bottom-left coordinates to the display-relative outer top-left expected by pinned
-`MacWindow::open`. Tests cover positive and negative monitor origins. Native
-validation currently covers the development display, not a physical multi-monitor
-setup. Direct macOS dependencies reuse the already locked cocoa/objc versions;
-no GPUI or registry source is patched.
+Pinned GPUI's `PlatformDisplay` exposes no usable-area API. Its suggested bounds
+are used only for restoration hints; no taskbar, Dock, menu or decoration sizes
+are guessed. Native placement remains the desktop's decision, and the game is
+centered within the resulting content viewport. Tests cover positive and negative
+origins and small, portrait and fractional bounds. Native validation covers the
+macOS development display, not a physical multi-monitor setup or Linux/Windows
+desktop. See the [portable correction](docs/portable-window-validation.md) for
+backend evidence and validation limits. Dated earlier viewport receipts describe
+the former AppKit-specific implementation.
 
 The logical size, initial native-size policy, actual viewport and paint transform
 are separate boundaries. Future configuration should give developers and players
@@ -353,7 +443,8 @@ scaling. Fixed size is an optional policy, not a universal restriction. These
 choices should adjust gracefully to the available display while leaving large-map
 camera scrolling independent. Configuration can change the window and transform
 policies without rewriting protocol snapshots; it is not implemented in this
-phase. The current policy is resizable with uniform downscaling and a 1× cap.
+phase. The current policy starts maximized, remains restorable and resizable, and
+uses uniform downscaling with a 1× cap.
 
 ## Opt-in input latency diagnostics
 
@@ -412,7 +503,8 @@ record contains `clock:"CLOCK_UPTIME_RAW"`, the renderer `pid`, `host_ns`, and
 `clock_gettime_nsec_np` API and libc's `clockid_t`/`CLOCK_UPTIME_RAW` definition are
 used directly. The development host's PHP build was verified to use the same clock
 for `hrtime(true)`. Other platforms emit `clock_anchor_unavailable`; they do not
-pretend to share that clock. Non-macOS graphical startup remains unsupported here.
+pretend to share that clock. Missing host-clock alignment does not prevent native
+window startup or process-relative diagnostics on those platforms.
 
 To align an event's process-relative `at_ns` to the same host clock, use integer
 nanosecond arithmetic and retain the uncertainty interval:
@@ -447,8 +539,11 @@ particular received snapshot through these stages:
 | `paint_begin/end` | Root's public Element CPU paint method; excludes subsequent native presentation |
 
 Receipt-to-acceptance includes parsing, validation and preparation. Acceptance-to-
-replacement includes the bounded reader queue and UI scheduling; startup also
-includes native window creation. Previous foreground rendering can delay the next
+replacement includes the bounded reader queue, UI scheduling and device-density
+glyph raster preparation when effects are present; startup also includes native
+window creation. `accepted` does not establish glyph admission: that later step
+can reject a candidate before `replace_begin`, preserving the previous display.
+Previous foreground rendering can delay the next
 update. The opt-in root observer delegates the same element ID, state types, bounds
 and arguments; disabled tracing uses the original unwrapped element.
 
@@ -501,7 +596,7 @@ the same full-sheet image identity and GPUI atlas upload.
 | Decoded source images per frame (actors + tiles) | 64 MiB / 1024 images |
 | Session decoded-image cache | 64 MiB / 1024 images |
 | Prepared tile regions per frame and in session LRU | 64 MiB / 4096 regions, including guards |
-| Display tile-sample LRU | 64 MiB / 32768 images; paint-time evictions retire at the next render |
+| Shared tile/glyph display-raster LRU | 64 MiB / 32768 images; evictions retire at the next render |
 | V2 text layers | 64 |
 | V2 runs across all layers | 32768 |
 | V2 Unicode scalars across all runs, including spaces/overlap | 524288 |
@@ -512,7 +607,13 @@ mutation. Display samples are derived during paint, when device scale and final
 cell position are known. They have a separate LRU; samples evicted while painting
 remain alive until the next render boundary so their GPU slots cannot be reused
 under the current scene. These in-flight samples and GPUI uploads are additional
-memory, not part of a process-wide cache limit.
+memory, not part of a process-wide cache limit. Glyph candidate admission counts
+live tile/glyph rasters held by snapshots and retirement queues, new candidate
+rasters and peak mask/blur scratch against that same 64 MiB display allowance;
+eviction does not make retained bytes disappear. There is no second glyph pool.
+Glyph raster dimensions are bounded to 16384 device pixels per axis, and a bounded
+cache-miss work check applies before preparation. These are native resource checks,
+not increases or replacements of the wire layer/run/scalar limits.
 
 ## Key identities (both versions)
 

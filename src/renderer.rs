@@ -19,7 +19,10 @@ pub struct Renderer {
     pub cached_images: Vec<Arc<RenderImage>>,
     pub logical_font_size: Option<f32>,
     pub canvas_fonts: std::collections::HashMap<(u32, u32), f32>,
-    pub tile_samples: Rc<RefCell<crate::tile_sampling::TileSamplingCache>>,
+    pub tile_samples: Rc<RefCell<crate::display_cache::DisplayRasterCache>>,
+    pub glyph_fonts: crate::glyph_raster::FontCatalog,
+    pub glyph_frame: crate::glyph_cache::GlyphFrame,
+    pub glyph_density: Option<f32>,
 }
 
 pub(crate) const FONT_FAMILY: &str = if cfg!(target_os = "macos") {
@@ -109,7 +112,11 @@ impl Render for Renderer {
             .flat_map(|batch| &batch.regions)
             .map(|region| region.id)
             .collect();
-        for retired in self.tile_samples.borrow_mut().begin_frame(&active_regions) {
+        for retired in self
+            .tile_samples
+            .borrow_mut()
+            .begin_frame(&active_regions, &self.glyph_frame.keys)
+        {
             if let Err(error) = window.drop_image(retired) {
                 crate::protocol::diagnostic(format!("cannot retire tile sample: {error}"));
             }
@@ -143,6 +150,23 @@ impl Render for Renderer {
             viewport.width.into(),
             viewport.height.into(),
         );
+        let density = transform.scale.max(1.0 / 256.0) * window.scale_factor();
+        if self.glyph_density != Some(density) {
+            self.glyph_density = Some(density);
+            if let Some(frame) = &self.state.frame {
+                match crate::glyph_cache::prepare(
+                    frame,
+                    density,
+                    &mut self.glyph_fonts,
+                    &mut self.tile_samples.borrow_mut(),
+                ) {
+                    Ok(glyphs) => self.glyph_frame = glyphs,
+                    Err(error) => crate::protocol::diagnostic(format!(
+                        "cannot resize glyph rasters; retaining complete generation: {error}"
+                    )),
+                }
+            }
+        }
         if self.last_viewport != Some(viewport)
             || self.last_logical_size != Some((logical_width, logical_height))
         {
@@ -202,7 +226,12 @@ impl Render for Renderer {
             .line_height(px(ch * transform.scale));
         if let Some(frame) = &self.state.frame {
             if let Some(canvas) = &frame.canvas {
-                surface = surface.child(canvas.element(transform, &mut self.canvas_fonts, cx));
+                surface = surface.child(canvas.element(
+                    transform,
+                    &mut self.canvas_fonts,
+                    &self.glyph_frame.images,
+                    cx,
+                ));
             } else {
                 self.canvas_fonts.clear();
             }

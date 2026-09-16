@@ -86,6 +86,15 @@ pub struct CanvasImage {
     pub source_rect: Option<SourceRect>,
     #[serde(default = "opaque")]
     pub opacity: f64,
+    #[serde(default, deserialize_with = "present")]
+    pub clip_rect: Option<Rect>,
+}
+
+// Preserve explicit field presence for negotiation, without accepting null.
+pub(crate) fn present<'de, D: serde::Deserializer<'de>, T: Deserialize<'de>>(
+    d: D,
+) -> Result<Option<T>, D::Error> {
+    T::deserialize(d).map(Some)
 }
 
 fn opaque() -> f64 {
@@ -170,6 +179,29 @@ pub struct CanvasText {
     pub grid: Grid,
     pub runs: Vec<TextRun>,
     pub layer: i32,
+    #[serde(default, rename = "clipRect", deserialize_with = "present")]
+    pub clip_rect: Option<Rect>,
+    #[serde(default, deserialize_with = "present")]
+    pub opacity: Option<f64>,
+    #[serde(default, rename = "glyphEffects", deserialize_with = "present")]
+    pub glyph_effects: Option<crate::glyph_effects::GlyphEffects>,
+}
+
+impl CanvasText {
+    pub fn bounds(&self) -> Rect {
+        Rect {
+            x: self.origin.x,
+            y: self.origin.y,
+            width: f64::from(self.grid.columns * self.grid.cell_width),
+            height: f64::from(self.grid.rows * self.grid.cell_height),
+        }
+    }
+
+    pub fn paint_bounds(&self) -> Rect {
+        self.glyph_effects
+            .as_ref()
+            .map_or(self.bounds(), |effects| effects.expand(self.bounds()))
+    }
 }
 
 fn identifiers<'a>(ids: impl Iterator<Item = &'a str>) -> Result<(), String> {
@@ -201,6 +233,9 @@ impl Canvas {
         identifiers(self.text_layers.iter().map(|i| i.id.as_str()))?;
         for image in &self.images {
             image.destination.validate(self)?;
+            if let Some(clip) = image.clip_rect {
+                clip.validate(self)?;
+            }
             if image.asset.as_os_str().is_empty()
                 || image.asset.is_absolute()
                 || image.asset.as_os_str().len() > 4096
@@ -236,6 +271,18 @@ impl Canvas {
         let mut scalars = 0usize;
         for layer in &self.text_layers {
             layer.grid.validate()?;
+            if let Some(effects) = &layer.glyph_effects {
+                effects.validate()?;
+                layer.paint_bounds().validate(self)?;
+            }
+            if let Some(clip) = layer.clip_rect {
+                clip.validate(self)?;
+            }
+            if let Some(opacity) = layer.opacity
+                && (!opacity.is_finite() || !(0.0..=1.0).contains(&opacity))
+            {
+                return Err("canvas text opacity must be finite and between 0 and 1".into());
+            }
             Rect {
                 x: layer.origin.x,
                 y: layer.origin.y,
