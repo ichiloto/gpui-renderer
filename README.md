@@ -159,7 +159,7 @@ scheduling or gameplay change; see [the measured investigation](docs/burst-inves
 
 ## Packaging and installation
 
-`scripts/package.py` builds the optimized executable and produces a verified
+`scripts/package.php` builds the optimized executable and produces a verified
 renderer package under `dist/`: a staged directory and a `.tar.gz`, each
 carrying `renderer-package.json` with the renderer id, platform id, package
 version and a SHA-256 for every payload file. On macOS the payload is the
@@ -169,7 +169,7 @@ bare executable. Cross-compiled targets pass `--platform` together with
 `--binary` pointing at that target's built executable.
 
 ```sh
-python3 scripts/package.py
+php scripts/package.php
 ```
 
 Installation is owned by the Console, which verifies every hash before
