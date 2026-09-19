@@ -156,8 +156,34 @@ baseline. A matched Last Legend investigation found long foreground paint work i
 the debug build and substantially shorter frame handoff/draw intervals with the
 same source compiled in release mode. This is a build-profile comparison, not a
 scheduling or gameplay change; see [the measured investigation](docs/burst-investigation.md).
-Packagers should preserve the native bundle/resources and stage the optimized
-executable through their existing installation boundary, verifying its hash.
+
+## Packaging and installation
+
+`scripts/package.py` builds the optimized executable and produces a verified
+renderer package under `dist/`: a staged directory and a `.tar.gz`, each
+carrying `renderer-package.json` with the renderer id, platform id, package
+version and a SHA-256 for every payload file. On macOS the payload is the
+`.app` bundle with its `Info.plist` (from `resources/macos/Info.plist`)
+preserved for native application identity; on Linux and Windows it is the
+bare executable. Cross-compiled targets pass `--platform` together with
+`--binary` pointing at that target's built executable.
+
+```sh
+python3 scripts/package.py
+```
+
+Installation is owned by the Console, which verifies every hash before
+staging anything into the Engine's `resources/renderers/installed/` boundary
+and backs up any existing installation:
+
+```sh
+ichiloto renderer:install dist/gpui-<platform>-<version>.tar.gz
+```
+
+That installs into the current project's Engine package. Development staging
+into an Engine checkout uses `--engine <path>`. The package format is
+renderer-agnostic; future renderer implementations publish the same artifact
+and install through the same command.
 
 Engine's GPUI launch now retains the shared presentation buffer while skipping
 physical terminal drawing. The [Garden of Roads comparison](docs/garden-performance.md)
