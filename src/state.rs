@@ -39,7 +39,7 @@ pub struct PreparedTileBatch {
     pub regions: Vec<Arc<RenderImage>>,
 }
 
-#[derive(Clone, Copy, Debug, Default, serde::Serialize)]
+#[derive(Clone, Debug, Default, serde::Serialize)]
 pub struct FrameResources {
     pub canvas_images: usize,
     pub canvas_indicators: usize,
@@ -52,6 +52,7 @@ pub struct FrameResources {
     pub region_bytes: usize,
     pub png_decodes: u64,
     pub region_builds: u64,
+    pub compositing: Option<Box<crate::composite_cache::Stats>>,
 }
 
 /// Shared source-image accounting across the independent actor and terrain paths.
@@ -143,6 +144,7 @@ impl<'a> FrameImages<'a> {
 impl PreparedFrame {
     pub fn prepare(frame: Frame, grid: Grid, assets: &AssetRoot) -> Result<Self, String> {
         frame.validate(grid)?;
+        assets.prepare_composites(&[], &Default::default())?;
         let mut images = FrameImages::new(assets);
         let mut sprites = prepare_sprites(frame.sprites, &mut images)?;
         sprites.sort_by_key(|item| item.sprite.layer);
@@ -167,10 +169,31 @@ impl PreparedFrame {
     pub fn prepare_v2(frame: FrameV2, grid: Grid, assets: &AssetRoot) -> Result<Self, String> {
         frame.validate(grid)?;
         let mut images = FrameImages::new(assets);
+        let composite_specs = frame
+            .canvas
+            .as_ref()
+            .and_then(|c| c.composites.as_deref())
+            .unwrap_or_default();
+        let mut composite_sources = crate::composite_cache::Sources::new();
+        for op in composite_specs.iter().flat_map(|c| &c.operations) {
+            for path in op.get_assets() {
+                composite_sources.insert(path.to_owned(), images.load(path)?);
+            }
+        }
+        let (composites, composite_stats) =
+            assets.prepare_composites(composite_specs, &composite_sources)?;
+        if !composite_specs.is_empty() {
+            images.resources.compositing = Some(Box::new(composite_stats));
+        }
+        let composite_images = composites.clone();
         let canvas = frame
             .canvas
             .map(|canvas| {
-                crate::canvas::PreparedCanvas::prepare(canvas, |image| images.canvas_image(image))
+                crate::canvas::PreparedCanvas::prepare(
+                    canvas,
+                    |image| images.canvas_image(image),
+                    composites,
+                )
             })
             .transpose()?
             .map(Box::new);
@@ -209,7 +232,8 @@ impl PreparedFrame {
             PaintItem::Sprite(i) => sprites[i].sprite.layer,
             PaintItem::LegacyText => unreachable!(),
         });
-        let (cached_images, resources) = images.finish();
+        let (mut cached_images, resources) = images.finish();
+        cached_images.extend(composite_images);
         Ok(Self {
             observation: None,
             canvas,

@@ -80,6 +80,163 @@ Run `scripts/native-tile-smoke.py --canvas --binary <installed-executable>
 `--observe-seconds 45` holds its first frame for inspection, then closes the
 owned window automatically. This synthetic check is not real-game acceptance.
 
+## Local image compositing
+
+The optional v2 capability `canvas_compositing` requires `graphical_canvas`.
+It adds `canvas.composites`; presence (including `[]`) requires negotiation,
+omission/`[]` clears, and null is rejected. The local development installation
+described below includes this capability; it is not a published renderer release.
+See the [sample frame](fixtures/compositing/frame.json), using the existing
+`fixtures/test-sprite.png` and `fixtures` as its asset root.
+
+Each composite has `{id,width,height,destination,layer,operations}` and optional
+`opacity` (default 1) and `clipRect`. Dimensions are integer local raster units;
+destination and clip use canvas coordinates. Operations paint into an initially
+transparent image in array order. The final image uses ordinary source-over.
+Screen blending never reads arbitrary canvas layers: put the intended backdrop
+inside the composite first. Equal-layer canvas order is images, composites,
+indicators, text, with stable array order within each type. PHP owns all motion,
+phase, positions, theme policy and lifetime; packets contain no timers or recipes.
+
+Operations are strictly tagged with `type`:
+
+| Type | Required fields | Optional fields |
+| --- | --- | --- |
+| `image` | `asset`, `destination` | `source`, `displacement`, `opacity`, `blend`, `masks` |
+| `fill` | `destination`, `brush` | `opacity`, `blend`, `masks` |
+| `stroke` | `points`, `width`, `brush` | `opacity`, `blend`, `masks` |
+
+Rectangles use `{x,y,width,height}`. Image `source` is normalized to the current
+decoded PNG (default the whole image), unlike existing integer `sourceRect`.
+Sampling is bilinear in premultiplied sRGB channels, clamped to the selected
+source extent. A displacement is `{columns,rows,offsets,masks?}`: row-major
+`[dx,dy]` points interpolate over the destination. Offsets are local destination
+units added to inverse sampling; positive x samples farther right. Its masks
+multiply displacement strength, while operation masks multiply output alpha.
+This permits a compact uniform grid or narrow strip grid without image-per-tile
+packets. Stroke points are an open polyline with round caps/joins; producers
+flatten authored curves into bounded points. Paths may cross the target edge.
+
+Brushes are `solid` with `color`, `linear` with `[x,y]` `start`/`end` and `stops`,
+or `radial` with `center`, `[rx,ry]` `radius` and `stops`. Stops have `offset`,
+structured `color` (the existing RGB/ANSI object), and optional `opacity` (1).
+Offsets increase strictly from 0 to 1; colors/alpha interpolate premultiplied.
+Radial position is elliptical radius, 0 at center and 1 on the outer ellipse.
+Operation `blend` is `source_over` (default) or `screen`; opacity defaults to 1.
+
+Masks are intersected by multiplying coverage. `polygon` has `contours`, a union
+of closed point lists (each uses even-odd interior); `ellipse` has `center` and
+`radius`; both accept `feather` (0) and `invert` (false). Polygon coverage uses
+the nearest edge with interior sign; ellipse feather uses signed distance along
+the radial ray (exact distance for circles). Inversion reverses that sign before
+smoothstep feathering. Zero feather uses a one-local-pixel boundary coverage
+ramp. `image_alpha` has `asset`, `destination`, optional normalized `source` and
+`invert`; it samples current image alpha, so replacement artwork needs no frozen
+hash or duplicated dimension metadata. Mask images use the same asset validation.
+
+All values must be finite; unknown keys/types and explicit null are rejected.
+Local image/fill destinations fit their target; canvas destinations/clips retain
+the existing full-rectangle validation. Limits per frame: 8 composites, 256
+operations, 8,388,608 target pixels, 16,384 displacement nodes. Each target axis
+is 1..4096 and area at most 4,194,304. Each grid axis is 2..64, offsets within
+±4096. Each mask list has at most 8 entries; a polygon has 1..8 contours of
+3..128 points without duplicate consecutive vertices. Strokes have 2..256 points
+and width `(0,256]`. Points are within ±16384, radii `(0,16384]`, feather 0..4096,
+gradients 2..8 stops, opacity 0..1. IDs use existing 256-byte rules.
+
+The compositor runs on the protocol reader thread before frame acceptance.
+Sources share the existing per-frame 1024-image/64 MiB decode budget. Its own
+64 MiB pool accounts live output generations (including queued/visible frames),
+new outputs, two temporary coverage buffers, an 8 MiB mask cache and up to
+16 MiB of reusable first-image pixels. Ordinary region and glyph/tile cache
+budgets are unchanged. Only current composite outputs are retained for reuse;
+older generations are weakly tracked until their owners release them. Geometry
+masks and immutable first images reuse bounded LRU entries. Source identities
+participate in keys; changed artwork invalidates derived pixels.
+These are CPU image/scratch bounds, not a total process or GPU-memory guarantee.
+Composite raster density is one pixel per declared local unit; normal canvas
+scaling then applies, without rebuilding pixels during a window resize.
+
+Conservative work is limited to 268,435,456 units per candidate. Each new output
+costs `2*width*height`, plus each clipped operation bounding-box area multiplied
+by image 16 (+8 for displacement), fill 4, or stroke `4+pointCount`. Every mask
+list use adds the same box area times `2+sum(maskCost)`: polygon vertex count,
+ellipse 8, image-alpha 16. Masks are charged cold even when cached, preventing
+cache eviction order from bypassing admission. Reused whole outputs cost zero.
+Budget failure rejects the candidate rather than skipping effects.
+
+CPU checks and the bounded synthetic workload run without any window or audio:
+
+```sh
+cargo test --release --locked composite_tests
+cargo test --release --locked benchmark_representative_day_night_composition -- --ignored --nocapture
+```
+
+These checks are not GPU timing, native visual acceptance or Windows/Linux/WSLg
+validation. The real-packet results below do not meet the 16.7 ms target.
+
+On the macOS arm64 development host, the release-mode synthetic test (25 changing
+snapshots, first cold, four retained generations) measured:
+
+| Workload | Cold ms | Warm mean ms | Warm p95 ms |
+| --- | ---: | ---: | ---: |
+| Day | 196.02 | 13.46 | 13.61 |
+| Night | 203.98 | 13.04 | 13.74 |
+| Both themes | 401.55 | 26.63 | 28.28 |
+
+Outputs are 1350×720 with synthetic 1717×916 source paintings, full-surface sky
+mask boxes, three water ribbons and 105 moving screen strokes per theme; Night
+also includes masked flame and radial glow. The logo is excluded. Peak reserved
+compositor bytes were 57,721,061. These numbers exclude PNG decode, protocol I/O
+and GPU/native drawing. Warm single-theme work fits 16.7 ms here; the overlap
+fits 33.3 ms but not 16.7 ms. Before first-image reuse, respective warm means
+were 51.91, 85.47 and 137.93 ms. The renderer does not reduce packet cadence.
+
+An optional real-packet CPU replay test accepts NDJSON starting with a hello
+(including the actual asset root), then complete frames. A line may instead be
+`{label,message}`. With `ICHILOTO_COMPOSITE_REPLAY` pointing to that file and
+`ICHILOTO_COMPOSITE_REPORT` to an output directory, run
+`cargo test --release --locked replay_engine_composite_packets_without_a_native_window
+-- --ignored --nocapture`. It writes preparation timings/resource reports and
+individual CPU composite PNGs at the first and every 30th subsequent frame
+(override with positive `ICHILOTO_COMPOSITE_CAPTURE_EVERY`); these are not native
+window screenshots. It reads
+current assets without launching PHP, a game, audio or a GPUI window.
+
+The 2026-09-22 Engine/Game title export was replayed on the same macOS arm64
+host with 60 frames per scenario and four retained generations. These timings
+include frame validation, asset/cache preparation and composition, but exclude
+wire parsing, PHP production, GPU upload and native drawing. The first frame
+is listed separately; subsequent frames include any newly encountered resources.
+
+| Actual title scenario | First ms | Subsequent mean ms | Subsequent p95 ms | Subsequent max ms |
+| --- | ---: | ---: | ---: | ---: |
+| Day with logo | 223.42 | 21.46 | 23.98 | 24.95 |
+| Night with logo | 227.09 | 20.82 | 24.64 | 28.19 |
+| Day → Night transition | 213.52 | 15.50 | 19.42 | 138.06 |
+| Reduced motion | 44.02 | 3.28 | 6.33 | 21.38 |
+
+All 240 frames passed validation/preparation. Every subsequent Day/Night frame
+fit 33.3 ms, but none fit 16.7 ms. The transition had two additional stalls:
+40.26 ms for the newly encountered Night painting and 138.06 ms for its first
+composite prefix/mask preparation. Its middle phase fades ordinary paintings
+while ambient effects are off; it does not render both animated composites
+simultaneously. Peak compositor reservation was 42,340,486 bytes; the independent
+decoded-source pool peaked at 34,871,296 bytes. This establishes protocol and
+CPU-output compatibility, not smooth 60 fps or native visual acceptance. No
+packet cadence reduction or platform-specific fallback is applied.
+
+## Window activation
+
+With the optional v2 `window_activation` capability, the renderer sends
+`{"protocol":2,"type":"window_activation","active":true}` after `ready`,
+then only when OS activation changes. Unnegotiated sessions receive no such
+events. The GPUI observer is owned by the window entity and stops at teardown.
+PHP decides whether to pause elapsed time, defer local-time changes or clear input.
+`active` means OS focus, not visibility: visible unfocused windows are inactive.
+Hidden/minimized/occluded status is not reported or inferred from paint cadence.
+No native platform lifecycle acceptance is implied by CPU protocol tests.
+
 A standalone native presentation and keyboard surface using pinned **GPUI 0.2.2**.
 It supports protocol v1 and v2 sessions. PHP owns actions, input bindings, movement,
 collision, scenes, battle state, camera conversion, timing and saves. Rust receives
@@ -90,14 +247,19 @@ audio, ANSI parser, terminal emulator or gameplay meaning for layer IDs/numbers.
 
 This section is the current installation status; dated validation documents and
 receipts describe their original checkpoints, including superseded binaries.
-On 16 September 2026, the accepted implementation from local commit
-`b44b08a8393ab74c28a0ff5c947274c5cbfca4f1` was integrated through `develop` into
-`main`. Its existing optimized executable, SHA256
-`8f946ccac39d1f6aa50e1edb4712300197ad6bfcea361b221dac060f3a52bbc5`, was installed
-in the normal Engine package at
+On 22 September 2026, the optimized development executable containing local
+image compositing, window activation and shared canvas destination sampling,
+SHA256 `781046dfb2c57b0b472e75a0d625bd65606ff7dfaf30224d8914abc08d20d6a8`,
+was packaged and installed in the normal Engine package at
 `resources/renderers/installed/gpui/darwin-arm64/Ichiloto Renderer.app/Contents/MacOS/gpui-renderer`.
-Engine preserved its original app metadata and manifest and verified the package
-resolver. This reused the tested binary without another build or runtime copy.
+The existing packager reused the release executable, and Engine's installer
+performed its dry run and installation. The release unit suite passes 121 tests
+with three opt-in checks ignored; formatting, release Clippy and the release
+build also pass on macOS arm64. Earlier real-packet CPU replay results are
+recorded above. Native visual acceptance of the latest canvas sampling and
+activation behavior remains pending. The subsequent five-battle capture check
+stopped before launch when screen-capture preflight reported access unavailable;
+it produced no native screenshots. Linux, Windows and WSLg were not tested.
 
 That local installation is not a published renderer release or a Console
 installer. Pulling the Engine repository does not install GPUI: a clean
@@ -650,7 +812,7 @@ the same full-sheet image identity and GPUI atlas upload.
 | Decoded source images per frame (actors + tiles) | 64 MiB / 1024 images |
 | Session decoded-image cache | 64 MiB / 1024 images |
 | Prepared tile regions per frame and in session LRU | 64 MiB / 4096 regions, including guards |
-| Shared tile/glyph display-raster LRU | 64 MiB / 32768 images; evictions retire at the next render |
+| Shared tile/canvas/glyph display-raster LRU | 64 MiB / 32768 images; evictions retire at the next render |
 | V2 text layers | 64 |
 | V2 runs across all layers | 32768 |
 | V2 Unicode scalars across all runs, including spaces/overlap | 524288 |
@@ -658,11 +820,18 @@ the same full-sheet image identity and GPUI atlas upload.
 
 Validation, PNG decoding and source-region preparation happen before displayed-state
 mutation. Display samples are derived during paint, when device scale and final
-cell position are known. They have a separate LRU; samples evicted while painting
+surface position are known. Guarded canvas images, composites and effected text
+use the same device-pixel sampling path as terrain. Their clip and destination
+stay independent of source resolution: switching from a full-size source to a
+smaller composite cannot round its borders into a different position. Clipping
+changes coverage without changing sample coordinates. This uses the existing
+shared display LRU and retirement mechanism, and adds canvas resampling work to
+native drawing; the CPU preparation timings above exclude that work.
+Samples evicted while painting
 remain alive until the next render boundary so their GPU slots cannot be reused
 under the current scene. These in-flight samples and GPUI uploads are additional
 memory, not part of a process-wide cache limit. Glyph candidate admission counts
-live tile/glyph rasters held by snapshots and retirement queues, new candidate
+live tile/canvas/glyph rasters held by snapshots and retirement queues, new candidate
 rasters and peak mask/blur scratch against that same 64 MiB display allowance;
 eviction does not make retained bytes disappear. There is no second glyph pool.
 Glyph raster dimensions are bounded to 16384 device pixels per axis, and a bounded

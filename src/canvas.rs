@@ -1,14 +1,15 @@
 //! Prepared canvas images and native painting. PHP owns all authored layout/state.
 use crate::canvas_protocol::{Canvas, CanvasImage, Rect};
 use crate::color::DEFAULT_FOREGROUND;
-use crate::renderer::{FONT_FAMILY, fit_cell_font, positioned, sheet_bounds};
+use crate::renderer::{FONT_FAMILY, fit_cell_font, positioned};
 use crate::viewport::{PaintRect, ViewportTransform};
-use gpui::{App, Div, ObjectFit, RenderImage, div, font, img, prelude::*, px, rgb};
-use std::{collections::HashMap, sync::Arc};
+use gpui::{App, Div, RenderImage, div, font, prelude::*, px, rgb};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum PaintItem {
     Image(usize),
+    Composite(usize),
     Indicator(usize),
     Text(usize),
 }
@@ -17,6 +18,7 @@ pub enum PaintItem {
 pub struct PreparedCanvas {
     pub source: Canvas,
     pub images: Vec<Arc<RenderImage>>,
+    pub composites: Vec<Arc<RenderImage>>,
     pub plan: Vec<PaintItem>,
 }
 
@@ -55,6 +57,7 @@ impl PreparedCanvas {
     pub fn prepare(
         source: Canvas,
         prepare_image: impl FnMut(&CanvasImage) -> Result<Arc<RenderImage>, String>,
+        composites: Vec<Arc<RenderImage>>,
     ) -> Result<Self, String> {
         let images = source
             .images
@@ -63,17 +66,20 @@ impl PreparedCanvas {
             .collect::<Result<Vec<_>, String>>()?;
         let mut plan: Vec<_> = (0..images.len())
             .map(PaintItem::Image)
+            .chain((0..composites.len()).map(PaintItem::Composite))
             .chain((0..source.indicators.len()).map(PaintItem::Indicator))
             .chain((0..source.text_layers.len()).map(PaintItem::Text))
             .collect();
         plan.sort_by_key(|item| match *item {
             PaintItem::Image(i) => source.images[i].layer,
+            PaintItem::Composite(i) => source.composites.as_ref().unwrap()[i].layer,
             PaintItem::Indicator(i) => source.indicators[i].layer,
             PaintItem::Text(i) => source.text_layers[i].layer,
         });
         Ok(Self {
             source,
             images,
+            composites,
             plan,
         })
     }
@@ -83,6 +89,7 @@ impl PreparedCanvas {
         transform: ViewportTransform,
         fonts: &mut HashMap<(u32, u32), f32>,
         glyphs: &HashMap<usize, Arc<RenderImage>>,
+        samples: Rc<RefCell<crate::display_cache::DisplayRasterCache>>,
         cx: &App,
     ) -> Div {
         // Retain only active metrics: at most the already validated 64 text layers.
@@ -95,42 +102,27 @@ impl PreparedCanvas {
         let mut surface = div().absolute().size_full().overflow_hidden();
         for item in &self.plan {
             match *item {
+                PaintItem::Composite(index) => {
+                    let item = &self.source.composites.as_ref().unwrap()[index];
+                    surface = surface.child(crate::canvas_image::element(
+                        self.composites[index].clone(),
+                        item.destination,
+                        item.clip_rect,
+                        item.opacity,
+                        transform,
+                        samples.clone(),
+                    ));
+                }
                 PaintItem::Image(index) => {
                     let item = &self.source.images[index];
-                    let Some((mask, bounds)) =
-                        clipped_bounds(item.destination, item.clip_rect, transform)
-                    else {
-                        continue;
-                    };
-                    let image = &self.images[index];
-                    let mut clip = positioned(div(), mask)
-                        .overflow_hidden()
-                        .opacity(item.opacity as f32);
-                    // Every canvas image, whole or cropped, has cached edge guards.
-                    // Sample only its authored rectangle, never an adjacent GPU atlas entry.
-                    let size = image.size(0);
-                    let guard = crate::tile_regions::GUARD;
-                    let sheet = sheet_bounds(
-                        crate::protocol::SourceRect {
-                            x: guard,
-                            y: guard,
-                            width: size.width.0 as u32 - 2 * guard,
-                            height: size.height.0 as u32 - 2 * guard,
-                        },
-                        size.width.0 as u32,
-                        size.height.0 as u32,
-                        bounds.width,
-                        bounds.height,
-                    );
-                    let painted = img(image.clone())
-                        .object_fit(ObjectFit::Fill)
-                        .absolute()
-                        .left(px(bounds.left + sheet.left))
-                        .top(px(bounds.top + sheet.top))
-                        .w(px(sheet.width))
-                        .h(px(sheet.height));
-                    clip = clip.child(painted);
-                    surface = surface.child(clip);
+                    surface = surface.child(crate::canvas_image::element(
+                        self.images[index].clone(),
+                        item.destination,
+                        item.clip_rect,
+                        item.opacity,
+                        transform,
+                        samples.clone(),
+                    ));
                 }
                 PaintItem::Indicator(index) => {
                     let item = &self.source.indicators[index];
@@ -143,42 +135,17 @@ impl PreparedCanvas {
                 PaintItem::Text(index) => {
                     let layer = &self.source.text_layers[index];
                     if layer.glyph_effects.is_some() {
-                        let Some((mask, bounds)) =
-                            clipped_bounds(layer.paint_bounds(), layer.clip_rect, transform)
-                        else {
-                            continue;
-                        };
                         let image = glyphs
                             .get(&index)
                             .expect("accepted effected text has a prepared raster");
-                        let size = image.size(0);
-                        let guard = crate::glyph_raster::GUARD;
-                        let sheet = sheet_bounds(
-                            crate::protocol::SourceRect {
-                                x: guard,
-                                y: guard,
-                                width: size.width.0 as u32 - 2 * guard,
-                                height: size.height.0 as u32 - 2 * guard,
-                            },
-                            size.width.0 as u32,
-                            size.height.0 as u32,
-                            bounds.width,
-                            bounds.height,
-                        );
-                        surface = surface.child(
-                            positioned(div(), mask)
-                                .overflow_hidden()
-                                .opacity(layer.opacity.unwrap_or(1.0) as f32)
-                                .child(
-                                    img(image.clone())
-                                        .object_fit(ObjectFit::Fill)
-                                        .absolute()
-                                        .left(px(bounds.left + sheet.left))
-                                        .top(px(bounds.top + sheet.top))
-                                        .w(px(sheet.width))
-                                        .h(px(sheet.height)),
-                                ),
-                        );
+                        surface = surface.child(crate::canvas_image::element(
+                            image.clone(),
+                            layer.paint_bounds(),
+                            layer.clip_rect,
+                            layer.opacity.unwrap_or(1.0),
+                            transform,
+                            samples.clone(),
+                        ));
                         continue;
                     }
                     let Some((mask, bounds)) = clipped_bounds(

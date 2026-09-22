@@ -16,6 +16,8 @@ pub struct Canvas {
     pub height: u32,
     #[serde(default)]
     pub images: Vec<CanvasImage>,
+    #[serde(default, deserialize_with = "present")]
+    pub composites: Option<Vec<crate::composite_protocol::Composite>>,
     #[serde(default)]
     pub indicators: Vec<Indicator>,
     #[serde(default)]
@@ -231,6 +233,7 @@ impl Canvas {
         identifiers(self.images.iter().map(|i| i.id.as_str()))?;
         identifiers(self.indicators.iter().map(|i| i.id.as_str()))?;
         identifiers(self.text_layers.iter().map(|i| i.id.as_str()))?;
+        crate::composite_protocol::validate(self.composites.as_deref().unwrap_or_default(), self)?;
         for image in &self.images {
             image.destination.validate(self)?;
             if let Some(clip) = image.clip_rect {

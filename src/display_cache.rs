@@ -1,4 +1,4 @@
-//! One device-raster LRU for terrain samples and runtime glyph-effect images.
+//! One device-raster LRU for terrain/canvas samples and runtime glyph-effect images.
 use gpui::{ImageId, RenderImage};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
@@ -114,7 +114,7 @@ impl DisplayRasterCache {
         let stale: Vec<_> = self
             .entries
             .keys()
-            .filter(|key| !wanted.contains_key(*key))
+            .filter(|key| matches!(key, RasterKey::Glyph(_)) && !wanted.contains_key(*key))
             .cloned()
             .collect();
         for key in stale {

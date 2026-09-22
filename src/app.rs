@@ -182,6 +182,8 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         glyph_fonts: Default::default(),
                                         glyph_frame: Default::default(),
                                         glyph_density: None,
+                                        activation: Default::default(),
+                                        activation_subscription: None,
                                     }
                                 })
                             },
@@ -190,6 +192,14 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                 window = Some(handle);
                                 cx.activate(true);
                                 output.emit(Event::Ready { capabilities }, cx);
+                                if let Err(error) = handle.update(cx, |view, window, cx| {
+                                    view.observe_window_activation(window, cx)
+                                }) {
+                                    output.fatal(
+                                        format!("cannot observe window activation: {error}"),
+                                        cx,
+                                    );
+                                }
                             }
                             Err(error) => {
                                 output.fatal(format!("cannot open native window: {error}"), cx)

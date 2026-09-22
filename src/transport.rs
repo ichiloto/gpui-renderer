@@ -64,6 +64,15 @@ impl Session {
                     .ok_or("frame requires a successful hello")?;
                 validate_capabilities(&frame.sprites, hello)?;
                 if let Some(canvas) = &frame.canvas {
+                    if canvas.composites.is_some()
+                        && !hello
+                            .required_capabilities
+                            .contains(&Capability::CanvasCompositing)
+                    {
+                        return Err(
+                            "composites requires negotiated canvas_compositing capability".into(),
+                        );
+                    }
                     if !hello
                         .required_capabilities
                         .contains(&Capability::GraphicalCanvas)
@@ -226,7 +235,7 @@ fn read_protocol_observed(
                 if let Update::Frame(frame) = &mut update {
                     frame.observation = observation;
                     diagnostics.frame_stage(observation, "accepted");
-                    diagnostics.frame_resources(observation, frame.resources);
+                    diagnostics.frame_resources(observation, frame.resources.clone());
                 }
                 Ok(update)
             })

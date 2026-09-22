@@ -229,6 +229,7 @@ fn results_layout_stages_share_art_clip_gauges_and_release_complete_pages() {
             canvas::PaintItem::Image(i) => &transition.source.images[i].id,
             canvas::PaintItem::Text(i) => &transition.source.text_layers[i].id,
             canvas::PaintItem::Indicator(_) => unreachable!(),
+            canvas::PaintItem::Composite(_) => unreachable!(),
         };
         let band = if id == "battlefield" || id == "battle-combatant" {
             0

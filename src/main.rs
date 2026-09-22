@@ -3,10 +3,18 @@ mod assets;
 mod canvas;
 #[cfg(test)]
 mod canvas_clip_tests;
+mod canvas_image;
+#[cfg(test)]
+mod canvas_image_tests;
 mod canvas_protocol;
 #[cfg(test)]
 mod canvas_tests;
 mod color;
+mod composite_cache;
+mod composite_pixels;
+mod composite_protocol;
+#[cfg(test)]
+mod composite_tests;
 mod diagnostics;
 mod display_cache;
 mod glyph_cache;
@@ -25,6 +33,7 @@ mod tile_sampling;
 mod tiles;
 mod transport;
 mod viewport;
+mod window_activation;
 mod window_layout;
 
 use std::sync::{

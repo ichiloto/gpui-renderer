@@ -76,6 +76,8 @@ pub enum Capability {
     GraphicalCanvas,
     CanvasClipOpacity,
     CanvasGlyphEffects,
+    CanvasCompositing,
+    WindowActivation,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
@@ -437,6 +439,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::GraphicalCanvas) {
             return Err("graphical_canvas requires protocol v2".into());
         }
+        if version == Version::V1 && unique.contains(&Capability::WindowActivation) {
+            return Err("window_activation requires protocol v2".into());
+        }
         if unique.contains(&Capability::CanvasClipOpacity) {
             if version != Version::V2 {
                 return Err("canvas_clip_opacity requires protocol v2".into());
@@ -450,6 +455,11 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         {
             return Err("canvas_glyph_effects requires protocol v2 and graphical_canvas".into());
         }
+        if unique.contains(&Capability::CanvasCompositing)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_compositing requires protocol v2 and graphical_canvas".into());
+        }
     }
     Ok(Incoming { version, message })
 }
@@ -457,6 +467,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Event {
+    WindowActivation {
+        active: bool,
+    },
     Ready {
         #[serde(skip_serializing_if = "Vec::is_empty")]
         capabilities: Vec<Capability>,

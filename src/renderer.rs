@@ -23,6 +23,38 @@ pub struct Renderer {
     pub glyph_fonts: crate::glyph_raster::FontCatalog,
     pub glyph_frame: crate::glyph_cache::GlyphFrame,
     pub glyph_density: Option<f32>,
+    pub activation: crate::window_activation::ActivationState,
+    pub activation_subscription: Option<gpui::Subscription>,
+}
+
+impl Renderer {
+    /// Called after ready has been enqueued. Retaining the subscription here
+    /// makes observer teardown follow the window entity, not a detached timer.
+    pub fn observe_window_activation(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self
+            .state
+            .hello
+            .required_capabilities
+            .contains(&crate::protocol::Capability::WindowActivation)
+        {
+            return;
+        }
+        self.report_window_activation(window, cx);
+        self.activation_subscription =
+            Some(cx.observe_window_activation(window, |view, window, cx| {
+                view.report_window_activation(window, cx);
+            }));
+    }
+    fn report_window_activation(&mut self, window: &Window, cx: &mut Context<Self>) {
+        if !self
+            .output
+            .closing
+            .load(std::sync::atomic::Ordering::SeqCst)
+            && let Some(event) = self.activation.update(window.is_window_active())
+        {
+            self.output.emit(event, cx);
+        }
+    }
 }
 
 pub(crate) const FONT_FAMILY: &str = if cfg!(target_os = "macos") {
@@ -104,7 +136,7 @@ impl Render for Renderer {
             }
             self.cached_images.clone_from(&frame.cached_images);
         }
-        let active_regions = self
+        let mut active_regions: std::collections::HashSet<_> = self
             .state
             .frame
             .iter()
@@ -112,6 +144,21 @@ impl Render for Renderer {
             .flat_map(|batch| &batch.regions)
             .map(|region| region.id)
             .collect();
+        if let Some(canvas) = self
+            .state
+            .frame
+            .as_ref()
+            .and_then(|frame| frame.canvas.as_ref())
+        {
+            active_regions.extend(
+                canvas
+                    .images
+                    .iter()
+                    .chain(&canvas.composites)
+                    .map(|image| image.id),
+            );
+        }
+        active_regions.extend(self.glyph_frame.images.values().map(|image| image.id));
         for retired in self
             .tile_samples
             .borrow_mut()
@@ -230,6 +277,7 @@ impl Render for Renderer {
                     transform,
                     &mut self.canvas_fonts,
                     &self.glyph_frame.images,
+                    self.tile_samples.clone(),
                     cx,
                 ));
             } else {
