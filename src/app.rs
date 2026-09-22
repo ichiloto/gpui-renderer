@@ -2,9 +2,7 @@ use crate::protocol::{Event, ProtocolWriter, Version, diagnostic};
 use crate::renderer::Renderer;
 use crate::state::RendererState;
 use crate::transport::{self, Update};
-use gpui::{
-    App, AppContext, Application, TitlebarOptions, WindowBounds, WindowHandle, WindowOptions,
-};
+use gpui::{App, AppContext, Application, TitlebarOptions, WindowHandle, WindowOptions};
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -150,7 +148,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                         let view_output = output.clone();
                         match cx.open_window(
                             WindowOptions {
-                                window_bounds: Some(WindowBounds::Windowed(initial.bounds)),
+                                window_bounds: Some(initial.bounds),
                                 display_id: Some(initial.display_id),
                                 titlebar: Some(TitlebarOptions {
                                     title: Some(hello.title.clone().into()),
@@ -176,9 +174,16 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         focus,
                                         output: view_output,
                                         last_viewport: None,
+                                        last_logical_size: None,
                                         cached_images: vec![],
                                         logical_font_size: None,
+                                        canvas_fonts: Default::default(),
                                         tile_samples: Default::default(),
+                                        glyph_fonts: Default::default(),
+                                        glyph_frame: Default::default(),
+                                        glyph_density: None,
+                                        activation: Default::default(),
+                                        activation_subscription: None,
                                     }
                                 })
                             },
@@ -187,6 +192,14 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                 window = Some(handle);
                                 cx.activate(true);
                                 output.emit(Event::Ready { capabilities }, cx);
+                                if let Err(error) = handle.update(cx, |view, window, cx| {
+                                    view.observe_window_activation(window, cx)
+                                }) {
+                                    output.fatal(
+                                        format!("cannot observe window activation: {error}"),
+                                        cx,
+                                    );
+                                }
                             }
                             Err(error) => {
                                 output.fatal(format!("cannot open native window: {error}"), cx)
@@ -196,8 +209,52 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                     Update::Frame(frame) => {
                         if let Some(window) = window {
                             let number = frame.number;
-                            if let Err(error) = window.update(cx, |view, _, cx| {
+                            if let Err(error) = window.update(cx, |view, window, cx| {
                                 let observation = frame.observation;
+                                let (width, height) = frame.canvas.as_ref().map_or(
+                                    (
+                                        (view.state.hello.grid.columns
+                                            * view.state.hello.grid.cell_width)
+                                            as f32,
+                                        (view.state.hello.grid.rows
+                                            * view.state.hello.grid.cell_height)
+                                            as f32,
+                                    ),
+                                    |canvas| {
+                                        (canvas.source.width as f32, canvas.source.height as f32)
+                                    },
+                                );
+                                let viewport = window.viewport_size();
+                                let fit = crate::viewport::ViewportTransform::fit(
+                                    width,
+                                    height,
+                                    viewport.width.into(),
+                                    viewport.height.into(),
+                                );
+                                let density = fit.scale.max(1.0 / 256.0) * window.scale_factor();
+                                let prepared = crate::glyph_cache::prepare(
+                                    &frame,
+                                    density,
+                                    &mut view.glyph_fonts,
+                                    &mut view.tile_samples.borrow_mut(),
+                                );
+                                let glyphs = match prepared {
+                                    Ok(glyphs) => glyphs,
+                                    Err(message) => {
+                                        view.output.emit(Event::Error { message }, cx);
+                                        return;
+                                    }
+                                };
+                                view.output.diagnostics.geometry("glyph_rasters", || {
+                                    vec![
+                                        ("frame", number as f64),
+                                        ("density", density as f64),
+                                        ("builds", glyphs.builds as f64),
+                                        ("reserved_bytes", glyphs.reserved_bytes as f64),
+                                    ]
+                                });
+                                view.glyph_frame = glyphs;
+                                view.glyph_density = Some(density);
                                 view.output
                                     .diagnostics
                                     .frame_stage(observation, "replace_begin");

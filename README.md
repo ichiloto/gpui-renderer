@@ -1,12 +1,300 @@
 # Ichiloto GPUI renderer
 
+The negotiated v2 `graphical_canvas` extension draws images at explicit graphical
+rectangles, with outlines/underlines and locally positioned text. PHP resolves
+image pivots, contain-fit geometry and presentation state. Native resizing fits
+the complete canvas uniformly and centers it. Existing field sprite/tile grid
+coordinates retain their meaning.
+
+Project-owned image cursors use the existing canvas image path; see
+[cursor presentation](#cursor-presentation) for ownership and limits.
+
+The [G1 wire corpus](fixtures/graphical-canvas/manifest.json) and its
+[hash manifest](fixtures/graphical-canvas/SHA256SUMS) freeze the shared boundary.
+Each accepted canvas fully replaces the previous one; omitting it clears all
+canvas content and resumes the legacy frame. Canvas text uses transparent null
+backgrounds, while explicit colors paint opaque cells. Legacy text backgrounds
+are unchanged. Canvas and nonempty legacy collections cannot share a frame.
+
+The additional v2 `canvas_clip_opacity` capability requires `graphical_canvas` in
+the same hello and acknowledgement in ready. It adds optional `clipRect` to canvas
+images and text layers, and optional `opacity` to canvas text layers. See the
+[independent clipping/opacity wire cases](fixtures/canvas-clip-opacity/manifest.json)
+and their [hash manifest](fixtures/canvas-clip-opacity/SHA256SUMS).
+
+`clipRect` is `{ "x": 40, "y": 40, "width": 80, "height": 24 }` in absolute
+canvas logical coordinates. Origins must be finite and nonnegative; dimensions
+must be finite and strictly positive, with the whole rectangle inside the canvas.
+It intersects the existing image destination or text grid without changing its
+position, dimensions or image source mapping. A disjoint or edge-touching clip
+paints nothing. Original destination, text, asset and source validation still
+applies even when hidden. For gauges, keep the image destination at full track
+width and vary only the clipping width; omit a zero-fill image.
+
+Text opacity accepts finite values from 0 through 1 and applies to glyphs and
+explicit cell backgrounds. Omission means full opacity. Presence of either new
+field, including explicit text opacity `1`, requires negotiation; explicit null
+and unknown fields are rejected. Existing image opacity requires only
+`graphical_canvas`. Omitting the fields on a later full frame removes the previous
+clip/fade. Source crops, caches, budgets and legacy text behavior are unchanged;
+PHP continues to resolve motion and fade timing.
+
+This extension has headless macOS validation. Text clipping/fading also passed
+the focused native glyph scenario below, followed by an isolated ordinary Game
+battle playtest on macOS. Linux/WSLg/Windows validation remains pending. See
+[availability and installation](#availability-and-installation) for current delivery status.
+
+The separately negotiated v2 `canvas_glyph_effects` capability also requires
+`graphical_canvas`. A canvas text layer may then include:
+
+```json
+"glyphEffects":{"outline":{"width":2,"color":{"kind":"rgb","r":8,"g":15,"b":29}},"shadow":{"offsetX":0,"offsetY":2,"sigma":1,"opacity":0.7,"color":{"kind":"rgb","r":8,"g":15,"b":29}}}
+```
+
+Both nested objects and every shown field are required when `glyphEffects` is
+present. Values must be finite: outline width 0..4, shadow offsets -8..8, Gaussian
+sigma 0..4, shadow opacity 0..1. Null and unknown fields are errors. Existing
+`clipRect` and text opacity still independently require `canvas_clip_opacity`.
+The [90-case effects corpus](fixtures/canvas-glyph-effects/manifest.json) and its
+[hash manifest](fixtures/canvas-glyph-effects/SHA256SUMS) freeze this extension.
+
+The original grid, cell pitch, scalar positions, run order and colors remain
+authoritative. The runtime uses system monospace with measured sizing; foreground
+and real contour strokes share the same COSMIC Text/Swash glyphs. Effects expand
+only paint bounds: with `R = outline.width + ceil(3 * shadow.sigma)`, each side's
+padding is `ceil(R + max(0, signed shadow offset toward that side))`. The example
+reserves left/top/right/bottom 5/5/5/7 logical pixels. The entire expanded rectangle
+must fit the canvas even with zero opacity or a tiny clip. `clipRect` intersects
+that expanded footprint. Engine owns placement, motion, timing and whole-block
+removal. No font assets, semantic label parsing or native animation clock are used.
+
+This glyph path uses exact direct dependencies COSMIC Text **0.14.2** and Swash
+**0.2.10**, retaining GPUI **0.2.2**. Text without `glyphEffects` keeps the existing
+GPUI text path. Font appearance can vary between hosts. Effects require scalable
+glyph contours; unavailable system glyphs reject the complete candidate before
+visible replacement instead of substituting an approximation. See
+[glyph implementation and validation](docs/glyph-effects-validation.md).
+
+Run `scripts/native-tile-smoke.py --canvas --binary <installed-executable>
+--evidence-dir <directory>` for one silent native check. Optional
+`--observe-seconds 45` holds its first frame for inspection, then closes the
+owned window automatically. This synthetic check is not real-game acceptance.
+
+## Local image compositing
+
+The optional v2 capability `canvas_compositing` requires `graphical_canvas`.
+It adds `canvas.composites`; presence (including `[]`) requires negotiation,
+omission/`[]` clears, and null is rejected. The local development installation
+described below includes this capability; it is not a published renderer release.
+See the [sample frame](fixtures/compositing/frame.json), using the existing
+`fixtures/test-sprite.png` and `fixtures` as its asset root.
+
+Each composite has `{id,width,height,destination,layer,operations}` and optional
+`opacity` (default 1) and `clipRect`. Dimensions are integer local raster units;
+destination and clip use canvas coordinates. Operations paint into an initially
+transparent image in array order. The final image uses ordinary source-over.
+Screen blending never reads arbitrary canvas layers: put the intended backdrop
+inside the composite first. Equal-layer canvas order is images, composites,
+indicators, text, with stable array order within each type. PHP owns all motion,
+phase, positions, theme policy and lifetime; packets contain no timers or recipes.
+
+Operations are strictly tagged with `type`:
+
+| Type | Required fields | Optional fields |
+| --- | --- | --- |
+| `image` | `asset`, `destination` | `source`, `displacement`, `opacity`, `blend`, `masks` |
+| `fill` | `destination`, `brush` | `opacity`, `blend`, `masks` |
+| `stroke` | `points`, `width`, `brush` | `opacity`, `blend`, `masks` |
+
+Rectangles use `{x,y,width,height}`. Image `source` is normalized to the current
+decoded PNG (default the whole image), unlike existing integer `sourceRect`.
+Sampling is bilinear in premultiplied sRGB channels, clamped to the selected
+source extent. A displacement is `{columns,rows,offsets,masks?}`: row-major
+`[dx,dy]` points interpolate over the destination. Offsets are local destination
+units added to inverse sampling; positive x samples farther right. Its masks
+multiply displacement strength, while operation masks multiply output alpha.
+This permits a compact uniform grid or narrow strip grid without image-per-tile
+packets. Stroke points are an open polyline with round caps/joins; producers
+flatten authored curves into bounded points. Paths may cross the target edge.
+
+Brushes are `solid` with `color`, `linear` with `[x,y]` `start`/`end` and `stops`,
+or `radial` with `center`, `[rx,ry]` `radius` and `stops`. Stops have `offset`,
+structured `color` (the existing RGB/ANSI object), and optional `opacity` (1).
+Offsets increase strictly from 0 to 1; colors/alpha interpolate premultiplied.
+Radial position is elliptical radius, 0 at center and 1 on the outer ellipse.
+Operation `blend` is `source_over` (default) or `screen`; opacity defaults to 1.
+
+Masks are intersected by multiplying coverage. `polygon` has `contours`, a union
+of closed point lists (each uses even-odd interior); `ellipse` has `center` and
+`radius`; both accept `feather` (0) and `invert` (false). Polygon coverage uses
+the nearest edge with interior sign; ellipse feather uses signed distance along
+the radial ray (exact distance for circles). Inversion reverses that sign before
+smoothstep feathering. Zero feather uses a one-local-pixel boundary coverage
+ramp. `image_alpha` has `asset`, `destination`, optional normalized `source` and
+`invert`; it samples current image alpha, so replacement artwork needs no frozen
+hash or duplicated dimension metadata. Mask images use the same asset validation.
+
+All values must be finite; unknown keys/types and explicit null are rejected.
+Local image/fill destinations fit their target; canvas destinations/clips retain
+the existing full-rectangle validation. Limits per frame: 8 composites, 256
+operations, 8,388,608 target pixels, 16,384 displacement nodes. Each target axis
+is 1..4096 and area at most 4,194,304. Each grid axis is 2..64, offsets within
+±4096. Each mask list has at most 8 entries; a polygon has 1..8 contours of
+3..128 points without duplicate consecutive vertices. Strokes have 2..256 points
+and width `(0,256]`. Points are within ±16384, radii `(0,16384]`, feather 0..4096,
+gradients 2..8 stops, opacity 0..1. IDs use existing 256-byte rules.
+
+The compositor runs on the protocol reader thread before frame acceptance.
+Sources share the existing per-frame 1024-image/64 MiB decode budget. Its own
+64 MiB pool accounts live output generations (including queued/visible frames),
+new outputs, two temporary coverage buffers, an 8 MiB mask cache and up to
+16 MiB of reusable first-image pixels. Ordinary region and glyph/tile cache
+budgets are unchanged. Only current composite outputs are retained for reuse;
+older generations are weakly tracked until their owners release them. Geometry
+masks and immutable first images reuse bounded LRU entries. Source identities
+participate in keys; changed artwork invalidates derived pixels.
+These are CPU image/scratch bounds, not a total process or GPU-memory guarantee.
+Composite raster density is one pixel per declared local unit; normal canvas
+scaling then applies, without rebuilding pixels during a window resize.
+
+Conservative work is limited to 268,435,456 units per candidate. Each new output
+costs `2*width*height`, plus each clipped operation bounding-box area multiplied
+by image 16 (+8 for displacement), fill 4, or stroke `4+pointCount`. Every mask
+list use adds the same box area times `2+sum(maskCost)`: polygon vertex count,
+ellipse 8, image-alpha 16. Masks are charged cold even when cached, preventing
+cache eviction order from bypassing admission. Reused whole outputs cost zero.
+Budget failure rejects the candidate rather than skipping effects.
+
+CPU checks and the bounded synthetic workload run without any window or audio:
+
+```sh
+cargo test --release --locked composite_tests
+cargo test --release --locked benchmark_representative_day_night_composition -- --ignored --nocapture
+```
+
+These checks are not GPU timing, native visual acceptance or Windows/Linux/WSLg
+validation. The real-packet results below do not meet the 16.7 ms target.
+
+On the macOS arm64 development host, the release-mode synthetic test (25 changing
+snapshots, first cold, four retained generations) measured:
+
+| Workload | Cold ms | Warm mean ms | Warm p95 ms |
+| --- | ---: | ---: | ---: |
+| Day | 196.02 | 13.46 | 13.61 |
+| Night | 203.98 | 13.04 | 13.74 |
+| Both themes | 401.55 | 26.63 | 28.28 |
+
+Outputs are 1350×720 with synthetic 1717×916 source paintings, full-surface sky
+mask boxes, three water ribbons and 105 moving screen strokes per theme; Night
+also includes masked flame and radial glow. The logo is excluded. Peak reserved
+compositor bytes were 57,721,061. These numbers exclude PNG decode, protocol I/O
+and GPU/native drawing. Warm single-theme work fits 16.7 ms here; the overlap
+fits 33.3 ms but not 16.7 ms. Before first-image reuse, respective warm means
+were 51.91, 85.47 and 137.93 ms. The renderer does not reduce packet cadence.
+
+An optional real-packet CPU replay test accepts NDJSON starting with a hello
+(including the actual asset root), then complete frames. A line may instead be
+`{label,message}`. With `ICHILOTO_COMPOSITE_REPLAY` pointing to that file and
+`ICHILOTO_COMPOSITE_REPORT` to an output directory, run
+`cargo test --release --locked replay_engine_composite_packets_without_a_native_window
+-- --ignored --nocapture`. It writes preparation timings/resource reports and
+individual CPU composite PNGs at the first and every 30th subsequent frame
+(override with positive `ICHILOTO_COMPOSITE_CAPTURE_EVERY`); these are not native
+window screenshots. It reads
+current assets without launching PHP, a game, audio or a GPUI window.
+
+The 2026-09-22 Engine/Game title export was replayed on the same macOS arm64
+host with 60 frames per scenario and four retained generations. These timings
+include frame validation, asset/cache preparation and composition, but exclude
+wire parsing, PHP production, GPU upload and native drawing. The first frame
+is listed separately; subsequent frames include any newly encountered resources.
+
+| Actual title scenario | First ms | Subsequent mean ms | Subsequent p95 ms | Subsequent max ms |
+| --- | ---: | ---: | ---: | ---: |
+| Day with logo | 223.42 | 21.46 | 23.98 | 24.95 |
+| Night with logo | 227.09 | 20.82 | 24.64 | 28.19 |
+| Day → Night transition | 213.52 | 15.50 | 19.42 | 138.06 |
+| Reduced motion | 44.02 | 3.28 | 6.33 | 21.38 |
+
+All 240 frames passed validation/preparation. Every subsequent Day/Night frame
+fit 33.3 ms, but none fit 16.7 ms. The transition had two additional stalls:
+40.26 ms for the newly encountered Night painting and 138.06 ms for its first
+composite prefix/mask preparation. Its middle phase fades ordinary paintings
+while ambient effects are off; it does not render both animated composites
+simultaneously. Peak compositor reservation was 42,340,486 bytes; the independent
+decoded-source pool peaked at 34,871,296 bytes. This establishes protocol and
+CPU-output compatibility, not smooth 60 fps or native visual acceptance. No
+packet cadence reduction or platform-specific fallback is applied.
+
+## Window activation
+
+With the optional v2 `window_activation` capability, the renderer sends
+`{"protocol":2,"type":"window_activation","active":true}` after `ready`,
+then only when OS activation changes. Unnegotiated sessions receive no such
+events. The GPUI observer is owned by the window entity and stops at teardown.
+PHP decides whether to pause elapsed time, defer local-time changes or clear input.
+`active` means OS focus, not visibility: visible unfocused windows are inactive.
+Hidden/minimized/occluded status is not reported or inferred from paint cadence.
+No native platform lifecycle acceptance is implied by CPU protocol tests.
+
 A standalone native presentation and keyboard surface using pinned **GPUI 0.2.2**.
 It supports protocol v1 and v2 sessions. PHP owns actions, input bindings, movement,
 collision, scenes, battle state, camera conversion, timing and saves. Rust receives
 complete presentation snapshots and forwards key identities. It has no game loop,
 audio, ANSI parser, terminal emulator or gameplay meaning for layer IDs/numbers.
 
-## Build and validate
+## Availability and installation
+
+This section is the current installation status; dated validation documents and
+receipts describe their original checkpoints, including superseded binaries.
+On 22 September 2026, the optimized development executable containing local
+image compositing, window activation and shared canvas destination sampling,
+SHA256 `781046dfb2c57b0b472e75a0d625bd65606ff7dfaf30224d8914abc08d20d6a8`,
+was packaged and installed in the normal Engine package at
+`resources/renderers/installed/gpui/darwin-arm64/Ichiloto Renderer.app/Contents/MacOS/gpui-renderer`.
+The existing packager reused the release executable, and Engine's installer
+performed its dry run and installation. The release unit suite passes 121 tests
+with three opt-in checks ignored; formatting, release Clippy and the release
+build also pass on macOS arm64. Earlier real-packet CPU replay results are
+recorded above. Native visual acceptance of the latest canvas sampling and
+activation behavior remains pending. The subsequent five-battle capture check
+stopped before launch when screen-capture preflight reported access unavailable;
+it produced no native screenshots. Linux, Windows and WSLg were not tested.
+
+That local installation is not a published renderer release or a Console
+installer. Pulling the Engine repository does not install GPUI: a clean
+`resources/renderers/` directory contains a README, while generated installed
+packages and manifests are ignored by Git. Public player delivery remains
+unfinished; it must supply compatible, verified platform packages without
+requiring Rust, a compiler or a source checkout.
+
+WSL/WSLg runs the Linux renderer with Linux PHP. A native Windows executable is a
+different target, and Engine's native Windows process transport remains a separate
+unsupported boundary. Removing this renderer's platform startup rejection does not
+provide those packages or establish end-to-end platform support.
+
+## Cursor presentation
+
+Engine owns actor/target identity, anchoring, selection and oscillation timing;
+Game owns the cursor images. The intended presentation uses an above-head actor
+cursor and high-contrast animated target cursors pointing down or inward from a
+side. Directional images with authored outlines/glow use existing `CanvasImage`
+placement and opacity. They need no rotation primitive, native animation clock
+or new protocol capability, and avoid font-dependent silhouettes and extra text
+layers. The existing 64-text-layer limit remains unchanged. Renderer draws the
+submitted assets without inferring gameplay meaning from IDs or marker shapes.
+
+## Developer build and validation
+
+Run these commands from the root of this separate `ichiloto/gpui-renderer`
+repository, alongside [Cargo.toml](Cargo.toml). Engine's `resources/renderers/`
+directory is an installation destination and contains no Rust project. These are
+development and packaging instructions, not player setup steps. Reuse the
+accepted installed executable when source changes do not require a new binary.
+Use repository branches and the normal Game checkout for fixes and playtesting;
+do not accumulate standalone runtime copies. Before a game playtest, verify music
+and sound effects are muted and preserve existing mute choices. The synthetic
+Renderer fixtures below contain no audio.
 
 Rust **1.98.1** is pinned in `rust-toolchain.toml`; commit and use `Cargo.lock`.
 
@@ -22,15 +310,42 @@ For a single silent window checking both negotiated capabilities, full-viewport
 terrain and frame clearing, run `scripts/native-tile-smoke.py` with `--binary`
 and `--evidence-dir`. See the [installed-renderer check](docs/s8-b-installation.md).
 
-Use `target/release/gpui-renderer` for ordinary gameplay, internally staged runtime
-bundles and performance validation. `cargo build --locked` produces an unoptimized
+Ordinary gameplay uses Engine's installed optimized executable. When a new build
+is necessary, `target/release/gpui-renderer` is the packaging and performance
+validation input. `cargo build --locked` produces an unoptimized
 `target/debug/gpui-renderer` for development/debugging; it is not the performance
 baseline. A matched Last Legend investigation found long foreground paint work in
 the debug build and substantially shorter frame handoff/draw intervals with the
 same source compiled in release mode. This is a build-profile comparison, not a
 scheduling or gameplay change; see [the measured investigation](docs/burst-investigation.md).
-Packagers should preserve the native bundle/resources and stage the optimized
-executable through their existing installation boundary, verifying its hash.
+
+## Packaging and installation
+
+`scripts/package.php` builds the optimized executable and produces a verified
+renderer package under `dist/`: a staged directory and a `.tar.gz`, each
+carrying `renderer-package.json` with the renderer id, platform id, package
+version and a SHA-256 for every payload file. On macOS the payload is the
+`.app` bundle with its `Info.plist` (from `resources/macos/Info.plist`)
+preserved for native application identity; on Linux and Windows it is the
+bare executable. Cross-compiled targets pass `--platform` together with
+`--binary` pointing at that target's built executable.
+
+```sh
+php scripts/package.php
+```
+
+Installation is owned by the Console, which verifies every hash before
+staging anything into the Engine's `resources/renderers/installed/` boundary
+and backs up any existing installation:
+
+```sh
+ichiloto renderer:install dist/gpui-<platform>-<version>.tar.gz
+```
+
+That installs into the current project's Engine package. Development staging
+into an Engine checkout uses `--engine <path>`. The package format is
+renderer-agnostic; future renderer implementations publish the same artifact
+and install through the same command.
 
 Engine's GPUI launch now retains the shared presentation buffer while skipping
 physical terminal drawing. The [Garden of Roads comparison](docs/garden-performance.md)
@@ -44,14 +359,23 @@ per-case stdout, stderr and exit status. `--trace` validates enabled diagnostic
 stderr separately from ordinary errors while retaining the same stdout assertions;
 the default smoke run explicitly disables tracing.
 
+Native startup uses one window policy across GPUI backends: request desktop-managed
+maximization, with a centered restore size fitted to GPUI's suggested window bounds.
+The desktop determines the actual content area, including panels, decorations and
+display scaling. The shared viewport transform fits and centers the complete grid
+or graphical canvas on every resize. The window remains movable, restorable and
+resizable. Display bounds are not treated as measurements of usable work area.
+See the [portable window correction and validation](docs/portable-window-validation.md).
+
 Validated on macOS/Apple Silicon, with Xcode/SDK/Metal toolchain installed.
-Initial usable-area fitting is currently implemented on macOS. Other targets keep
-the platform-neutral paint model but explicitly reject native window creation until
-a work-area adapter exists; GPUI 0.2.2's full display bounds are insufficient for
-that guarantee. Cross-target compilation has not been validated here. Upstream
-`block 0.1.6` and `proc-macro-error2 2.0.1` report future-compatibility warnings;
-current builds, Clippy and tests pass. See [S7-R validation](docs/s7-r-validation.md)
-and the historical [S1 validation](docs/s1-validation.md).
+Linux/WSLg and native Windows compilation and desktop execution still require
+validation on those platforms; the renderer has no operating-system startup
+rejection. Native renderer backend support alone does not establish support for
+Engine's process transport or availability of an installed platform package. Upstream
+`block 0.1.6` and `proc-macro-error2 2.0.1` report future-compatibility warnings.
+The accepted source passed 106 optimized tests, Clippy and the recorded native
+checks; see [glyph-effects validation](docs/glyph-effects-validation.md), the
+earlier [S7-R validation](docs/s7-r-validation.md) and [S1 validation](docs/s1-validation.md).
 
 ## Session and channel contract
 
@@ -284,9 +608,11 @@ Explicit developer dimensions still override the default. Engine selects these
 dimensions before the session; GPUI does not infer them from visible content.
 See [battle viewport validation](docs/battle-viewport-validation.md).
 
-The hello fixes the logical surface for the entire session:
+The hello fixes the legacy logical grid for the entire session:
 `logicalWidth = columns * cellWidth`, `logicalHeight = rows * cellHeight`.
-Native window dimensions are independent. Every paint uses the actual
+An active negotiated graphical canvas supplies its own logical width and height;
+omitting it returns to the unchanged legacy grid. Native window dimensions are
+independent. Every paint uses the current logical surface, the actual
 `Window::viewport_size()` and the pure `ViewportTransform` model:
 
 ```text
@@ -299,9 +625,10 @@ offsetY = (viewportHeight - presentedHeight) / 2
 
 Smaller windows scale the complete surface uniformly. Larger windows keep 1×
 rendering centered with letterboxing. Text pitch, font size, line height, opaque
-cell backgrounds, sprite origins/dimensions and bottom-center anchors share this
-transform. The inner surface clips off-grid sprites at the logical grid boundary;
-the outer viewport paints the default background. There are no scrollbars or
+cell backgrounds, sprite origins/dimensions, bottom-center anchors, canvas images
+and indicators share this transform. The inner surface clips off-grid sprites at
+the logical grid boundary; the outer viewport paints the default background.
+There are no scrollbars or
 independent X/Y scaling. Resizing requests a GPUI repaint; it never modifies stored
 frames, negotiates a grid, sends protocol resize events or changes gameplay/camera
 coordinates. A zero-sized viewport paints no surface and retains the focus root.
@@ -309,24 +636,21 @@ Large maps can extend beyond this fixed logical viewport: PHP's camera scrolls t
 visible portion and sends new snapshots. The renderer does not fit an entire map
 unless its caller deliberately sends the entire map as the logical surface.
 
-On macOS, `window_layout.rs` reads `NSScreen.mainScreen` (first screen fallback),
-`frame`, `visibleFrame` and `NSScreenNumber`. It matches that display to GPUI and
-passes its explicit `display_id` when opening. AppKit's
-`contentRectForFrameRect:styleMask:` and `frameRectForContentRect:styleMask:` account
-for the actual normal resizable titlebar. Fitted content is selected first, capped
-at 1× and rounded inward to whole points, then its outer frame is centered in the
-usable work area. The top-left is aligned to whole points to prevent AppKit from
-rounding fractional initial rectangles outward. Centering may differ by less than
-one point due to this alignment. No screen dimensions, Dock/menu sizes or chrome
-constants are guessed.
+`window_layout.rs` uses the same public GPUI path on every backend. It selects the
+primary display (first display fallback), fits centered restore-size hints inside
+that display's `default_bounds()`, and requests `WindowBounds::Maximized`. GPUI
+delegates maximization to the desktop, which supplies the actual content area.
+The player can restore, move and resize the window using normal native controls.
 
-Pinned GPUI's `PlatformDisplay` exposes no usable-area API, and `MacDisplay::bounds`
-discards global display origins. The adapter therefore converts AppKit's global
-bottom-left coordinates to the display-relative outer top-left expected by pinned
-`MacWindow::open`. Tests cover positive and negative monitor origins. Native
-validation currently covers the development display, not a physical multi-monitor
-setup. Direct macOS dependencies reuse the already locked cocoa/objc versions;
-no GPUI or registry source is patched.
+Pinned GPUI's `PlatformDisplay` exposes no usable-area API. Its suggested bounds
+are used only for restoration hints; no taskbar, Dock, menu or decoration sizes
+are guessed. Native placement remains the desktop's decision, and the game is
+centered within the resulting content viewport. Tests cover positive and negative
+origins and small, portrait and fractional bounds. Native validation covers the
+macOS development display, not a physical multi-monitor setup or Linux/Windows
+desktop. See the [portable correction](docs/portable-window-validation.md) for
+backend evidence and validation limits. Dated earlier viewport receipts describe
+the former AppKit-specific implementation.
 
 The logical size, initial native-size policy, actual viewport and paint transform
 are separate boundaries. Future configuration should give developers and players
@@ -335,7 +659,8 @@ scaling. Fixed size is an optional policy, not a universal restriction. These
 choices should adjust gracefully to the available display while leaving large-map
 camera scrolling independent. Configuration can change the window and transform
 policies without rewriting protocol snapshots; it is not implemented in this
-phase. The current policy is resizable with uniform downscaling and a 1× cap.
+phase. The current policy starts maximized, remains restorable and resizable, and
+uses uniform downscaling with a 1× cap.
 
 ## Opt-in input latency diagnostics
 
@@ -394,7 +719,8 @@ record contains `clock:"CLOCK_UPTIME_RAW"`, the renderer `pid`, `host_ns`, and
 `clock_gettime_nsec_np` API and libc's `clockid_t`/`CLOCK_UPTIME_RAW` definition are
 used directly. The development host's PHP build was verified to use the same clock
 for `hrtime(true)`. Other platforms emit `clock_anchor_unavailable`; they do not
-pretend to share that clock. Non-macOS graphical startup remains unsupported here.
+pretend to share that clock. Missing host-clock alignment does not prevent native
+window startup or process-relative diagnostics on those platforms.
 
 To align an event's process-relative `at_ns` to the same host clock, use integer
 nanosecond arithmetic and retain the uncertainty interval:
@@ -429,8 +755,11 @@ particular received snapshot through these stages:
 | `paint_begin/end` | Root's public Element CPU paint method; excludes subsequent native presentation |
 
 Receipt-to-acceptance includes parsing, validation and preparation. Acceptance-to-
-replacement includes the bounded reader queue and UI scheduling; startup also
-includes native window creation. Previous foreground rendering can delay the next
+replacement includes the bounded reader queue, UI scheduling and device-density
+glyph raster preparation when effects are present; startup also includes native
+window creation. `accepted` does not establish glyph admission: that later step
+can reject a candidate before `replace_begin`, preserving the previous display.
+Previous foreground rendering can delay the next
 update. The opt-in root observer delegates the same element ID, state types, bounds
 and arguments; disabled tracing uses the original unwrapped element.
 
@@ -483,7 +812,7 @@ the same full-sheet image identity and GPUI atlas upload.
 | Decoded source images per frame (actors + tiles) | 64 MiB / 1024 images |
 | Session decoded-image cache | 64 MiB / 1024 images |
 | Prepared tile regions per frame and in session LRU | 64 MiB / 4096 regions, including guards |
-| Display tile-sample LRU | 64 MiB / 32768 images; paint-time evictions retire at the next render |
+| Shared tile/canvas/glyph display-raster LRU | 64 MiB / 32768 images; evictions retire at the next render |
 | V2 text layers | 64 |
 | V2 runs across all layers | 32768 |
 | V2 Unicode scalars across all runs, including spaces/overlap | 524288 |
@@ -491,10 +820,23 @@ the same full-sheet image identity and GPUI atlas upload.
 
 Validation, PNG decoding and source-region preparation happen before displayed-state
 mutation. Display samples are derived during paint, when device scale and final
-cell position are known. They have a separate LRU; samples evicted while painting
+surface position are known. Guarded canvas images, composites and effected text
+use the same device-pixel sampling path as terrain. Their clip and destination
+stay independent of source resolution: switching from a full-size source to a
+smaller composite cannot round its borders into a different position. Clipping
+changes coverage without changing sample coordinates. This uses the existing
+shared display LRU and retirement mechanism, and adds canvas resampling work to
+native drawing; the CPU preparation timings above exclude that work.
+Samples evicted while painting
 remain alive until the next render boundary so their GPU slots cannot be reused
 under the current scene. These in-flight samples and GPUI uploads are additional
-memory, not part of a process-wide cache limit.
+memory, not part of a process-wide cache limit. Glyph candidate admission counts
+live tile/canvas/glyph rasters held by snapshots and retirement queues, new candidate
+rasters and peak mask/blur scratch against that same 64 MiB display allowance;
+eviction does not make retained bytes disappear. There is no second glyph pool.
+Glyph raster dimensions are bounded to 16384 device pixels per axis, and a bounded
+cache-miss work check applies before preparation. These are native resource checks,
+not increases or replacements of the wire layer/run/scalar limits.
 
 ## Key identities (both versions)
 
@@ -587,9 +929,7 @@ buffered pre-session errors cannot be relabelled after a successful hello. There
 no equality-based redraw suppression; all accepted state (IDs, layers, runs, styles,
 sprites) is replaced and notified intact. The only renderer timer is shutdown drain.
 
-The Engine still sends v1 today. Renderer support alone does not restore game
-colours, UI layering or transient timing; those require the separate S7-E work.
-
-S7-E must opt into a v2 hello and v2 DTOs consistently, produce structured colours
-without ANSI, preserve explicit blank UI cells, and choose layer policy in PHP.
+Engine uses v2 with negotiated graphical capabilities for GPUI; v1 remains a
+compatibility path. PHP supplies structured colors without ANSI, preserves
+explicit blank UI cells and chooses layering and transient timing.
 The renderer does not infer missing UI backgrounds, masks, overlays or game bindings.

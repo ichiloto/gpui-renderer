@@ -73,9 +73,14 @@ pub struct Hello {
 pub enum Capability {
     SpriteSourceRect,
     TileBatches,
+    GraphicalCanvas,
+    CanvasClipOpacity,
+    CanvasGlyphEffects,
+    CanvasCompositing,
+    WindowActivation,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Grid {
     pub columns: u32,
@@ -143,7 +148,7 @@ pub const MAX_TILE_SOURCES: usize = 4096;
 pub const MAX_TILE_CELLS: usize = 32768;
 pub const MAX_TILE_ASSET_BYTES: usize = 4096;
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FrameV2 {
     pub frame: u64,
@@ -152,6 +157,8 @@ pub struct FrameV2 {
     // Preserve presence for capability gating; omission and [] both clear.
     #[serde(default, deserialize_with = "tile_batches")]
     pub tile_batches: Option<Vec<TileBatch>>,
+    #[serde(default, deserialize_with = "crate::canvas_protocol::optional_canvas")]
+    pub canvas: Option<crate::canvas_protocol::Canvas>,
 }
 
 fn tile_batches<'de, D: serde::Deserializer<'de>>(
@@ -255,6 +262,15 @@ fn required_color<'de, D: serde::Deserializer<'de>>(
 
 impl FrameV2 {
     pub fn validate(&self, grid: Grid) -> Result<(), String> {
+        if let Some(canvas) = &self.canvas {
+            if !self.text_layers.is_empty()
+                || !self.sprites.is_empty()
+                || self.tile_batches.as_ref().is_some_and(|b| !b.is_empty())
+            {
+                return Err("canvas cannot mix with nonempty legacy text, sprites or tiles".into());
+            }
+            canvas.validate()?;
+        }
         if self.text_layers.len() > MAX_TEXT_LAYERS {
             return Err("frame exceeds 64 text layers".into());
         }
@@ -328,7 +344,9 @@ pub struct Sprite {
     pub source_rect: Option<SourceRect>,
 }
 
-fn source_rect<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<SourceRect>, D::Error> {
+pub(crate) fn source_rect<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> Result<Option<SourceRect>, D::Error> {
     // Omission is the legacy whole image; an explicit null is not a rectangle.
     SourceRect::deserialize(d).map(Some)
 }
@@ -418,6 +436,30 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::TileBatches) {
             return Err("tile_batches requires protocol v2".into());
         }
+        if version == Version::V1 && unique.contains(&Capability::GraphicalCanvas) {
+            return Err("graphical_canvas requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::WindowActivation) {
+            return Err("window_activation requires protocol v2".into());
+        }
+        if unique.contains(&Capability::CanvasClipOpacity) {
+            if version != Version::V2 {
+                return Err("canvas_clip_opacity requires protocol v2".into());
+            }
+            if !unique.contains(&Capability::GraphicalCanvas) {
+                return Err("canvas_clip_opacity requires graphical_canvas".into());
+            }
+        }
+        if unique.contains(&Capability::CanvasGlyphEffects)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_glyph_effects requires protocol v2 and graphical_canvas".into());
+        }
+        if unique.contains(&Capability::CanvasCompositing)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_compositing requires protocol v2 and graphical_canvas".into());
+        }
     }
     Ok(Incoming { version, message })
 }
@@ -425,6 +467,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Event {
+    WindowActivation {
+        active: bool,
+    },
     Ready {
         #[serde(skip_serializing_if = "Vec::is_empty")]
         capabilities: Vec<Capability>,

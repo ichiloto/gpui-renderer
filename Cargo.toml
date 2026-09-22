@@ -6,6 +6,8 @@ description = "Ichiloto's standalone native presentation and keyboard surface"
 
 [dependencies]
 gpui = "=0.2.2"
+cosmic-text = "=0.14.2"
+swash = "=0.2.10"
 async-channel = "2"
 futures-lite = "2"
 serde = { version = "1", features = ["derive"] }

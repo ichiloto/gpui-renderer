@@ -62,6 +62,7 @@ pub struct AssetRoot {
     cache: Arc<Mutex<ImageCache>>,
     regions: Arc<Mutex<crate::tile_regions::RegionCache>>,
     decodes: Arc<AtomicU64>,
+    composites: Arc<Mutex<crate::composite_cache::CompositeCache>>,
 }
 
 impl AssetRoot {
@@ -80,6 +81,7 @@ impl AssetRoot {
             cache: Arc::default(),
             regions: Arc::default(),
             decodes: Arc::default(),
+            composites: Arc::default(),
         })
     }
 
@@ -180,6 +182,14 @@ impl AssetRoot {
             self.decodes.load(Ordering::Relaxed),
             self.regions.lock().unwrap().builds,
         )
+    }
+
+    pub fn prepare_composites(
+        &self,
+        composites: &[crate::composite_protocol::Composite],
+        sources: &crate::composite_cache::Sources,
+    ) -> Result<(Vec<Arc<RenderImage>>, crate::composite_cache::Stats), String> {
+        self.composites.lock().unwrap().prepare(composites, sources)
     }
 }
 

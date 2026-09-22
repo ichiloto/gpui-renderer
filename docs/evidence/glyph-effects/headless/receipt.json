@@ -1,0 +1,40 @@
+{
+  "validation": "headless only; focused native candidate validation and Game playtest pending; Mac unlock request routed through Engine",
+  "platform": "macOS/Apple Silicon; Linux/WSLg and Windows unvalidated",
+  "baseCommit": "68704cb94960920c868efcadb29eb94211ebd754",
+  "sourceManifestSha256": "e5f15a3718dec9c9fcfb8a533c55e5c90e59d4aeb30102309b4b9067468adadd",
+  "reportSha256": "795cae3f4a245da75013bf97e8ad4a2e2cdb9af7cf46cefa4ccb352bf4b8e6d3",
+  "inputRoot": "/private/tmp/last-legend-ui-acceptance.bSdOGt/artifacts",
+  "inputSha256": {
+    "hello.json": "3cbbe89944d107e0ae6b59a68113e1f2e795cf86e41b02901e25b8319e036ce9",
+    "battle-ordinary.frame.json": "d252092bd41507a5090c59586036ca9120b294f8877f5daaaf1173d713f2a0ef",
+    "battle-feedback.frame.json": "808fc8e50a273faea14287f57b354a4ab9540dca7457662bed164ae4f73fd1d4",
+    "battle-six-recipient-stress.frame.json": "67a01295636bdd35fe1d95c0ca22635327452a7778e2441687af8113a16bdf17",
+    "capture-receipt.json": "964b14f6cad5760fab393efe00ce072ed291dfea830390116ccafb1746b6658d"
+  },
+  "candidate": {
+    "root": "/private/tmp/ichiloto-glyph-candidate-wamzdphv",
+    "executable": "/private/tmp/ichiloto-glyph-candidate-wamzdphv/Ichiloto Glyph Check.app/Contents/MacOS/gpui-renderer",
+    "sha256": "8f946ccac39d1f6aa50e1edb4712300197ad6bfcea361b221dac060f3a52bbc5",
+    "manifest": "/private/tmp/ichiloto-glyph-candidate-wamzdphv/manifest.json",
+    "manifestSha256": "75a19855a5a216c7d208324660a322915a9cb2c3aa9248fe11c8ab41ac2b98b6",
+    "infoPlistSha256": "4d9c61d4ecb96868d1be213b030cba60bdcd4e9320a2a02ee80865c17de27d4b",
+    "nativeValidated": false
+  },
+  "preservedInstalledSha256": "31521f61fc5d6dcab7231e906612cc5595f6af93c2841afbf1dfc80f11cf07ca",
+  "checks": {
+    "optimizedTestsPassed": 106,
+    "externalFixtureTestIgnoredInNormalSuite": 1,
+    "externalFixtureTestExplicitlyPassed": true,
+    "externalFixtureCasesPassed": 32,
+    "clippyAllHostTargetKindsWarningsDenied": true,
+    "releaseBuild": true
+  },
+  "limits": {
+    "sharedDisplayBytes": 67108864,
+    "sharedDisplayImages": 32768,
+    "cacheMissSampleWork": 67108864
+  },
+  "measurements": "CPU glyph preparation in a single optimized host run; no GPU/FPS claim. Each cold case resets renderer font catalog and raster pool, not OS caches. Numeric-variation case is a test-only derivative retaining input geometry and scalar counts.",
+  "publishing": "No staging, commit, push, release or canonical install replacement."
+}

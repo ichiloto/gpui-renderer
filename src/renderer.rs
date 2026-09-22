@@ -15,19 +15,61 @@ pub struct Renderer {
     pub focus: FocusHandle,
     pub output: Output,
     pub last_viewport: Option<gpui::Size<gpui::Pixels>>,
+    pub last_logical_size: Option<(f32, f32)>,
     pub cached_images: Vec<Arc<RenderImage>>,
     pub logical_font_size: Option<f32>,
-    pub tile_samples: Rc<RefCell<crate::tile_sampling::TileSamplingCache>>,
+    pub canvas_fonts: std::collections::HashMap<(u32, u32), f32>,
+    pub tile_samples: Rc<RefCell<crate::display_cache::DisplayRasterCache>>,
+    pub glyph_fonts: crate::glyph_raster::FontCatalog,
+    pub glyph_frame: crate::glyph_cache::GlyphFrame,
+    pub glyph_density: Option<f32>,
+    pub activation: crate::window_activation::ActivationState,
+    pub activation_subscription: Option<gpui::Subscription>,
 }
 
-const FONT_FAMILY: &str = if cfg!(target_os = "macos") {
+impl Renderer {
+    /// Called after ready has been enqueued. Retaining the subscription here
+    /// makes observer teardown follow the window entity, not a detached timer.
+    pub fn observe_window_activation(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if !self
+            .state
+            .hello
+            .required_capabilities
+            .contains(&crate::protocol::Capability::WindowActivation)
+        {
+            return;
+        }
+        self.report_window_activation(window, cx);
+        self.activation_subscription =
+            Some(cx.observe_window_activation(window, |view, window, cx| {
+                view.report_window_activation(window, cx);
+            }));
+    }
+    fn report_window_activation(&mut self, window: &Window, cx: &mut Context<Self>) {
+        if !self
+            .output
+            .closing
+            .load(std::sync::atomic::Ordering::SeqCst)
+            && let Some(event) = self.activation.update(window.is_window_active())
+        {
+            self.output.emit(event, cx);
+        }
+    }
+}
+
+pub(crate) const FONT_FAMILY: &str = if cfg!(target_os = "macos") {
     "Menlo"
 } else {
     "monospace"
 };
 
 /// Font em size is derived from measured advance/line metrics; cell pitch is fixed.
-fn fit_cell_font(cw: f32, ch: f32, advance_per_em: Option<f32>, line_per_em: f32) -> f32 {
+pub(crate) fn fit_cell_font(
+    cw: f32,
+    ch: f32,
+    advance_per_em: Option<f32>,
+    line_per_em: f32,
+) -> f32 {
     if !cw.is_finite() || !ch.is_finite() || cw <= 0.0 || ch <= 0.0 {
         return 0.0;
     }
@@ -43,7 +85,7 @@ fn fit_cell_font(cw: f32, ch: f32, advance_per_em: Option<f32>, line_per_em: f32
 
 /// Full-sheet bounds relative to the destination clip. Source coordinates are
 /// image pixels; the selected rectangle fills the destination logical size.
-fn sheet_bounds(
+pub(crate) fn sheet_bounds(
     rect: SourceRect,
     image_width: u32,
     image_height: u32,
@@ -94,7 +136,7 @@ impl Render for Renderer {
             }
             self.cached_images.clone_from(&frame.cached_images);
         }
-        let active_regions = self
+        let mut active_regions: std::collections::HashSet<_> = self
             .state
             .frame
             .iter()
@@ -102,7 +144,26 @@ impl Render for Renderer {
             .flat_map(|batch| &batch.regions)
             .map(|region| region.id)
             .collect();
-        for retired in self.tile_samples.borrow_mut().begin_frame(&active_regions) {
+        if let Some(canvas) = self
+            .state
+            .frame
+            .as_ref()
+            .and_then(|frame| frame.canvas.as_ref())
+        {
+            active_regions.extend(
+                canvas
+                    .images
+                    .iter()
+                    .chain(&canvas.composites)
+                    .map(|image| image.id),
+            );
+        }
+        active_regions.extend(self.glyph_frame.images.values().map(|image| image.id));
+        for retired in self
+            .tile_samples
+            .borrow_mut()
+            .begin_frame(&active_regions, &self.glyph_frame.keys)
+        {
             if let Err(error) = window.drop_image(retired) {
                 crate::protocol::diagnostic(format!("cannot retire tile sample: {error}"));
             }
@@ -129,14 +190,35 @@ impl Render for Renderer {
             size
         });
         let viewport = window.viewport_size();
+        let (logical_width, logical_height) = self.state.logical_size();
         let transform = ViewportTransform::fit(
-            grid.columns as f32 * cw,
-            grid.rows as f32 * ch,
+            logical_width,
+            logical_height,
             viewport.width.into(),
             viewport.height.into(),
         );
-        if self.last_viewport != Some(viewport) {
+        let density = transform.scale.max(1.0 / 256.0) * window.scale_factor();
+        if self.glyph_density != Some(density) {
+            self.glyph_density = Some(density);
+            if let Some(frame) = &self.state.frame {
+                match crate::glyph_cache::prepare(
+                    frame,
+                    density,
+                    &mut self.glyph_fonts,
+                    &mut self.tile_samples.borrow_mut(),
+                ) {
+                    Ok(glyphs) => self.glyph_frame = glyphs,
+                    Err(error) => crate::protocol::diagnostic(format!(
+                        "cannot resize glyph rasters; retaining complete generation: {error}"
+                    )),
+                }
+            }
+        }
+        if self.last_viewport != Some(viewport)
+            || self.last_logical_size != Some((logical_width, logical_height))
+        {
             self.last_viewport = Some(viewport);
+            self.last_logical_size = Some((logical_width, logical_height));
             self.output.diagnostics.geometry("viewport", || {
                 let bounds = window.bounds();
                 vec![
@@ -146,6 +228,8 @@ impl Render for Renderer {
                     ("outer_height", f32::from(bounds.size.height).into()),
                     ("width", f32::from(viewport.width).into()),
                     ("height", f32::from(viewport.height).into()),
+                    ("logical_width", logical_width.into()),
+                    ("logical_height", logical_height.into()),
                     ("scale", transform.scale.into()),
                     ("offset_x", transform.offset_x.into()),
                     ("offset_y", transform.offset_y.into()),
@@ -188,6 +272,17 @@ impl Render for Renderer {
             .text_size(px(logical_font_size * transform.scale))
             .line_height(px(ch * transform.scale));
         if let Some(frame) = &self.state.frame {
+            if let Some(canvas) = &frame.canvas {
+                surface = surface.child(canvas.element(
+                    transform,
+                    &mut self.canvas_fonts,
+                    &self.glyph_frame.images,
+                    self.tile_samples.clone(),
+                    cx,
+                ));
+            } else {
+                self.canvas_fonts.clear();
+            }
             for item in &frame.plan {
                 match *item {
                     PaintItem::Tiles(index) => {
@@ -282,7 +377,7 @@ fn cell_bounds(column: u32, row: u32, cw: f32, ch: f32, transform: ViewportTrans
     transform.surface_rect(column as f32 * cw, row as f32 * ch, cw, ch)
 }
 
-fn positioned(element: gpui::Div, bounds: PaintRect) -> gpui::Div {
+pub(crate) fn positioned(element: gpui::Div, bounds: PaintRect) -> gpui::Div {
     element
         .absolute()
         .left(px(bounds.left))

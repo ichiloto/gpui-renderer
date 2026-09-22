@@ -1,0 +1,100 @@
+{
+  "binary_sha256": "fa84f81814efc0623e28795ef49ee1281367b2fddae22792fcc7a8b0f8356f86",
+  "ready": {
+    "protocol": 2,
+    "type": "ready",
+    "capabilities": [
+      "graphical_canvas",
+      "sprite_source_rect",
+      "tile_batches"
+    ]
+  },
+  "frames_painted": 5,
+  "tile_cells": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "canvas_images": [
+    3,
+    1,
+    1,
+    0,
+    0
+  ],
+  "exit_code": 0,
+  "silent": true,
+  "measurement": "CPU paint callback completion; not GPU completion or FPS",
+  "platform": "macOS/Apple Silicon",
+  "initial_window": {
+    "display_id": 1.0,
+    "maximized": 1.0,
+    "restore_left": 800.0,
+    "restore_top": 440.0,
+    "restore_width": 320.0,
+    "restore_height": 320.0,
+    "logical_width": 320.0,
+    "logical_height": 320.0
+  },
+  "viewport_observations": 46,
+  "all_observed_viewports_finite_centered_and_fitted": true,
+  "selected_viewports": {
+    "maximized_canvas": {
+      "outer_left": 0.0,
+      "outer_top": 30.0,
+      "outer_width": 1920.0,
+      "outer_height": 1094.0,
+      "width": 1920.0,
+      "height": 1062.0,
+      "logical_width": 1350.0,
+      "logical_height": 720.0,
+      "scale": 1.0,
+      "offset_x": 285.0,
+      "offset_y": 171.0,
+      "presented_width": 1350.0,
+      "presented_height": 720.0
+    },
+    "restored_canvas": {
+      "outer_left": 800.0,
+      "outer_top": 440.0,
+      "outer_width": 320.0,
+      "outer_height": 352.0,
+      "width": 320.0,
+      "height": 320.0,
+      "logical_width": 1350.0,
+      "logical_height": 720.0,
+      "scale": 0.2370370328426361,
+      "offset_x": 0.0,
+      "offset_y": 74.66667175292969,
+      "presented_width": 320.0,
+      "presented_height": 170.66665649414062
+    },
+    "resized_legacy_return": {
+      "outer_left": 800.0,
+      "outer_top": 440.0,
+      "outer_width": 763.0,
+      "outer_height": 594.0,
+      "width": 763.0,
+      "height": 562.0,
+      "logical_width": 320.0,
+      "logical_height": 320.0,
+      "scale": 1.0,
+      "offset_x": 221.5,
+      "offset_y": 121.0,
+      "presented_width": 320.0,
+      "presented_height": 320.0
+    }
+  },
+  "source_base_commit": "68704cb94960920c868efcadb29eb94211ebd754",
+  "source_sha256": {
+    "src/window_layout.rs": "bd107b57028e8a563a3b0a02084acf1471bdd111fea261ece7d5161f74576813",
+    "src/app.rs": "0d672bb07ed065feada1ccd348e0a923ba85875e4cf3398a08a4ceb53ee75aec"
+  },
+  "validation_limits": [
+    "Synthetic renderer fixture, not a game playtest",
+    "Linux/WSLg and native Windows not built or run",
+    "Existing installed renderer unchanged"
+  ]
+}

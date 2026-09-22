@@ -4,55 +4,17 @@
 //! that raster 1:1. The exact cell mask still owns coverage. Moving a cell by an
 //! integer device pixel reuses the raster; source identity, size and subpixel
 //! phase determine its samples. No PNG encoding or GPUI internals are involved.
+use crate::display_cache::{DisplayRasterCache, MAX_BYTES, MAX_IMAGES, RasterKey, TileKey};
 use crate::tile_regions::GUARD;
 use crate::viewport::PaintRect;
-use gpui::{ImageId, RenderImage};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use gpui::RenderImage;
+#[cfg(test)]
+use std::collections::HashSet;
 use std::sync::Arc;
 
-const MAX_BYTES: usize = 64 * 1024 * 1024;
-const MAX_IMAGES: usize = crate::protocol::MAX_TILE_CELLS;
 const DEVICE_GUARD: u32 = 1;
 
-#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
-struct Key {
-    region: ImageId,
-    width: u32,
-    height: u32,
-    phase_x: u32,
-    phase_y: u32,
-}
-
-struct Entry {
-    image: Arc<RenderImage>,
-    used: u64,
-}
-
-#[derive(Default)]
-pub struct TileSamplingCache {
-    entries: HashMap<Key, Entry>,
-    lru: BTreeMap<u64, Key>,
-    bytes: usize,
-    clock: u64,
-    // Eviction during paint must not free atlas slots referenced by that scene.
-    // Retire them at the next render boundary, before building its replacement.
-    retired: Vec<Arc<RenderImage>>,
-}
-
-impl TileSamplingCache {
-    pub fn begin_frame(&mut self, active_regions: &HashSet<ImageId>) -> Vec<Arc<RenderImage>> {
-        let stale: Vec<_> = self
-            .entries
-            .keys()
-            .filter(|key| !active_regions.contains(&key.region))
-            .copied()
-            .collect();
-        for key in stale {
-            self.remove(key);
-        }
-        std::mem::take(&mut self.retired)
-    }
-
+impl DisplayRasterCache {
     pub fn prepare(
         &mut self,
         region: &Arc<RenderImage>,
@@ -71,48 +33,19 @@ impl TileSamplingCache {
         count_limit: usize,
     ) -> (Arc<RenderImage>, PaintRect) {
         let geometry = SamplingGeometry::new(destination, scale);
-        let key = Key {
+        let key = RasterKey::Tile(TileKey {
             region: region.id,
             width: geometry.width.to_bits(),
             height: geometry.height.to_bits(),
             phase_x: geometry.phase_x.to_bits(),
             phase_y: geometry.phase_y.to_bits(),
-        };
-        self.clock += 1;
-        if let Some(entry) = self.entries.get_mut(&key) {
-            self.lru.remove(&entry.used);
-            entry.used = self.clock;
-            self.lru.insert(entry.used, key);
-            return (entry.image.clone(), geometry.bounds(scale));
+        });
+        if let Some(image) = self.get(&key) {
+            return (image, geometry.bounds(scale));
         }
         let image = rasterize(region, geometry);
-        let bytes = image.as_bytes(0).unwrap().len();
-        if bytes <= byte_limit && count_limit > 0 {
-            while self.bytes + bytes > byte_limit || self.entries.len() >= count_limit {
-                self.remove(*self.lru.first_key_value().unwrap().1);
-            }
-            self.bytes += bytes;
-            self.entries.insert(
-                key,
-                Entry {
-                    image: image.clone(),
-                    used: self.clock,
-                },
-            );
-            self.lru.insert(self.clock, key);
-        } else {
-            // A large display raster can be painted without retaining it in the
-            // LRU. Its upload has the same next-frame retirement rule as eviction.
-            self.retired.push(image.clone());
-        }
+        self.insert_with_limits(key, image.clone(), byte_limit, count_limit);
         (image, geometry.bounds(scale))
-    }
-
-    fn remove(&mut self, key: Key) {
-        let entry = self.entries.remove(&key).unwrap();
-        self.lru.remove(&entry.used);
-        self.bytes -= entry.image.as_bytes(0).unwrap().len();
-        self.retired.push(entry.image);
     }
 }
 
@@ -270,7 +203,8 @@ mod tests {
     }
 
     fn assert_gradient_samples(destination: PaintRect, scale: f32) -> usize {
-        let (image, bounds) = TileSamplingCache::default().prepare(&gradient(), destination, scale);
+        let (image, bounds) =
+            DisplayRasterCache::default().prepare(&gradient(), destination, scale);
         let painted = painted_bounds(bounds, scale);
         let size = image.size(0);
         assert_eq!(painted.width, size.width.0 as f32);
@@ -326,7 +260,7 @@ mod tests {
             height: 20.0,
         };
         assert_eq!(assert_gradient_samples(destination, 1.0), 200);
-        let (image, _) = TileSamplingCache::default().prepare(&gradient(), destination, 1.0);
+        let (image, _) = DisplayRasterCache::default().prepare(&gradient(), destination, 1.0);
         // First/last visible red samples are 5/235. The former outward-snapped
         // guarded image gave 17/223, cropping both distinctive source edges.
         let bytes = image.as_bytes(0).unwrap();
@@ -373,7 +307,7 @@ mod tests {
                     width: 10.0 * fit,
                     height: 20.0 * fit,
                 };
-                let (image, _) = TileSamplingCache::default().prepare(&region, destination, 1.25);
+                let (image, _) = DisplayRasterCache::default().prepare(&region, destination, 1.25);
                 for pixel in image.as_bytes(0).unwrap().as_chunks::<4>().0 {
                     assert_eq!(pixel, &[193, 17, 43, 71]);
                 }
@@ -384,7 +318,7 @@ mod tests {
     #[test]
     fn unchanged_cells_and_frames_reuse_samples_but_phase_size_dpi_and_source_do_not() {
         let region = gradient();
-        let mut cache = TileSamplingCache::default();
+        let mut cache = DisplayRasterCache::default();
         let d = PaintRect {
             left: 0.25,
             top: 0.5,
@@ -393,7 +327,11 @@ mod tests {
         };
         let (first, _) = cache.prepare(&region, d, 1.0);
         for _ in 0..2 {
-            assert!(cache.begin_frame(&HashSet::from([region.id])).is_empty());
+            assert!(
+                cache
+                    .begin_frame(&HashSet::from([region.id]), &HashSet::new())
+                    .is_empty()
+            );
             for row in 0..36 {
                 for col in 0..135 {
                     let (image, _) = cache.prepare(
@@ -424,7 +362,7 @@ mod tests {
     #[test]
     fn cache_eviction_defers_atlas_retirement_until_the_next_frame() {
         let region = gradient();
-        let mut cache = TileSamplingCache::default();
+        let mut cache = DisplayRasterCache::default();
         let d = PaintRect {
             left: 0.0,
             top: 0.0,
@@ -437,7 +375,7 @@ mod tests {
         assert_eq!(cache.bytes, bytes);
         assert_eq!(cache.entries.len(), 1);
         assert_eq!(cache.retired[0].id, first.id);
-        let retired = cache.begin_frame(&HashSet::new()); // Empty tile frame.
+        let retired = cache.begin_frame(&HashSet::new(), &HashSet::new()); // Empty tile frame.
         assert_eq!(
             retired.iter().map(|image| image.id).collect::<HashSet<_>>(),
             HashSet::from([first.id, second.id])
@@ -449,7 +387,7 @@ mod tests {
         let (uncached, _) = cache.prepare_with_limits(&region, d, 1.0, bytes - 1, 1);
         assert!(cache.entries.is_empty());
         assert_eq!(
-            cache.begin_frame(&HashSet::from([region.id]))[0].id,
+            cache.begin_frame(&HashSet::from([region.id]), &HashSet::new())[0].id,
             uncached.id
         );
     }

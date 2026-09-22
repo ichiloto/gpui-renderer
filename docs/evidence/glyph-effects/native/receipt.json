@@ -1,0 +1,28 @@
+{
+  "binary_sha256": "8f946ccac39d1f6aa50e1edb4712300197ad6bfcea361b221dac060f3a52bbc5",
+  "ready": {
+    "protocol": 2,
+    "type": "ready",
+    "capabilities": [
+      "graphical_canvas",
+      "canvas_glyph_effects",
+      "canvas_clip_opacity"
+    ]
+  },
+  "frames_painted": 4,
+  "tile_cells": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "canvas_images": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "exit_code": 0,
+  "silent": true,
+  "measurement": "CPU paint callback completion; not GPU completion or FPS"
+}

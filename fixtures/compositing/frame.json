@@ -1,0 +1,129 @@
+{
+  "protocol": 2,
+  "type": "frame",
+  "frame": 1,
+  "textLayers": [],
+  "sprites": [],
+  "canvas": {
+    "width": 64,
+    "height": 48,
+    "composites": [
+      {
+        "id": "masked-light",
+        "width": 64,
+        "height": 48,
+        "destination": {
+          "x": 0,
+          "y": 0,
+          "width": 64,
+          "height": 48
+        },
+        "layer": 0,
+        "operations": [
+          {
+            "type": "image",
+            "asset": "test-sprite.png",
+            "destination": {
+              "x": 0,
+              "y": 0,
+              "width": 64,
+              "height": 48
+            }
+          },
+          {
+            "type": "fill",
+            "destination": {
+              "x": 0,
+              "y": 0,
+              "width": 64,
+              "height": 48
+            },
+            "blend": "screen",
+            "brush": {
+              "type": "linear",
+              "start": [
+                10,
+                0
+              ],
+              "end": [
+                40,
+                48
+              ],
+              "stops": [
+                {
+                  "offset": 0,
+                  "color": {
+                    "kind": "rgb",
+                    "r": 255,
+                    "g": 240,
+                    "b": 180
+                  },
+                  "opacity": 0
+                },
+                {
+                  "offset": 0.5,
+                  "color": {
+                    "kind": "rgb",
+                    "r": 255,
+                    "g": 240,
+                    "b": 180
+                  },
+                  "opacity": 0.65
+                },
+                {
+                  "offset": 1,
+                  "color": {
+                    "kind": "rgb",
+                    "r": 255,
+                    "g": 240,
+                    "b": 180
+                  },
+                  "opacity": 0
+                }
+              ]
+            },
+            "masks": [
+              {
+                "type": "image_alpha",
+                "asset": "test-sprite.png",
+                "destination": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 64,
+                  "height": 48
+                }
+              }
+            ]
+          },
+          {
+            "type": "stroke",
+            "points": [
+              [
+                2,
+                44
+              ],
+              [
+                20,
+                30
+              ],
+              [
+                58,
+                42
+              ]
+            ],
+            "width": 1.5,
+            "brush": {
+              "type": "solid",
+              "color": {
+                "kind": "rgb",
+                "r": 150,
+                "g": 210,
+                "b": 255
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
