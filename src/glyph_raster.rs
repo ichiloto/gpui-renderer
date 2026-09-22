@@ -6,7 +6,8 @@ use std::{collections::HashMap, sync::Arc};
 use swash::scale::{Render, ScaleContext, Source};
 use swash::zeno::{Format, Join, Stroke, Vector};
 
-pub const GUARD: u32 = 1;
+// Glyph surfaces use the same source border as the shared display sampler.
+pub use crate::tile_regions::GUARD;
 // A finite work bound for the opt-in raster path, independent of cache hits.
 const MAX_SAMPLE_WORK: usize = 64 * 1024 * 1024;
 

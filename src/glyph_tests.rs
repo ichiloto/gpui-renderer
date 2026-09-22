@@ -132,6 +132,64 @@ fn real_font_contours_are_transparent_bounded_and_cached_across_motion_fade() {
 }
 
 #[test]
+fn glyph_display_sampling_preserves_every_content_pixel_including_edges() {
+    let mut catalog = FontCatalog::default();
+    // Distinct one-pixel cell backgrounds expose cropped edges and stretching
+    // without depending on a particular system font's contour placement.
+    for padding in [0, 1] {
+        let runs: Vec<_> = (0..3)
+            .flat_map(|row| {
+                (0..3).map(move |column| {
+                    json!({"row":row,"column":column,"text":" ","foreground":null,
+                        "background":{"kind":"rgb","r":40+column*80,"g":30+row*90,"b":70}})
+                })
+            })
+            .collect();
+        let frame: FrameV2 = serde_json::from_value(json!({
+            "frame":1,"sprites":[],"textLayers":[],
+            "canvas":{"width":100,"height":100,"textLayers":[{
+                "id":"edge-pixels","layer":0,"origin":{"x":10,"y":20},
+                "grid":{"columns":3,"rows":3,"cellWidth":1,"cellHeight":1},
+                "runs":runs,"glyphEffects":{
+                    "outline":{"width":padding,"color":{"kind":"rgb","r":0,"g":0,"b":0}},
+                    "shadow":{"offsetX":0,"offsetY":0,"sigma":0,"opacity":0,
+                        "color":{"kind":"rgb","r":0,"g":0,"b":0}}
+                }
+            }]}
+        }))
+        .unwrap();
+        let frame = prepared(frame);
+        let destination = frame.canvas.as_ref().unwrap().source.text_layers[0]
+            .paint_bounds()
+            .paint(crate::viewport::ViewportTransform::fit(
+                100., 100., 100., 100.,
+            ));
+        for density in [1.0, 2.0, 3.0] {
+            let mut cache = DisplayRasterCache::default();
+            let glyphs = glyph_cache::prepare(&frame, density, &mut catalog, &mut cache).unwrap();
+            let source = &glyphs.images[&0];
+            let (sampled, bounds) = cache.prepare(source, destination, density);
+            let source_stride = source.size(0).width.0 as usize;
+            let sampled_stride = sampled.size(0).width.0 as usize;
+            let offset_x = (destination.left * density - (bounds.left * density).floor()) as usize;
+            let offset_y = (destination.top * density - (bounds.top * density).floor()) as usize;
+            let guard = crate::glyph_raster::GUARD as usize;
+            for y in 0..(destination.height * density) as usize {
+                for x in 0..(destination.width * density) as usize {
+                    let original = ((y + guard) * source_stride + x + guard) * 4;
+                    let displayed = ((y + offset_y) * sampled_stride + x + offset_x) * 4;
+                    assert_eq!(
+                        &sampled.as_bytes(0).unwrap()[displayed..displayed + 4],
+                        &source.as_bytes(0).unwrap()[original..original + 4],
+                        "padding={padding}, density={density}, pixel=({x},{y})"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn candidate_failure_does_not_replace_previous_glyphs_and_budget_is_shared() {
     let mut catalog = FontCatalog::default();
     let mut cache = DisplayRasterCache::default();
