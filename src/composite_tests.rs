@@ -328,10 +328,10 @@ fn capability_negotiation_example_fixture_and_clear_are_compatible() {
             .unwrap();
         let result =
             session.prepare(parse(include_bytes!("../fixtures/compositing/frame.json")).unwrap());
-        assert_eq!(result.is_ok(), negotiated);
+        assert!(result.is_ok());
         let clear = json!({"protocol":2,"type":"frame","frame":2,"textLayers":[],"sprites":[],"canvas":{"width":64,"height":48,"composites":[]}});
         let result = session.prepare(parse(&serde_json::to_vec(&clear).unwrap()).unwrap());
-        assert_eq!(result.is_ok(), negotiated);
+        assert!(result.is_ok());
         if let Ok(Update::Frame(frame)) = result {
             assert!(frame.canvas.unwrap().composites.is_empty());
         }

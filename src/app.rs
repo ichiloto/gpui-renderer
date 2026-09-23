@@ -130,7 +130,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                 let stop = matches!(update, Update::Shutdown | Update::Fatal(_) | Update::Eof);
                 let result = cx.update(|cx| match update {
                     Update::Hello(version, hello) => {
-                        let capabilities = hello.required_capabilities.clone();
+                        let capabilities = hello.get_enabled_capabilities(version);
                         output.version = version;
                         let grid = hello.grid;
                         let initial = match crate::window_layout::initial_window(

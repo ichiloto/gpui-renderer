@@ -17,7 +17,7 @@ backgrounds, while explicit colors paint opaque cells. Legacy text backgrounds
 are unchanged. Canvas and nonempty legacy collections cannot share a frame.
 
 The additional v2 `canvas_clip_opacity` capability requires `graphical_canvas` in
-the same hello and acknowledgement in ready. It adds optional `clipRect` to canvas
+the enabled capability set advertised in ready. It adds optional `clipRect` to canvas
 images and text layers, and optional `opacity` to canvas text layers. See the
 [independent clipping/opacity wire cases](fixtures/canvas-clip-opacity/manifest.json)
 and their [hash manifest](fixtures/canvas-clip-opacity/SHA256SUMS).
@@ -75,7 +75,7 @@ glyph contours; unavailable system glyphs reject the complete candidate before
 visible replacement instead of substituting an approximation. See
 [glyph implementation and validation](docs/glyph-effects-validation.md).
 
-Run `scripts/native-tile-smoke.py --canvas --binary <installed-executable>
+Run `scripts/native-tile-smoke.php --canvas --binary <installed-executable>
 --evidence-dir <directory>` for one silent native check. Optional
 `--observe-seconds 45` holds its first frame for inspection, then closes the
 owned window automatically. This synthetic check is not real-game acceptance.
@@ -228,10 +228,14 @@ packet cadence reduction or platform-specific fallback is applied.
 
 ## Window activation
 
-With the optional v2 `window_activation` capability, the renderer sends
+Request `window_activation` explicitly in v2 hello.requiredCapabilities to subscribe.
+The renderer then sends
 `{"protocol":2,"type":"window_activation","active":true}` after `ready`,
 then only when OS activation changes. Unnegotiated sessions receive no such
-events. The GPUI observer is owned by the window entity and stops at teardown.
+events. This event subscription is not implicitly enabled by drawing support.
+Title and Credits do not require it for graphical presentation: without it, native
+focus-based pausing is unavailable while scene/modal pausing remains supported.
+The GPUI observer is owned by the window entity and stops at teardown.
 PHP decides whether to pause elapsed time, defer local-time changes or clear input.
 `active` means OS focus, not visibility: visible unfocused windows are inactive.
 Hidden/minimized/occluded status is not reported or inferred from paint cadence.
@@ -296,6 +300,16 @@ do not accumulate standalone runtime copies. Before a game playtest, verify musi
 and sound effects are muted and preserve existing mute choices. The synthetic
 Renderer fixtures below contain no audio.
 
+Repository utilities use PHP 8.2 or later with JSON and zlib; no Python runtime
+or Composer installation is needed. Run the windowless utility regressions with
+`php tests/scripts/run.php`. They compare retained analysis results and exercise
+process drivers through PHP test doubles, not native rendering. The Darwin-only
+historical `sample-window.php` adapter also requires PHP FFI for its original
+`CLOCK_UPTIME_RAW` markers and `/usr/bin/sample`; other analysis and fixture tools
+do not require FFI. Evidence helpers share code under `scripts/lib/`, so run them
+from a complete checkout. Their `--base`, `--pid` and `--out` options allow replay
+into a new directory without overwriting retained measurements.
+
 Rust **1.98.1** is pinned in `rust-toolchain.toml`; commit and use `Cargo.lock`.
 
 ```sh
@@ -303,11 +317,11 @@ cargo test --locked
 cargo fmt --check
 cargo clippy --all-targets --locked -- -D warnings
 cargo build --release --locked
-python3 scripts/native-smoke.py --binary target/release/gpui-renderer
+php scripts/native-smoke.php --binary target/release/gpui-renderer
 ```
 
 For a single silent window checking both negotiated capabilities, full-viewport
-terrain and frame clearing, run `scripts/native-tile-smoke.py` with `--binary`
+terrain and frame clearing, run `scripts/native-tile-smoke.php` with `--binary`
 and `--evidence-dir`. See the [installed-renderer check](docs/s8-b-installation.md).
 
 Ordinary gameplay uses Engine's installed optimized executable. When a new build
@@ -395,19 +409,27 @@ must be nonempty without control characters. A successful hello opens one resiza
 native window, then emits `ready`. The version is latched before opening it, so even
 a window-creation error uses that version. A second hello cannot open another window.
 
-Sprite-sheet cropping is explicitly negotiated on either version. Add
-`"requiredCapabilities":["sprite_source_rect"]` to hello. A successful opted-in
-ready includes `"capabilities":["sprite_source_rect"]`; the caller must verify
-that acknowledgment before sending crops. Missing or empty requirements keep the
-legacy ready shape, with no capabilities field. Unknown or duplicate requirements
-are rejected. Older renderers reject the new hello field; callers must also reject
-a missing acknowledgment, never silently fall back to drawing the whole sheet.
+For v2, `hello.requiredCapabilities` declares the mandatory minimum, not an
+allowlist. `ready.capabilities` advertises all supported v2 drawing features:
+`sprite_source_rect`, `tile_batches`, `graphical_canvas`, `canvas_clip_opacity`,
+`canvas_glyph_effects` and `canvas_compositing`. Frame validation and renderer
+state use that same enabled set. Clients may use additional advertised drawing
+features; Engine retains the known v2 drawing capabilities and selects a useful
+fallback per surface when a renderer does not advertise a feature. Unknown or
+duplicate required capabilities are rejected. `window_activation` is a separate,
+explicit opt-in event subscription; it is never enabled merely because drawing
+capabilities are available.
 
-Graphical terrain uses the v2-only `tile_batches` capability. Automatic Engine
-startup requests both capabilities before any later map transfer. Every
-`tileBatches` field, including an empty array, requires acknowledgment; v1
-rejects this capability. See the [frozen tile contract](docs/tile-batches.md).
+V1 retains opt-in sprite cropping: request
+`"requiredCapabilities":["sprite_source_rect"]` and verify its acknowledgment
+before sending crops. Missing or empty v1 requirements retain the legacy ready
+shape without a capabilities field. V1 cannot enable the v2 drawing extensions.
+Existing v2 renderers that echo only requested capabilities continue to work;
+clients must use their actual ready response and must not assume extra support.
+No new hello wire field is needed, preserving older strict hello parsers.
 
+Every `tileBatches` field, including an empty array, requires `tile_batches` in
+ready. See the [tile contract](docs/tile-batches.md).
 Before a successfully validated hello, errors use the legacy `protocol:1` envelope,
 **including errors for invalid v2 hellos**. That is a pre-session exception, not
 negotiation or downgrade. Once initialized, every `ready`, `key`, `close_requested`
@@ -691,12 +713,12 @@ records and clock anchors use the same switch, as described below. PHP consumpti
 and actual GPU/display completion are not measured by this renderer.
 
 ```sh
-ICHILOTO_GPUI_TRACE=1 python3 scripts/inspect-fixture.py --binary target/release/gpui-renderer --geometry last-legend \
+ICHILOTO_GPUI_TRACE=1 php scripts/inspect-fixture.php --binary target/release/gpui-renderer --geometry last-legend \
   > /tmp/events.ndjson 2> /tmp/trace.ndjson
-python3 scripts/analyze-trace.py /tmp/trace.ndjson --events /tmp/events.ndjson
+php scripts/analyze-trace.php /tmp/trace.ndjson --events /tmp/events.ndjson
 # Select an inclusive ID interval or only events GPUI flags as held:
-python3 scripts/analyze-trace.py /tmp/trace.ndjson --ids 3:12
-python3 scripts/analyze-trace.py /tmp/trace.ndjson --held
+php scripts/analyze-trace.php /tmp/trace.ndjson --ids 3:12
+php scripts/analyze-trace.php /tmp/trace.ndjson --held
 ```
 
 On pinned GPUI 0.2.2 macOS, nonprinting keys can pass through
@@ -891,11 +913,11 @@ to drain output; an unavailable output channel can only report diagnostics to st
 
 ```sh
 # Existing v1 fixture; EOF leaves the native window open.
-python3 scripts/fixture.py | target/release/gpui-renderer
+php scripts/fixture.php | target/release/gpui-renderer
 # V2 first visual frame; --frame second selects the changed style snapshot.
-python3 scripts/fixture.py --protocol 2 --frame first | target/release/gpui-renderer
+php scripts/fixture.php --protocol 2 --frame first | target/release/gpui-renderer
 # Controlled single-window fixture, with protocol logs captured separately.
-python3 scripts/inspect-fixture.py --binary target/release/gpui-renderer > /tmp/events.ndjson 2> /tmp/renderer.log
+php scripts/inspect-fixture.php --binary target/release/gpui-renderer > /tmp/events.ndjson 2> /tmp/renderer.log
 ```
 
 For the controlled fixture, type commands into its launching terminal: `second`

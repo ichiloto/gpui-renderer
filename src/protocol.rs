@@ -68,6 +68,31 @@ pub struct Hello {
     pub required_capabilities: Vec<Capability>,
 }
 
+impl Hello {
+    /// Requirements are a startup minimum, not a drawing-feature allowlist.
+    /// Event-stream extensions remain explicit subscriptions for older clients.
+    pub fn get_enabled_capabilities(&self, version: Version) -> Vec<Capability> {
+        if version == Version::V1 {
+            return self.required_capabilities.clone();
+        }
+        let mut enabled = vec![
+            Capability::SpriteSourceRect,
+            Capability::TileBatches,
+            Capability::GraphicalCanvas,
+            Capability::CanvasClipOpacity,
+            Capability::CanvasGlyphEffects,
+            Capability::CanvasCompositing,
+        ];
+        if self
+            .required_capabilities
+            .contains(&Capability::WindowActivation)
+        {
+            enabled.push(Capability::WindowActivation);
+        }
+        enabled
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum Capability {
@@ -602,6 +627,50 @@ impl ProtocolWriter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn v2_ready_advertises_drawing_features_without_subscribing_to_events() {
+        let Message::Hello(mut hello) =
+            parse(include_bytes!("../fixtures/tile-batches/hello.json"))
+                .unwrap()
+                .message
+        else {
+            panic!()
+        };
+        hello.required_capabilities = vec![Capability::SpriteSourceRect, Capability::TileBatches];
+        let enabled = hello.get_enabled_capabilities(Version::V2);
+        assert!(enabled.contains(&Capability::GraphicalCanvas));
+        assert!(enabled.contains(&Capability::CanvasCompositing));
+        assert!(!enabled.contains(&Capability::WindowActivation));
+        assert_eq!(hello.required_capabilities.len(), 2);
+        let mut bytes = Vec::new();
+        write_event(
+            &mut bytes,
+            Version::V2,
+            &Event::Ready {
+                capabilities: enabled.clone(),
+            },
+        )
+        .unwrap();
+        let ready: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(
+            ready["capabilities"],
+            serde_json::to_value(enabled).unwrap()
+        );
+        hello.required_capabilities = vec![Capability::SpriteSourceRect];
+        assert_eq!(
+            hello.get_enabled_capabilities(Version::V1),
+            hello.required_capabilities
+        );
+        hello
+            .required_capabilities
+            .push(Capability::WindowActivation);
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::WindowActivation)
+        );
+    }
 
     fn tile_frame() -> FrameV2 {
         let Message::FrameV2(frame) = parse(include_bytes!(

@@ -74,7 +74,13 @@ fn clipping_wire_corpus_negotiates_validates_and_preserves_accepted_frames() {
                     assert!(session.prepare(incoming).is_err(), "{name}");
                 }
             },
-            "session" | "preparation" => {
+            "session" => {
+                assert!(
+                    matches!(session.prepare(parsed.unwrap()).unwrap(), Update::Frame(_)),
+                    "{name}"
+                );
+            }
+            "preparation" => {
                 let incoming = parsed.unwrap_or_else(|error| panic!("{name}: {error}"));
                 let Message::FrameV2(frame) = &incoming.message else {
                     panic!("{name}")

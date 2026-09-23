@@ -388,7 +388,15 @@ fn exact_wire_corpus_matches_stages_and_preserves_the_previous_display_on_error(
                     other => panic!("{name}: unexpected {other:?}"),
                 }
             }
-            "session" | "preparation" => {
+            "session" => {
+                // This renderer advertises all V2 drawing features, even when
+                // the shared legacy-client corpus does not require them.
+                assert!(
+                    matches!(session.prepare(parsed.unwrap()).unwrap(), Update::Frame(_)),
+                    "{name}"
+                );
+            }
+            "preparation" => {
                 let incoming = parsed.unwrap_or_else(|error| panic!("{name}: {error}"));
                 let Message::FrameV2(frame) = &incoming.message else {
                     panic!("{name}")

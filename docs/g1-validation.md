@@ -77,7 +77,7 @@ to the 320x320 legacy grid. Final clearing pixels were not captured before timed
 close; clearing evidence is the atomic-state tests and native CPU observations.
 The owned process exited normally and its window closed.
 
-The reusable check is `scripts/native-tile-smoke.py --canvas`; the optional
+The reusable check is `scripts/native-tile-smoke.php --canvas`; the optional
 observation period permits inspection and then automatic shutdown. No game,
 save, audio or gameplay state is used. These synthetic checks do not establish
 a real battle outcome, FPS/GPU completion, Linux/WSLg support or G2 delivery.
@@ -109,3 +109,7 @@ preserved.
 Current cursor ownership and presentation policy are consolidated in the
 [README](../README.md#cursor-presentation); this historical record is not a
 competing implementation plan.
+
+Utility links and reproduction commands now point to PHP equivalents. Recorded
+native measurements above predate this utility migration; the migration did not
+rerun native validation or change retained measurement data.

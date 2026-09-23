@@ -154,7 +154,7 @@ See also [Engine's validation report](../../../engine/docs/rendering/garden-outp
 - [Foreground whole-session summary](evidence/garden-output/normalized-foreground/summary.json),
   [foreground workload summary](evidence/garden-output/normalized-foreground/workload-summary.json), Engine PID 11176.
 - [Retained workload](evidence/garden-output/driver.php).
-- [Analysis script](evidence/garden-output/analyze.py), [source receipts](evidence/garden-output/receipts.json).
+- [Analysis script](evidence/garden-output/analyze.php), [source receipts](evidence/garden-output/receipts.json).
 
 The full retained Engine traces contain the renderer stderr chunks, rather than
 assuming that stderr chunk boundaries match diagnostic lines. The analyzer
@@ -164,16 +164,16 @@ and incomplete records. It makes no cross-process duration claims from unmatched
 clock epochs.
 
 ```sh
-python3 docs/evidence/garden-output/analyze.py \
+php docs/evidence/garden-output/analyze.php \
   docs/evidence/garden-output/mirror/engine.ndjson \
   --pid 96843 --out /tmp/ichiloto-garden-mirror-review
-python3 docs/evidence/garden-output/analyze.py \
+php docs/evidence/garden-output/analyze.php \
   docs/evidence/garden-output/buffer-only/engine.ndjson \
   --pid 97013 --out /tmp/ichiloto-garden-buffer-review
-python3 docs/evidence/garden-output/analyze.py \
+php docs/evidence/garden-output/analyze.php \
   docs/evidence/garden-output/normalized-unconfirmed-draw/engine.ndjson \
   --pid 4807 --out /tmp/ichiloto-garden-style-review
-python3 docs/evidence/garden-output/analyze.py \
+php docs/evidence/garden-output/analyze.php \
   docs/evidence/garden-output/normalized-foreground/engine.ndjson \
   --pid 11176 --after-probe-start --out /tmp/ichiloto-garden-foreground-review
 ```
@@ -192,3 +192,7 @@ Engine verified a terminal Garden run independently. Renderer source is unchange
 from the previously validated 68-test S8/readability candidate. The new native
 visual evidence is the initial foreground Garden capture described above;
 physical held-key input and an entire chapter playthrough are not claimed.
+
+Utility links and reproduction commands now point to PHP equivalents. Recorded
+native measurements above predate this utility migration; the migration did not
+rerun native validation or change retained measurement data.

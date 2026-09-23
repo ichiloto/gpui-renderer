@@ -48,44 +48,38 @@ impl Session {
                 Ok(Update::Hello(incoming.version, hello))
             }
             Message::Frame(frame) => {
-                let (_, hello, assets) = self
+                let (version, hello, assets) = self
                     .initialized
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
-                validate_capabilities(&frame.sprites, hello)?;
+                validate_capabilities(&frame.sprites, &hello.get_enabled_capabilities(*version))?;
                 Ok(Update::Frame(PreparedFrame::prepare(
                     frame, hello.grid, assets,
                 )?))
             }
             Message::FrameV2(frame) => {
-                let (_, hello, assets) = self
+                let (version, hello, assets) = self
                     .initialized
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
-                validate_capabilities(&frame.sprites, hello)?;
+                let enabled = hello.get_enabled_capabilities(*version);
+                validate_capabilities(&frame.sprites, &enabled)?;
                 if let Some(canvas) = &frame.canvas {
                     if canvas.composites.is_some()
-                        && !hello
-                            .required_capabilities
-                            .contains(&Capability::CanvasCompositing)
+                        && !enabled.contains(&Capability::CanvasCompositing)
                     {
                         return Err(
                             "composites requires negotiated canvas_compositing capability".into(),
                         );
                     }
-                    if !hello
-                        .required_capabilities
-                        .contains(&Capability::GraphicalCanvas)
-                    {
+                    if !enabled.contains(&Capability::GraphicalCanvas) {
                         return Err("canvas requires negotiated graphical_canvas capability".into());
                     }
                     if canvas
                         .text_layers
                         .iter()
                         .any(|text| text.glyph_effects.is_some())
-                        && !hello
-                            .required_capabilities
-                            .contains(&Capability::CanvasGlyphEffects)
+                        && !enabled.contains(&Capability::CanvasGlyphEffects)
                     {
                         return Err(
                             "glyphEffects requires negotiated canvas_glyph_effects capability"
@@ -97,9 +91,7 @@ impl Session {
                             .text_layers
                             .iter()
                             .any(|text| text.clip_rect.is_some() || text.opacity.is_some()))
-                        && !hello
-                            .required_capabilities
-                            .contains(&Capability::CanvasClipOpacity)
+                        && !enabled.contains(&Capability::CanvasClipOpacity)
                     {
                         return Err(
                             "canvas clipRect/text opacity requires negotiated canvas_clip_opacity capability"
@@ -110,9 +102,7 @@ impl Session {
                         .images
                         .iter()
                         .any(|image| image.source_rect.is_some())
-                        && !hello
-                            .required_capabilities
-                            .contains(&Capability::SpriteSourceRect)
+                        && !enabled.contains(&Capability::SpriteSourceRect)
                     {
                         return Err(
                             "canvas sourceRect requires negotiated sprite_source_rect capability"
@@ -120,11 +110,7 @@ impl Session {
                         );
                     }
                 }
-                if frame.tile_batches.is_some()
-                    && !hello
-                        .required_capabilities
-                        .contains(&Capability::TileBatches)
-                {
+                if frame.tile_batches.is_some() && !enabled.contains(&Capability::TileBatches) {
                     return Err("tileBatches requires negotiated tile_batches capability".into());
                 }
                 Ok(Update::Frame(PreparedFrame::prepare_v2(
@@ -136,11 +122,9 @@ impl Session {
     }
 }
 
-fn validate_capabilities(sprites: &[Sprite], hello: &Hello) -> Result<(), String> {
+fn validate_capabilities(sprites: &[Sprite], enabled: &[Capability]) -> Result<(), String> {
     if sprites.iter().any(|sprite| sprite.source_rect.is_some())
-        && !hello
-            .required_capabilities
-            .contains(&Capability::SpriteSourceRect)
+        && !enabled.contains(&Capability::SpriteSourceRect)
     {
         return Err("sourceRect requires negotiated sprite_source_rect capability".into());
     }
@@ -304,7 +288,7 @@ mod tests {
                     .unwrap_or_else(|e| panic!("{name}: {e}"));
             }
             let update = session.prepare(incoming);
-            if stage == "accept" {
+            if stage == "accept" || stage == "session" {
                 let Update::Frame(frame) = update.unwrap_or_else(|e| panic!("{name}: {e}")) else {
                     panic!()
                 };
@@ -596,7 +580,7 @@ mod tests {
         serde_json::to_vec(&serde_json::json!({"protocol":version,"type":"hello","title":"Session","assetRoot":std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures"),"grid":{"columns":80,"rows":24,"cellWidth":16,"cellHeight":24}})).unwrap()
     }
     #[test]
-    fn source_rect_is_opt_in_for_both_versions_and_rejection_does_not_end_session() {
+    fn source_rect_is_opt_in_for_v1_and_advertised_for_v2() {
         for version in [1, 2] {
             for enabled in [false, true] {
                 let mut hello: serde_json::Value = serde_json::from_slice(&hello(version)).unwrap();
@@ -614,7 +598,7 @@ mod tests {
                 frame[if version == 1 { "text" } else { "textLayers" }] = serde_json::json!([]);
                 let cropped =
                     session.prepare(protocol::parse(&serde_json::to_vec(&frame).unwrap()).unwrap());
-                assert_eq!(cropped.is_ok(), enabled);
+                assert_eq!(cropped.is_ok(), enabled || version == 2);
                 if let Err(error) = cropped {
                     assert!(error.contains("negotiated"));
                 }

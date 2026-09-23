@@ -90,7 +90,7 @@ burst later in collection. This offset is not added between taps.
 /usr/bin/sample 7655 5 1 -file /tmp/ichiloto-renderer-burst-20260912/evidence/home-b-sample.txt
 ```
 
-[sample-window.py](evidence/burst-investigation/baseline/sample-window.py) records
+[sample-window.php](evidence/burst-investigation/baseline/sample-window.php) records
 command begin/end and collection banners with `CLOCK_UPTIME_RAW` host timestamps
 and wall-clock markers. CUA records `Date.now()` immediately before/after every
 `pressKey` call. Those millisecond wall brackets describe tool requests, with
@@ -365,3 +365,7 @@ were optimized runtimes. No production scheduling or rendering refactor is neede
 for this diagnosed case. Engine may retain the internally staged optimized binary.
 Physical held-input gameplay, an eligible T skit, battle and full S7-E acceptance
 remain explicitly open under Engine coordination.
+
+Utility links and reproduction commands now point to PHP equivalents. Recorded
+native measurements above predate this utility migration; the migration did not
+rerun native validation or change retained measurement data.
