@@ -348,6 +348,49 @@ bare executable. Cross-compiled targets pass `--platform` together with
 php scripts/package.php
 ```
 
+For Console's explicitly declared source-development checkout, the builder also
+provides a read-only description:
+
+```sh
+php scripts/package.php --describe --out=/private/output/directory
+```
+
+Stdout is exactly one JSON object with `renderer` (`gpui`), `platform` (host or
+`--platform`), `profile` (`release`), `fingerprint` (SHA-256), and
+`packageDirectory` (absolute `--out/gpui-<platform>-<version>`). The directory may
+not exist yet. Description runs no compiler or subprocess and creates no files;
+errors go to stderr with a nonzero exit code. Running without `--describe` and
+with the same `--out` builds and stages that package, retaining human-readable
+build output. Console can compare descriptions before and after preparation to
+reject concurrent input changes. Normal builds discover the executable from
+Cargo's compiler-artifact output, including configured target directories.
+At build time only, the builder queries `rustc -vV` (or `RUSTC`), verifies that
+its host matches the package host, and explicitly selects that native target.
+This overrides a foreign Cargo target configuration rather than mislabelling a
+cross-compiled executable. Explicit cross-platform packaging still uses
+`--platform` and `--binary`; `--skip-build` retains the conventional
+`target/release` default.
+
+The fingerprint covers Cargo manifests/lockfile, Rust source trees, optional
+`build.rs` and toolchain declarations, bundle resources, the packaging script and
+its helpers, applicable ancestor/Cargo-home configuration, and relevant declared
+compiler/linker/build environment. It excludes documentation, evidence, build
+outputs, Git metadata and game artwork. It is a source/build-context cache key,
+not verified compiler provenance: description does not query compiler versions,
+hash installed toolchains, resolve external build-script inputs or certify OS
+libraries. Replacing those external inputs without changing declarations may
+require explicit preparation again. `--describe` rejects `--binary` and
+`--skip-build`; manual packaging cannot certify an arbitrary executable as a
+build of the described source. Source preparation belongs to Console's declared
+development path; Engine's installed-renderer lookup remains build-free.
+
+Pure PHP regression checks (no Cargo or native windows):
+
+```sh
+php tests/scripts/run.php
+php tests/scripts/package.php
+```
+
 Installation is owned by the Console, which verifies every hash before
 staging anything into the Engine's `resources/renderers/installed/` boundary
 and backs up any existing installation:
