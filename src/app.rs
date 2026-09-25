@@ -258,7 +258,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                 view.output
                                     .diagnostics
                                     .frame_stage(observation, "replace_begin");
-                                view.state.replace(frame);
+                                view.state.replace(*frame);
                                 view.output.diagnostics.frame_stage(observation, "replaced");
                                 cx.notify();
                             }) {

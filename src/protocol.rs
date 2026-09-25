@@ -82,6 +82,7 @@ impl Hello {
             Capability::CanvasClipOpacity,
             Capability::CanvasGlyphEffects,
             Capability::CanvasCompositing,
+            Capability::FrameViewport,
         ];
         if self
             .required_capabilities
@@ -102,6 +103,7 @@ pub enum Capability {
     CanvasClipOpacity,
     CanvasGlyphEffects,
     CanvasCompositing,
+    FrameViewport,
     WindowActivation,
 }
 
@@ -184,6 +186,106 @@ pub struct FrameV2 {
     pub tile_batches: Option<Vec<TileBatch>>,
     #[serde(default, deserialize_with = "crate::canvas_protocol::optional_canvas")]
     pub canvas: Option<crate::canvas_protocol::Canvas>,
+    #[serde(default, deserialize_with = "optional_viewport")]
+    pub viewport: Option<FrameViewport>,
+}
+
+pub const MAX_RENDER_SCALE: f32 = 8.0;
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ViewportPoint {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ViewportRect {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FrameViewport {
+    pub scale: f32,
+    pub origin: ViewportPoint,
+    pub clip_rect: ViewportRect,
+    pub text_layer_ids: Vec<String>,
+    pub sprite_ids: Vec<String>,
+    pub tile_batch_ids: Vec<String>,
+}
+
+fn optional_viewport<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> Result<Option<FrameViewport>, D::Error> {
+    // Omission is the legacy full-session presentation; explicit null is invalid.
+    FrameViewport::deserialize(d).map(Some)
+}
+
+impl FrameViewport {
+    pub fn validate(&self, grid: Grid, frame: &FrameV2) -> Result<(), String> {
+        let width = (grid.columns * grid.cell_width) as f32;
+        let height = (grid.rows * grid.cell_height) as f32;
+        let clip = self.clip_rect;
+        if !self.scale.is_finite() || self.scale <= 0.0 || self.scale > MAX_RENDER_SCALE {
+            return Err("viewport scale must be finite and in (0, 8]".into());
+        }
+        if !self.origin.x.is_finite()
+            || !self.origin.y.is_finite()
+            || self.origin.x.abs() > width * MAX_RENDER_SCALE
+            || self.origin.y.abs() > height * MAX_RENDER_SCALE
+        {
+            return Err("viewport origin must be finite and bounded by the session canvas".into());
+        }
+        if ![clip.x, clip.y, clip.width, clip.height]
+            .into_iter()
+            .all(f32::is_finite)
+            || clip.x < 0.0
+            || clip.y < 0.0
+            || clip.width <= 0.0
+            || clip.height <= 0.0
+            || clip.x + clip.width > width
+            || clip.y + clip.height > height
+        {
+            return Err("viewport clipRect must lie within the session canvas".into());
+        }
+        validate_viewport_ids(
+            &self.text_layer_ids,
+            frame.text_layers.iter().map(|v| v.id.as_str()),
+            "text layer",
+        )?;
+        validate_viewport_ids(
+            &self.sprite_ids,
+            frame.sprites.iter().map(|v| v.id.as_str()),
+            "sprite",
+        )?;
+        validate_viewport_ids(
+            &self.tile_batch_ids,
+            frame.tile_batches.iter().flatten().map(|v| v.id.as_str()),
+            "tile batch",
+        )
+    }
+}
+
+fn validate_viewport_ids<'a>(
+    members: &[String],
+    available: impl Iterator<Item = &'a str>,
+    kind: &str,
+) -> Result<(), String> {
+    let available: std::collections::HashSet<&str> = available.collect();
+    let mut seen = std::collections::HashSet::new();
+    for id in members {
+        if !seen.insert(id.as_str()) || !available.contains(id.as_str()) {
+            return Err(format!(
+                "viewport {kind} ids must be unique and reference frame items"
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn tile_batches<'de, D: serde::Deserializer<'de>>(
@@ -291,8 +393,9 @@ impl FrameV2 {
             if !self.text_layers.is_empty()
                 || !self.sprites.is_empty()
                 || self.tile_batches.as_ref().is_some_and(|b| !b.is_empty())
+                || self.viewport.is_some()
             {
-                return Err("canvas cannot mix with nonempty legacy text, sprites or tiles".into());
+                return Err("canvas cannot mix with text, sprites, tiles or viewport".into());
             }
             canvas.validate()?;
         }
@@ -331,7 +434,11 @@ impl FrameV2 {
             }
         }
         validate_sprites(&self.sprites)?;
-        validate_tiles(self.tile_batches.as_deref().unwrap_or_default(), grid)
+        validate_tiles(self.tile_batches.as_deref().unwrap_or_default(), grid)?;
+        if let Some(viewport) = &self.viewport {
+            viewport.validate(grid, self)?;
+        }
+        Ok(())
     }
 }
 
@@ -460,6 +567,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         }
         if version == Version::V1 && unique.contains(&Capability::TileBatches) {
             return Err("tile_batches requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::FrameViewport) {
+            return Err("frame_viewport requires protocol v2".into());
         }
         if version == Version::V1 && unique.contains(&Capability::GraphicalCanvas) {
             return Err("graphical_canvas requires protocol v2".into());
@@ -641,6 +751,7 @@ mod tests {
         let enabled = hello.get_enabled_capabilities(Version::V2);
         assert!(enabled.contains(&Capability::GraphicalCanvas));
         assert!(enabled.contains(&Capability::CanvasCompositing));
+        assert!(enabled.contains(&Capability::FrameViewport));
         assert!(!enabled.contains(&Capability::WindowActivation));
         assert_eq!(hello.required_capabilities.len(), 2);
         let mut bytes = Vec::new();
@@ -682,6 +793,96 @@ mod tests {
             panic!()
         };
         frame
+    }
+
+    #[test]
+    fn frame_viewport_membership_is_explicit_and_validated_atomically() {
+        let v1_hello = r#"{"protocol":1,"type":"hello","title":"Test","assetRoot":"/tmp","grid":{"columns":1,"rows":1,"cellWidth":1,"cellHeight":1},"requiredCapabilities":["frame_viewport"]}"#;
+        assert!(parse(v1_hello.as_bytes()).is_err());
+        let grid = Grid {
+            columns: 135,
+            rows: 36,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut frame = tile_frame();
+        let viewport = FrameViewport {
+            scale: 2.0,
+            origin: ViewportPoint { x: 5.0, y: 0.0 },
+            clip_rect: ViewportRect {
+                x: 0.0,
+                y: 0.0,
+                width: 1350.0,
+                height: 720.0,
+            },
+            text_layer_ids: vec!["world".into()],
+            sprite_ids: vec!["player".into()],
+            tile_batch_ids: vec!["terrain".into()],
+        };
+        frame.viewport = Some(viewport.clone());
+        frame.validate(grid).unwrap();
+        for invalid in [
+            FrameViewport {
+                scale: 0.0,
+                ..viewport.clone()
+            },
+            FrameViewport {
+                scale: MAX_RENDER_SCALE + 0.1,
+                ..viewport.clone()
+            },
+            FrameViewport {
+                scale: f32::NAN,
+                ..viewport.clone()
+            },
+            FrameViewport {
+                origin: ViewportPoint {
+                    x: f32::INFINITY,
+                    y: 0.0,
+                },
+                ..viewport.clone()
+            },
+            FrameViewport {
+                clip_rect: ViewportRect {
+                    x: 1.0,
+                    ..viewport.clip_rect
+                },
+                ..viewport.clone()
+            },
+            FrameViewport {
+                text_layer_ids: vec!["world".into(), "world".into()],
+                ..viewport.clone()
+            },
+            FrameViewport {
+                sprite_ids: vec!["missing".into()],
+                ..viewport.clone()
+            },
+            FrameViewport {
+                tile_batch_ids: vec!["missing".into()],
+                ..viewport.clone()
+            },
+        ] {
+            frame.viewport = Some(invalid);
+            assert!(frame.validate(grid).is_err());
+        }
+
+        let mut wire: serde_json::Value = serde_json::from_str(include_str!(
+            "../fixtures/tile-batches/valid-tiles-text-player-ui.json"
+        ))
+        .unwrap();
+        wire["viewport"] = serde_json::json!({
+            "scale":2,"origin":{"x":5,"y":0},
+            "clipRect":{"x":0,"y":0,"width":1350,"height":720},
+            "textLayerIds":["world"],"spriteIds":["player"],"tileBatchIds":["terrain"]
+        });
+        let valid = serde_json::to_vec(&wire).unwrap();
+        let Message::FrameV2(decoded) = parse(&valid).unwrap().message else {
+            panic!()
+        };
+        decoded.validate(grid).unwrap();
+        wire["viewport"] = serde_json::Value::Null;
+        assert!(parse(&serde_json::to_vec(&wire).unwrap()).is_err());
+        wire["viewport"] = serde_json::json!({"scale":2});
+        assert!(parse(&serde_json::to_vec(&wire).unwrap()).is_err());
     }
 
     #[test]

@@ -125,7 +125,7 @@ fn clipping_wire_corpus_negotiates_validates_and_preserves_accepted_frames() {
                         panic!("{name}")
                     };
                     let expected = frame(name).canvas;
-                    state.replace(next);
+                    state.replace(*next);
                     assert_eq!(
                         state
                             .frame

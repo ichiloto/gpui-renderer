@@ -1,7 +1,7 @@
 use crate::app::Output;
 use crate::color::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
 use crate::input;
-use crate::protocol::{Anchor, Event, Grid, SourceRect, Sprite};
+use crate::protocol::{Anchor, Event, FrameViewport, Grid, SourceRect, Sprite};
 use crate::state::{PaintItem, RendererState, painted_cells};
 use crate::viewport::{PaintRect, ViewportTransform};
 use gpui::{
@@ -284,14 +284,32 @@ impl Render for Renderer {
                 self.canvas_fonts.clear();
             }
             for item in &frame.plan {
+                let member = frame.viewport.as_ref().filter(|view| match *item {
+                    PaintItem::Tiles(index) => {
+                        view.contains_tile(&frame.tile_batches[index].batch.id)
+                    }
+                    PaintItem::Text(index) => view.contains_text(&frame.text_layers[index].id),
+                    PaintItem::Sprite(index) => {
+                        view.contains_sprite(&frame.sprites[index].sprite.id)
+                    }
+                    PaintItem::LegacyText => false,
+                });
+                let (item_transform, clip) = member.map_or((transform, None), |view| {
+                    let (content, clip) = content_geometry(transform, &view.geometry);
+                    (content, Some(clip))
+                });
                 match *item {
                     PaintItem::Tiles(index) => {
-                        surface = surface.child(crate::tiles::element(
-                            frame.tile_batches[index].clone(),
-                            grid,
-                            transform,
-                            self.tile_samples.clone(),
-                        ));
+                        surface = add_item(
+                            surface,
+                            crate::tiles::element(
+                                frame.tile_batches[index].clone(),
+                                grid,
+                                item_transform,
+                                self.tile_samples.clone(),
+                            ),
+                            clip,
+                        );
                     }
                     PaintItem::LegacyText => {
                         for (row, text) in frame.text.iter().enumerate() {
@@ -306,21 +324,27 @@ impl Render for Renderer {
                         }
                     }
                     PaintItem::Text(index) => {
+                        let mut layer = div()
+                            .absolute()
+                            .size_full()
+                            .text_size(px(logical_font_size * item_transform.scale))
+                            .line_height(px(ch * item_transform.scale));
                         for text in painted_cells(&frame.text_layers[index]) {
-                            let mut painted = cell(text.column, text.row, cw, ch, transform)
+                            let mut painted = cell(text.column, text.row, cw, ch, item_transform)
                                 .bg(rgb(text.background))
                                 .text_color(rgb(text.foreground));
                             if let Some(glyph) = text.glyph {
                                 painted = painted.child(glyph.to_string());
                             }
-                            surface = surface.child(painted);
+                            layer = layer.child(painted);
                         }
+                        surface = add_item(surface, layer, clip);
                     }
 
                     PaintItem::Sprite(index) => {
                         let item = &frame.sprites[index];
                         let (left, top) = sprite_origin(&item.sprite, grid);
-                        let bounds = transform.surface_rect(
+                        let bounds = item_transform.surface_rect(
                             left,
                             top,
                             item.sprite.width as f32,
@@ -335,7 +359,8 @@ impl Render for Renderer {
                                 bounds.width,
                                 bounds.height,
                             );
-                            surface = surface.child(
+                            surface = add_item(
+                                surface,
                                 positioned(div(), bounds).overflow_hidden().child(
                                     img(item.image.clone())
                                         .object_fit(ObjectFit::Fill)
@@ -345,15 +370,18 @@ impl Render for Renderer {
                                         .w(px(sheet.width))
                                         .h(px(sheet.height)),
                                 ),
+                                clip,
                             );
                         } else {
-                            surface = surface.child(
+                            surface = add_item(
+                                surface,
                                 img(item.image.clone())
                                     .absolute()
                                     .left(px(bounds.left))
                                     .top(px(bounds.top))
                                     .w(px(bounds.width))
                                     .h(px(bounds.height)),
+                                clip,
                             );
                         }
                     }
@@ -364,6 +392,28 @@ impl Render for Renderer {
         let root = root.child(surface);
         crate::render_trace::observe(root, &self.output.diagnostics, observation)
     }
+}
+
+fn add_item(surface: gpui::Div, item: impl IntoElement, clip: Option<PaintRect>) -> gpui::Div {
+    if let Some(clip) = clip {
+        surface.child(positioned(div(), clip).overflow_hidden().child(item))
+    } else {
+        surface.child(item)
+    }
+}
+
+fn content_geometry(
+    base: ViewportTransform,
+    viewport: &FrameViewport,
+) -> (ViewportTransform, PaintRect) {
+    let rect = viewport.clip_rect;
+    let clip = base.surface_rect(rect.x, rect.y, rect.width, rect.height);
+    let content = base.transform_content(
+        viewport.scale,
+        viewport.origin.x - rect.x,
+        viewport.origin.y - rect.y,
+    );
+    (content, clip)
 }
 
 fn cell(column: u32, row: u32, cw: f32, ch: f32, transform: ViewportTransform) -> gpui::Div {
@@ -389,6 +439,70 @@ pub(crate) fn positioned(element: gpui::Div, bounds: PaintRect) -> gpui::Div {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::protocol::{ViewportPoint, ViewportRect};
+
+    #[test]
+    fn selected_text_tile_and_sprite_share_a_clipped_presentation() {
+        let grid = Grid {
+            columns: 135,
+            rows: 36,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let view = FrameViewport {
+            scale: 2.0,
+            origin: ViewportPoint { x: 120.0, y: 50.0 },
+            clip_rect: ViewportRect {
+                x: 100.0,
+                y: 40.0,
+                width: 500.0,
+                height: 400.0,
+            },
+            text_layer_ids: vec![],
+            sprite_ids: vec![],
+            tile_batch_ids: vec![],
+        };
+        let base = ViewportTransform::fit(1350.0, 720.0, 675.0, 360.0);
+        let (content, clip) = content_geometry(base, &view);
+        assert_eq!(
+            clip,
+            PaintRect {
+                left: 50.0,
+                top: 20.0,
+                width: 250.0,
+                height: 200.0
+            }
+        );
+        let cell = cell_bounds(8, 4, 10.0, 20.0, content);
+        // Text cells and tile destinations both use this cell geometry.
+        assert_eq!(
+            cell,
+            PaintRect {
+                left: 90.0,
+                top: 85.0,
+                width: 10.0,
+                height: 20.0
+            }
+        );
+        let sprite = Sprite {
+            id: "player".into(),
+            asset: "player.png".into(),
+            x: 8,
+            y: 4,
+            width: 32,
+            height: 48,
+            anchor: Anchor::BottomCenter,
+            layer: 100,
+            source_rect: None,
+        };
+        let (left, top) = sprite_origin(&sprite, grid);
+        let actor = content.surface_rect(left, top, 32.0, 48.0);
+        assert_eq!(
+            (actor.left + actor.width / 2.0, actor.top + actor.height),
+            (cell.left + cell.width / 2.0, cell.top + cell.height)
+        );
+        assert_eq!(cell_bounds(8, 4, 10.0, 20.0, base).left, 40.0);
+    }
     #[test]
     fn measured_font_fills_cells_without_changing_pitch_or_resize_geometry() {
         // Representative monospace metrics: 0.6em advance, 1.2em ascent+descent.

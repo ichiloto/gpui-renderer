@@ -455,7 +455,7 @@ a window-creation error uses that version. A second hello cannot open another wi
 For v2, `hello.requiredCapabilities` declares the mandatory minimum, not an
 allowlist. `ready.capabilities` advertises all supported v2 drawing features:
 `sprite_source_rect`, `tile_batches`, `graphical_canvas`, `canvas_clip_opacity`,
-`canvas_glyph_effects` and `canvas_compositing`. Frame validation and renderer
+`canvas_glyph_effects`, `canvas_compositing` and `frame_viewport`. Frame validation and renderer
 state use that same enabled set. Clients may use additional advertised drawing
 features; Engine retains the known v2 drawing capabilities and selects a useful
 fallback per surface when a renderer does not advertise a feature. Unknown or
@@ -553,6 +553,41 @@ sprite `100` and UI `1000` are caller policy, never hardcoded gameplay rules.
 `textLayers:[]` removes all previous text layers. Together with `sprites:[]` and
 omitted or empty `tileBatches`, it
 clears the entire snapshot to the default surface background.
+
+### Selected frame viewport
+
+The optional `frame_viewport` capability lets a caller enlarge selected field
+content while leaving menus, status and other frame items at their normal size.
+Use it only when `ready.capabilities` advertises support. It is a presentation
+transform, not a map or camera: the caller projects the visible world into the
+session grid and decides which existing item IDs belong to the field. For
+example, a 2× field may show roughly half as many source columns and rows while
+the session grid and UI remain 135 × 36.
+
+```json
+"viewport": {
+  "scale": 2,
+  "origin": {"x": 0, "y": 0},
+  "clipRect": {"x": 0, "y": 0, "width": 1350, "height": 720},
+  "textLayerIds": ["world"],
+  "spriteIds": ["player"],
+  "tileBatchIds": ["terrain"]
+}
+```
+
+`origin` and `clipRect` are in session logical pixels. The source grid's (0, 0)
+maps to `origin`; each referenced text layer, sprite or tile batch is uniformly
+scaled from there, then clipped to `clipRect`, before the entire session surface
+is fitted to the native window. Before that final window fit, a source point
+`(x, y)` maps to `(origin.x + scale * x, origin.y + scale * y)`.
+IDs must refer to items already present in the same frame and cannot repeat in
+their list. Unlisted items retain their existing position, size and drawing
+order. The transform supports finite positive scales through 8×, finite bounded
+origins, and a positive clip rectangle inside the session surface. It does not
+relax existing frame resource limits. An invalid viewport rejects the complete
+frame. Omission clears the transform; explicit `null` is invalid. It cannot be
+combined with a graphical `canvas` frame. Older renderers remain usable because
+clients can omit this field and send the same 1× content.
 
 ### Tile batches
 
@@ -698,8 +733,10 @@ independent X/Y scaling. Resizing requests a GPUI repaint; it never modifies sto
 frames, negotiates a grid, sends protocol resize events or changes gameplay/camera
 coordinates. A zero-sized viewport paints no surface and retains the focus root.
 Large maps can extend beyond this fixed logical viewport: PHP's camera scrolls the
-visible portion and sends new snapshots. The renderer does not fit an entire map
-unless its caller deliberately sends the entire map as the logical surface.
+visible portion and sends new snapshots. A negotiated selected frame viewport
+can scale just that visible field area while the session grid, menus and HUD stay
+fixed. The renderer does not fit an entire map unless its caller deliberately
+sends the entire map as the logical surface.
 
 `window_layout.rs` uses the same public GPUI path on every backend. It selects the
 primary display (first display fallback), fits centered restore-size hints inside

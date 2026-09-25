@@ -299,7 +299,7 @@ fn results_layout_stages_share_art_clip_gauges_and_release_complete_pages() {
         frame: None,
     };
     for (index, frame) in frames.into_iter().enumerate() {
-        state.replace(frame);
+        state.replace(*frame);
         assert_eq!(state.logical_size(), (1350.0, 720.0));
         let current = state.frame.as_ref().unwrap().canvas.as_ref().unwrap();
         if index == 6 {
@@ -422,7 +422,7 @@ fn exact_wire_corpus_matches_stages_and_preserves_the_previous_display_on_error(
                     panic!("{name}")
                 };
                 let expected = source(name).canvas;
-                state.replace(frame);
+                state.replace(*frame);
                 assert_eq!(
                     state
                         .frame

@@ -6,7 +6,7 @@ use std::io::{BufRead, Read};
 
 pub enum Update {
     Hello(Version, Hello),
-    Frame(PreparedFrame),
+    Frame(Box<PreparedFrame>),
     Error(String),
     Fatal(String),
     Shutdown,
@@ -53,9 +53,9 @@ impl Session {
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
                 validate_capabilities(&frame.sprites, &hello.get_enabled_capabilities(*version))?;
-                Ok(Update::Frame(PreparedFrame::prepare(
+                Ok(Update::Frame(Box::new(PreparedFrame::prepare(
                     frame, hello.grid, assets,
-                )?))
+                )?)))
             }
             Message::FrameV2(frame) => {
                 let (version, hello, assets) = self
@@ -64,6 +64,9 @@ impl Session {
                     .ok_or("frame requires a successful hello")?;
                 let enabled = hello.get_enabled_capabilities(*version);
                 validate_capabilities(&frame.sprites, &enabled)?;
+                if frame.viewport.is_some() && !enabled.contains(&Capability::FrameViewport) {
+                    return Err("viewport requires negotiated frame_viewport capability".into());
+                }
                 if let Some(canvas) = &frame.canvas {
                     if canvas.composites.is_some()
                         && !enabled.contains(&Capability::CanvasCompositing)
@@ -113,9 +116,9 @@ impl Session {
                 if frame.tile_batches.is_some() && !enabled.contains(&Capability::TileBatches) {
                     return Err("tileBatches requires negotiated tile_batches capability".into());
                 }
-                Ok(Update::Frame(PreparedFrame::prepare_v2(
+                Ok(Update::Frame(Box::new(PreparedFrame::prepare_v2(
                     frame, hello.grid, assets,
-                )?))
+                )?)))
             }
             Message::Shutdown => Ok(Update::Shutdown),
         }
@@ -292,7 +295,7 @@ mod tests {
                 let Update::Frame(frame) = update.unwrap_or_else(|e| panic!("{name}: {e}")) else {
                     panic!()
                 };
-                state.replace(frame);
+                state.replace(*frame);
                 if name.starts_with("clear-") {
                     assert!(state.frame.as_ref().unwrap().tile_batches.is_empty());
                 }

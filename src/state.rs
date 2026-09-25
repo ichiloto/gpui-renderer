@@ -1,7 +1,7 @@
 use crate::assets::AssetRoot;
-use crate::protocol::{Frame, FrameV2, Grid, Hello, Sprite, TextLayer, TileBatch};
+use crate::protocol::{Frame, FrameV2, FrameViewport, Grid, Hello, Sprite, TextLayer, TileBatch};
 use gpui::RenderImage;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -31,6 +31,36 @@ pub struct PreparedFrame {
     pub tile_batches: Vec<Arc<PreparedTileBatch>>,
     pub resources: FrameResources,
     pub canvas: Option<Box<crate::canvas::PreparedCanvas>>,
+    pub viewport: Option<PreparedViewport>,
+}
+
+#[derive(Debug)]
+pub struct PreparedViewport {
+    pub geometry: FrameViewport,
+    text_ids: HashSet<String>,
+    sprite_ids: HashSet<String>,
+    tile_ids: HashSet<String>,
+}
+
+impl PreparedViewport {
+    fn new(geometry: FrameViewport) -> Self {
+        Self {
+            text_ids: geometry.text_layer_ids.iter().cloned().collect(),
+            sprite_ids: geometry.sprite_ids.iter().cloned().collect(),
+            tile_ids: geometry.tile_batch_ids.iter().cloned().collect(),
+            geometry,
+        }
+    }
+
+    pub fn contains_text(&self, id: &str) -> bool {
+        self.text_ids.contains(id)
+    }
+    pub fn contains_sprite(&self, id: &str) -> bool {
+        self.sprite_ids.contains(id)
+    }
+    pub fn contains_tile(&self, id: &str) -> bool {
+        self.tile_ids.contains(id)
+    }
 }
 
 #[derive(Debug)]
@@ -155,6 +185,7 @@ impl PreparedFrame {
         Ok(Self {
             observation: None,
             canvas: None,
+            viewport: None,
             number: frame.frame,
             text: frame.text,
             text_layers: vec![],
@@ -197,6 +228,7 @@ impl PreparedFrame {
             })
             .transpose()?
             .map(Box::new);
+        let viewport = frame.viewport.map(PreparedViewport::new);
         if let Some(canvas) = &canvas {
             images.resources.canvas_images = canvas.images.len();
             images.resources.canvas_indicators = canvas.source.indicators.len();
@@ -237,6 +269,7 @@ impl PreparedFrame {
         Ok(Self {
             observation: None,
             canvas,
+            viewport,
             number: frame.frame,
             text: vec![],
             text_layers: frame.text_layers,
@@ -1115,11 +1148,66 @@ mod tests {
     fn v2() -> FrameV2 {
         FrameV2 {
             canvas: None,
+            viewport: None,
             tile_batches: None,
             frame: 1,
             text_layers: vec![layer("world", 0), layer("ui", 1000)],
             sprites: vec![sprite("player", 100)],
         }
+    }
+    #[test]
+    fn viewport_membership_follows_each_complete_frame() {
+        use crate::protocol::{SourceRect, TileCell, ViewportPoint, ViewportRect};
+        let (mut state, assets) = setup();
+        let mut source = v2();
+        source.tile_batches = Some(vec![TileBatch {
+            id: "terrain".into(),
+            asset: "test-sprite.png".into(),
+            layer: -100,
+            sources: vec![SourceRect {
+                x: 0,
+                y: 0,
+                width: 1,
+                height: 1,
+            }],
+            cells: vec![TileCell {
+                column: 0,
+                row: 0,
+                source: 0,
+            }],
+        }]);
+        source.viewport = Some(FrameViewport {
+            scale: 2.0,
+            origin: ViewportPoint { x: 4.0, y: 0.0 },
+            clip_rect: ViewportRect {
+                x: 0.0,
+                y: 0.0,
+                width: 1280.0,
+                height: 576.0,
+            },
+            text_layer_ids: vec!["world".into()],
+            sprite_ids: vec!["player".into()],
+            tile_batch_ids: vec!["terrain".into()],
+        });
+        state.replace(PreparedFrame::prepare_v2(source, state.hello.grid, &assets).unwrap());
+        let frame = state.frame.as_ref().unwrap();
+        let view = frame.viewport.as_ref().unwrap();
+        assert!(view.contains_text("world"));
+        assert!(!view.contains_text("ui"));
+        assert!(view.contains_sprite("player"));
+        assert!(view.contains_tile("terrain"));
+        assert_eq!(
+            frame.plan,
+            [
+                PaintItem::Tiles(0),
+                PaintItem::Text(0),
+                PaintItem::Sprite(0),
+                PaintItem::Text(1)
+            ]
+        );
+
+        state.replace(PreparedFrame::prepare_v2(v2(), state.hello.grid, &assets).unwrap());
+        assert!(state.frame.as_ref().unwrap().viewport.is_none());
     }
     #[test]
     fn text_cells_have_exact_positions_and_opaque_spaces() {
@@ -1201,6 +1289,7 @@ mod tests {
         );
         let frame = FrameV2 {
             canvas: None,
+            viewport: None,
             tile_batches: None,
             frame: 1,
             text_layers: vec![
@@ -1310,6 +1399,7 @@ mod tests {
             PreparedFrame::prepare_v2(
                 FrameV2 {
                     canvas: None,
+                    viewport: None,
                     tile_batches: None,
                     frame: 2,
                     text_layers: vec![],
