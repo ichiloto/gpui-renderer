@@ -1,7 +1,7 @@
 use crate::app::Output;
 use crate::color::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
 use crate::input;
-use crate::protocol::{Anchor, Event, FrameViewport, Grid, SourceRect, Sprite};
+use crate::protocol::{Anchor, Event, FrameViewport, SourceRect, Sprite};
 use crate::retained_prepared::PreparedScene;
 use crate::retained_protocol::Viewport as RetainedViewport;
 use crate::state::{PaintItem, RendererState, painted_cells};
@@ -21,6 +21,8 @@ pub struct Renderer {
     pub last_device_scale: Option<f32>,
     pub cached_images: Vec<Arc<RenderImage>>,
     pub logical_font_size: Option<f32>,
+    /// Measured (advance per em, line height per em), shared by every cell pitch.
+    pub font_metrics: Option<(Option<f32>, f32)>,
     pub canvas_fonts: std::collections::HashMap<(u32, u32), f32>,
     pub tile_samples: Rc<RefCell<crate::display_cache::DisplayRasterCache>>,
     pub glyph_fonts: crate::glyph_raster::FontCatalog,
@@ -109,12 +111,14 @@ pub(crate) fn sheet_bounds(
     }
 }
 
-/// Zero-based cell coordinates -> GPUI logical pixels, relative to grid origin.
-pub fn sprite_origin(sprite: &Sprite, grid: Grid) -> (f32, f32) {
+/// Zero-based cell coordinates -> GPUI logical pixels, relative to the origin
+/// of whichever cell pitch the sprite belongs to: the square field cell for
+/// field members, the text grid otherwise.
+pub fn sprite_origin(sprite: &Sprite, cell_width: f32, cell_height: f32) -> (f32, f32) {
     match sprite.anchor {
         Anchor::BottomCenter => (
-            (sprite.x as f32 + 0.5) * grid.cell_width as f32 - sprite.width as f32 / 2.0,
-            (sprite.y as f32 + 1.0) * grid.cell_height as f32 - sprite.height as f32,
+            (sprite.x as f32 + 0.5) * cell_width - sprite.width as f32 / 2.0,
+            (sprite.y as f32 + 1.0) * cell_height - sprite.height as f32,
         ),
     }
 }
@@ -197,12 +201,15 @@ impl Render for Renderer {
         let grid = self.state.hello.grid;
         let cw = grid.cell_width as f32;
         let ch = grid.cell_height as f32;
-        let logical_font_size = *self.logical_font_size.get_or_insert_with(|| {
+        let (advance, line_em) = *self.font_metrics.get_or_insert_with(|| {
             let text = cx.text_system();
             let font_id = text.resolve_font(&font(FONT_FAMILY));
             let advance = text.ch_advance(font_id, px(1.0)).ok().map(f32::from);
             let line_em = f32::from(text.ascent(font_id, px(1.0)))
                 + f32::from(text.descent(font_id, px(1.0)));
+            (advance, line_em)
+        });
+        let logical_font_size = *self.logical_font_size.get_or_insert_with(|| {
             let size = fit_cell_font(cw, ch, advance, line_em);
             self.output.diagnostics.geometry("text_metrics", || {
                 vec![
@@ -303,6 +310,15 @@ impl Render for Renderer {
         if transform.scale == 0.0 {
             return crate::render_trace::observe(root, &self.output.diagnostics, observation);
         }
+        // The field has its own square cell, carried by the world the retained
+        // viewport presents. UI text keeps the session grid's pitch.
+        let field_cell = self
+            .retained_viewport
+            .as_ref()
+            .and_then(|view| view.world_id.as_ref())
+            .and_then(|id| self.retained_scene.as_ref()?.get_world(id))
+            .map(|world| world.source.cell_size());
+        let field_font_size = field_cell.map(|cell| fit_cell_font(cell, cell, advance, line_em));
         let bounds = transform.surface_bounds();
         let mut surface = positioned(div(), bounds)
             .overflow_hidden()
@@ -326,7 +342,9 @@ impl Render for Renderer {
                 && let Some(world_id) = &view.world_id
                 && let Some(world) = scene.get_world(world_id)
             {
-                let projected = crate::retained_paint::project_world(world, view, grid);
+                let field = world.source.cell_size();
+                let field_font = fit_cell_font(field, field, advance, line_em);
+                let projected = crate::retained_paint::project_world(world, view);
                 let occlusion = projected
                     .iter()
                     .any(|cell| {
@@ -339,6 +357,7 @@ impl Render for Renderer {
                             &frame.text_layers,
                             view,
                             grid,
+                            field,
                             transform,
                         )
                     });
@@ -354,7 +373,6 @@ impl Render for Renderer {
                             world.clone(),
                             index,
                             projected.clone(),
-                            grid,
                             transform,
                             view.clone(),
                             self.tile_samples.clone(),
@@ -363,8 +381,8 @@ impl Render for Renderer {
                     let mut text = div()
                         .absolute()
                         .size_full()
-                        .text_size(px(logical_font_size * transform.scale * view.scale))
-                        .line_height(px(ch * transform.scale * view.scale));
+                        .text_size(px(field_font * transform.scale * view.scale))
+                        .line_height(px(field * transform.scale * view.scale));
                     for &projected_cell in projected.iter() {
                         let Some(row) = world.source.get_row(projected_cell.world_row) else {
                             continue;
@@ -386,7 +404,7 @@ impl Render for Renderer {
                         }
                         let mut bounds = crate::retained_paint::cell_bounds(
                             projected_cell,
-                            grid,
+                            field,
                             transform,
                             view,
                         );
@@ -440,6 +458,12 @@ impl Render for Renderer {
                     #[cfg(test)]
                     PaintItem::LegacyText => false,
                 });
+                // Field members share the world's square cell and its font.
+                let (pitch_width, pitch_height, item_font) =
+                    match (retained_member.is_some(), field_cell, field_font_size) {
+                        (true, Some(cell), Some(font)) => (cell, cell, font),
+                        _ => (cw, ch, logical_font_size),
+                    };
                 let (item_transform, clip) = if let Some(view) = retained_member {
                     let (content, clip) = content_geometry_retained(transform, view);
                     (content, Some(clip))
@@ -479,12 +503,18 @@ impl Render for Renderer {
                         let mut layer = div()
                             .absolute()
                             .size_full()
-                            .text_size(px(logical_font_size * item_transform.scale))
-                            .line_height(px(ch * item_transform.scale));
+                            .text_size(px(item_font * item_transform.scale))
+                            .line_height(px(pitch_height * item_transform.scale));
                         for text in painted_cells(&frame.text_layers[index]) {
-                            let mut painted = cell(text.column, text.row, cw, ch, item_transform)
-                                .bg(rgb(text.background))
-                                .text_color(rgb(text.foreground));
+                            let mut painted = cell(
+                                text.column,
+                                text.row,
+                                pitch_width,
+                                pitch_height,
+                                item_transform,
+                            )
+                            .bg(rgb(text.background))
+                            .text_color(rgb(text.foreground));
                             if let Some(glyph) = text.glyph {
                                 painted = painted.child(glyph.to_string());
                             }
@@ -495,7 +525,7 @@ impl Render for Renderer {
 
                     PaintItem::Sprite(index) => {
                         let item = &frame.sprites[index];
-                        let (left, top) = sprite_origin(&item.sprite, grid);
+                        let (left, top) = sprite_origin(&item.sprite, pitch_width, pitch_height);
                         let bounds = item_transform.surface_rect(
                             left,
                             top,
@@ -605,6 +635,7 @@ pub(crate) fn positioned(element: gpui::Div, bounds: PaintRect) -> gpui::Div {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::protocol::Grid;
     use crate::protocol::{ViewportPoint, ViewportRect};
 
     #[test]
@@ -661,7 +692,7 @@ mod tests {
             layer: 100,
             source_rect: None,
         };
-        let (left, top) = sprite_origin(&sprite, grid);
+        let (left, top) = sprite_origin(&sprite, grid.cell_width as f32, grid.cell_height as f32);
         let actor = content.surface_rect(left, top, 32.0, 48.0);
         assert_eq!(
             (actor.left + actor.width / 2.0, actor.top + actor.height),
@@ -763,7 +794,8 @@ mod tests {
         for scale in [1.0, 0.75, 0.5] {
             let transform =
                 ViewportTransform::fit(1350.0, 720.0, 1350.0 * scale + 80.0, 720.0 * scale);
-            let (left, top) = sprite_origin(&sprite, grid);
+            let (left, top) =
+                sprite_origin(&sprite, grid.cell_width as f32, grid.cell_height as f32);
             let destination = transform.surface_rect(left, top, 32.0, 48.0);
             let rect = sprite.source_rect.unwrap();
             let sheet = sheet_bounds(rect, 1280, 1024, destination.width, destination.height);
@@ -809,6 +841,24 @@ mod tests {
         }
     }
     #[test]
+    fn one_cell_field_sprite_fills_its_square_field_cell() {
+        // A field character is exactly one field cell: at the 48-pixel field
+        // pitch its bounds are that cell, whatever the text grid's shape.
+        let sprite = Sprite {
+            id: "player".into(),
+            asset: "$Hero.png".into(),
+            x: 2,
+            y: 1,
+            width: 48,
+            height: 48,
+            anchor: Anchor::BottomCenter,
+            layer: 100,
+            source_rect: None,
+        };
+        assert_eq!(sprite_origin(&sprite, 48.0, 48.0), (96.0, 48.0));
+    }
+
+    #[test]
     fn bottom_center_places_feet_on_target_cell() {
         let grid = Grid {
             columns: 80,
@@ -827,19 +877,28 @@ mod tests {
             layer: 100,
             source_rect: None,
         };
-        assert_eq!(sprite_origin(&sprite, grid), (120.0, 72.0));
-        let (left, top) = sprite_origin(&sprite, grid);
+        assert_eq!(
+            sprite_origin(&sprite, grid.cell_width as f32, grid.cell_height as f32),
+            (120.0, 72.0)
+        );
+        let (left, top) = sprite_origin(&sprite, grid.cell_width as f32, grid.cell_height as f32);
         assert_eq!(
             (left + sprite.width as f32 / 2.0, top + sprite.height as f32),
             (136.0, 120.0)
         );
         sprite.width = 64;
         sprite.height = 96;
-        assert_eq!(sprite_origin(&sprite, grid), (104.0, 24.0));
+        assert_eq!(
+            sprite_origin(&sprite, grid.cell_width as f32, grid.cell_height as f32),
+            (104.0, 24.0)
+        );
         assert_eq!((grid.cell_width, grid.cell_height), (16, 24));
         sprite.x = -1;
         sprite.y = 0;
-        assert_eq!(sprite_origin(&sprite, grid), (-40.0, -72.0));
+        assert_eq!(
+            sprite_origin(&sprite, grid.cell_width as f32, grid.cell_height as f32),
+            (-40.0, -72.0)
+        );
     }
 
     #[test]
@@ -863,7 +922,7 @@ mod tests {
         };
         for scale in [1.0, 0.75, 0.5] {
             let t = ViewportTransform::fit(1350.0, 720.0, 1350.0 * scale + 80.0, 720.0 * scale);
-            let (x, y) = sprite_origin(&sprite, grid);
+            let (x, y) = sprite_origin(&sprite, grid.cell_width as f32, grid.cell_height as f32);
             let rect = t.viewport_rect(x, y, 32.0, 48.0);
             assert_eq!(t.scale, scale);
             assert_eq!(t.offset_x, 40.0);

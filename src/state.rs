@@ -495,8 +495,16 @@ mod tests {
         assert!(painted_cells(&first.text_layers[2]).any(
             |cell| cell.glyph.is_none() && cell.background == crate::color::DEFAULT_BACKGROUND
         ));
-        let initial_one = sprite_origin(&first.sprites[0].sprite, grid);
-        let initial_two = sprite_origin(&first.sprites[1].sprite, grid);
+        let initial_one = sprite_origin(
+            &first.sprites[0].sprite,
+            grid.cell_width as f32,
+            grid.cell_height as f32,
+        );
+        let initial_two = sprite_origin(
+            &first.sprites[1].sprite,
+            grid.cell_width as f32,
+            grid.cell_height as f32,
+        );
 
         state.replace(prepare(1));
         let uncovered = state.frame.as_ref().unwrap();
@@ -529,11 +537,11 @@ mod tests {
         let two = &panned.sprites[1].sprite;
         assert_eq!((one.x, one.y, two.x, two.y), (6, 2, 6, 2));
         assert_eq!(
-            sprite_origin(one, grid),
+            sprite_origin(one, grid.cell_width as f32, grid.cell_height as f32),
             (initial_one.0 - 32.0, initial_one.1 - 48.0)
         );
         assert_eq!(
-            sprite_origin(two, grid),
+            sprite_origin(two, grid.cell_width as f32, grid.cell_height as f32),
             (initial_two.0 - 48.0, initial_two.1 - 48.0)
         );
         assert_eq!(one.source_rect.unwrap().x, 512);
@@ -545,8 +553,12 @@ mod tests {
         // Both the sheet effect and foreground remain anchored over the same cell.
         for sprite in &panned.sprites[2..] {
             assert_eq!(
-                sprite_origin(&sprite.sprite, grid),
-                sprite_origin(two, grid)
+                sprite_origin(
+                    &sprite.sprite,
+                    grid.cell_width as f32,
+                    grid.cell_height as f32
+                ),
+                sprite_origin(two, grid.cell_width as f32, grid.cell_height as f32)
             );
         }
         assert_eq!(
@@ -612,7 +624,14 @@ mod tests {
                 height: 256
             })
         );
-        assert_eq!(sprite_origin(&actor.sprite, grid), (132.0, 24.0));
+        assert_eq!(
+            sprite_origin(
+                &actor.sprite,
+                grid.cell_width as f32,
+                grid.cell_height as f32
+            ),
+            (132.0, 24.0)
+        );
         assert!(!Arc::ptr_eq(&sheet, &actor.image));
         let replacement_sheet = actor.image.clone();
         let replacement_sprite = actor.sprite.clone();

@@ -1,7 +1,6 @@
 //! Retained, source-coordinate map data and the camera's logical-cell projection.
 //! Only the visible rows are visited during a scroll. Styled owner glyphs remain
 //! available when a tile crop cannot be painted at the current camera position.
-use crate::protocol::Grid;
 use crate::retained_protocol::{
     MAX_WORLD_TILE_CELLS, Viewport, WorldCell, WorldDefinition, WorldRow, WorldTileRow,
 };
@@ -161,20 +160,24 @@ impl World {
         self.tile_cells * 16 + self.owner_bytes + self.definition.layers.len() * 8192
     }
 
+    /// Side of one square field cell in logical pixels, before viewport scale.
+    pub fn cell_size(&self) -> f32 {
+        self.definition.cell_size as f32
+    }
+
     /// Visits only logical columns selected by this camera. A wide glyph
     /// advances the display column, but not the world-column selection index.
     pub fn project_visible(
         &self,
         viewport: &Viewport,
-        grid: Grid,
         mut visit: impl FnMut(ProjectedCell, &WorldCell),
     ) {
         let first_x = viewport.world_origin.column.max(0) as u32;
         let first_y = viewport.world_origin.row.max(0) as u32;
         let pad_x = (-viewport.world_origin.column).max(0);
         let pad_y = (-viewport.world_origin.row).max(0);
-        let cell_width = grid.cell_width as f32 * viewport.scale;
-        let cell_height = grid.cell_height as f32 * viewport.scale;
+        let cell_width = self.cell_size() * viewport.scale;
+        let cell_height = cell_width;
         let visible_columns = ((viewport.clip_rect.width
             + (viewport.clip_rect.x - viewport.origin.x).abs())
             / cell_width)
@@ -241,7 +244,7 @@ mod tests {
 
     #[test]
     fn row_replacement_updates_cached_bounds_and_sorts_tile_crops() {
-        let definition = from_value(json!({"columns":2,"rows":2,"layers":[{
+        let definition = from_value(json!({"columns":2,"rows":2,"cellSize":20,"layers":[{
             "id":"map:terrain","layer":-100,"kind":"gameplay",
             "asset":"tiles.png","sources":[{"x":0,"y":0,"width":1,"height":1}]
         }]}))
@@ -276,16 +279,7 @@ mod tests {
         }))
         .unwrap();
         let mut visible = Vec::new();
-        world.project_visible(
-            &viewport,
-            Grid {
-                columns: 2,
-                rows: 2,
-                cell_width: 10,
-                cell_height: 20,
-            },
-            |cell, _| visible.push(cell),
-        );
+        world.project_visible(&viewport, |cell, _| visible.push(cell));
         assert_eq!(visible.iter().filter(|cell| cell.world_row == 1).count(), 1);
         let original = world.estimated_bytes();
         world.replace_rows(vec![make_row(0, "界")]).unwrap();
@@ -320,5 +314,44 @@ mod tests {
             .unwrap();
         assert_eq!(world.tile_count(), 1);
         assert_eq!(world.estimated_bytes(), original + 2 + 16);
+    }
+
+    #[test]
+    fn field_cells_are_square_at_their_own_pitch() {
+        let definition = from_value(json!({"columns":4,"rows":4,"cellSize":48,"layers":[{
+            "id":"map:terrain","layer":-100,"kind":"gameplay"
+        }]}))
+        .unwrap();
+        let mut world = World::new(definition).unwrap();
+        let row = |row: u32| {
+            let cells: Vec<_> = (0..4)
+                .map(|_| {
+                    json!({"glyph":".","foreground":null,"background":null,
+                        "displayWidth":1,"ownerLayerId":"map:terrain"})
+                })
+                .collect();
+            from_value(json!({"row":row,"cells":cells})).unwrap()
+        };
+        world.replace_rows((0..4).map(row).collect()).unwrap();
+        // Two 48-pixel cells fit a 96 x 96 clip on both axes, whatever the
+        // session text grid's cell shape is.
+        let viewport: Viewport = from_value(json!({"scale":1,
+            "origin":{"x":0,"y":0},"worldId":"map",
+            "clipRect":{"x":0,"y":0,"width":96,"height":96}
+        }))
+        .unwrap();
+        let mut visible = Vec::new();
+        world.project_visible(&viewport, |cell, _| visible.push(cell));
+        let columns: HashSet<i32> = visible.iter().map(|cell| cell.screen_column).collect();
+        assert_eq!(columns, HashSet::from([0, 1]));
+        assert!(visible.iter().all(|cell| cell.screen_row < 4));
+        assert!(
+            World::new(
+                from_value(json!({"columns":1,"rows":1,"cellSize":0,"layers":[{
+                "id":"map:terrain","layer":0,"kind":"gameplay"}]}))
+                .unwrap()
+            )
+            .is_err()
+        );
     }
 }

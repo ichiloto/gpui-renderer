@@ -460,7 +460,7 @@ mod tests {
 
     fn world() -> Value {
         json!({"op":"put","kind":"world","id":"map","value":{
-            "columns":4,"rows":2,"layers":[{"id":"map:terrain","layer":-100,
+            "columns":4,"rows":2,"cellSize":10,"layers":[{"id":"map:terrain","layer":-100,
                 "kind":"gameplay"}]}})
     }
 
@@ -520,7 +520,7 @@ mod tests {
         assert!(Arc::ptr_eq(&source, &changed.scene));
         let world = changed.scene.worlds.get("map").unwrap();
         let mut projected = Vec::new();
-        world.project_visible(changed.viewport.as_ref().unwrap(), grid(), |cell, _| {
+        world.project_visible(changed.viewport.as_ref().unwrap(), |cell, _| {
             projected.push(cell)
         });
         assert_eq!(projected[0].world_column, 1);

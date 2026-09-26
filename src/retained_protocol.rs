@@ -9,6 +9,9 @@ use std::path::PathBuf;
 pub const MAX_WORLD_LAYERS: usize = 64;
 pub const MAX_WORLD_CELLS: usize = 1_048_576;
 pub const MAX_WORLD_TILE_CELLS: usize = 1_048_576;
+/// Largest square field cell, in logical pixels. The field unit is its own
+/// pitch, independent of the session text grid that UI text uses.
+pub const MAX_WORLD_CELL_SIZE: u32 = 256;
 pub const MAX_RETAINED_BYTES: usize = 64 * 1024 * 1024;
 pub const MAX_STAGING_AND_VISIBLE_BYTES: usize = 128 * 1024 * 1024;
 
@@ -112,6 +115,8 @@ pub enum EntityKind {
 pub struct WorldDefinition {
     pub columns: u32,
     pub rows: u32,
+    /// Side of one square field cell in logical pixels, before viewport scale.
+    pub cell_size: u32,
     pub layers: Vec<WorldLayer>,
 }
 
@@ -143,6 +148,9 @@ impl WorldDefinition {
             || u64::from(self.columns) * u64::from(self.rows) > MAX_WORLD_CELLS as u64
         {
             return Err("world dimensions exceed 16384 axes or 1048576 cells".into());
+        }
+        if self.cell_size == 0 || self.cell_size > MAX_WORLD_CELL_SIZE {
+            return Err("world cellSize must be 1..256 logical pixels".into());
         }
         if self.layers.is_empty() || self.layers.len() > MAX_WORLD_LAYERS {
             return Err("world requires 1..64 layers".into());

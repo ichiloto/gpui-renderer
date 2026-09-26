@@ -170,7 +170,7 @@ mod tests {
             ("compositing/frame.json", 0, false),
             ("test-sprite.png", 9999, false),
         ] {
-            let definition = from_value(json!({"columns":1,"rows":1,"layers":[{
+            let definition = from_value(json!({"columns":1,"rows":1,"cellSize":10,"layers":[{
                 "id":"map:terrain","layer":-100,"kind":"gameplay",
                 "asset":asset,"sources":[{"x":x,"y":0,"width":1,"height":1}]
             }]}))

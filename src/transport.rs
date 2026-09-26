@@ -501,29 +501,27 @@ mod tests {
                             .unwrap();
                         let mut actual =
                             std::collections::BTreeMap::<String, Vec<(u32, u32, u32)>>::new();
-                        world
-                            .source
-                            .project_visible(viewport, grid.unwrap(), |cell, _| {
-                                if !cell.tile_eligible
-                                    || cell.screen_column < 0
-                                    || cell.screen_row < 0
-                                    || cell.screen_column >= grid.unwrap().columns as i32
-                                    || cell.screen_row >= grid.unwrap().rows as i32
+                        world.source.project_visible(viewport, |cell, _| {
+                            if !cell.tile_eligible
+                                || cell.screen_column < 0
+                                || cell.screen_row < 0
+                                || cell.screen_column >= grid.unwrap().columns as i32
+                                || cell.screen_row >= grid.unwrap().rows as i32
+                            {
+                                return;
+                            }
+                            for layer in &world.layers {
+                                if let Some(source) =
+                                    world.get_source(layer, cell.world_column, cell.world_row)
                                 {
-                                    return;
+                                    actual.entry(layer.id.clone()).or_default().push((
+                                        cell.screen_column as u32,
+                                        cell.screen_row as u32,
+                                        source as u32,
+                                    ));
                                 }
-                                for layer in &world.layers {
-                                    if let Some(source) =
-                                        world.get_source(layer, cell.world_column, cell.world_row)
-                                    {
-                                        actual.entry(layer.id.clone()).or_default().push((
-                                            cell.screen_column as u32,
-                                            cell.screen_row as u32,
-                                            source as u32,
-                                        ));
-                                    }
-                                }
-                            });
+                            }
+                        });
                         let mut expected =
                             std::collections::BTreeMap::<String, Vec<(u32, u32, u32)>>::new();
                         for batch in old.tile_batches.iter().flatten() {
@@ -581,49 +579,43 @@ mod tests {
                         }
                         let mut current_paint = std::collections::BTreeMap::new();
                         for layer in &world.layers {
-                            world
-                                .source
-                                .project_visible(viewport, grid.unwrap(), |cell, owner| {
-                                    if cell.screen_column < 0
-                                        || cell.screen_row < 0
-                                        || cell.screen_column >= grid.unwrap().columns as i32
-                                        || cell.screen_row >= grid.unwrap().rows as i32
-                                    {
-                                        return;
-                                    }
-                                    let point = (cell.screen_column as u32, cell.screen_row as u32);
-                                    let crop = cell
-                                        .tile_eligible
-                                        .then(|| {
-                                            world.get_source(
-                                                layer,
-                                                cell.world_column,
-                                                cell.world_row,
-                                            )
-                                        })
-                                        .flatten();
-                                    if let Some(source) = crop {
-                                        current_paint
-                                            .insert(point, format!("tile:{}:{}", layer.id, source));
-                                    }
-                                    if owner.owner_layer_id == layer.id && crop.is_none() {
-                                        current_paint.insert(
-                                            point,
-                                            format!(
-                                                "glyph:{}:{:06x}:{:06x}",
-                                                owner.glyph,
-                                                owner.foreground.as_ref().map_or(
-                                                    crate::color::DEFAULT_FOREGROUND,
-                                                    crate::color::ColorSpec::rgb
-                                                ),
-                                                owner.background.as_ref().map_or(
-                                                    crate::color::DEFAULT_BACKGROUND,
-                                                    crate::color::ColorSpec::rgb
-                                                )
+                            world.source.project_visible(viewport, |cell, owner| {
+                                if cell.screen_column < 0
+                                    || cell.screen_row < 0
+                                    || cell.screen_column >= grid.unwrap().columns as i32
+                                    || cell.screen_row >= grid.unwrap().rows as i32
+                                {
+                                    return;
+                                }
+                                let point = (cell.screen_column as u32, cell.screen_row as u32);
+                                let crop = cell
+                                    .tile_eligible
+                                    .then(|| {
+                                        world.get_source(layer, cell.world_column, cell.world_row)
+                                    })
+                                    .flatten();
+                                if let Some(source) = crop {
+                                    current_paint
+                                        .insert(point, format!("tile:{}:{}", layer.id, source));
+                                }
+                                if owner.owner_layer_id == layer.id && crop.is_none() {
+                                    current_paint.insert(
+                                        point,
+                                        format!(
+                                            "glyph:{}:{:06x}:{:06x}",
+                                            owner.glyph,
+                                            owner.foreground.as_ref().map_or(
+                                                crate::color::DEFAULT_FOREGROUND,
+                                                crate::color::ColorSpec::rgb
                                             ),
-                                        );
-                                    }
-                                });
+                                            owner.background.as_ref().map_or(
+                                                crate::color::DEFAULT_BACKGROUND,
+                                                crate::color::ColorSpec::rgb
+                                            )
+                                        ),
+                                    );
+                                }
+                            });
                         }
                         let default_blank = format!(
                             "glyph: :{:06x}:{:06x}",
@@ -685,7 +677,7 @@ mod tests {
             "displayWidth":1,"ownerLayerId":"map:terrain"});
         let stage = json!({"protocol":2,"type":"frame","frame":1,"baseGeneration":0,
         "generation":1,"reset":true,"present":false,"operations":[
-            {"op":"put","kind":"world","id":"map","value":{"columns":4,"rows":2,
+            {"op":"put","kind":"world","id":"map","value":{"columns":4,"rows":2,"cellSize":10,
                 "layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay",
                     "asset":"test-sprite.png","sources":[{"x":0,"y":0,"width":1,"height":1}]}]}},
             {"op":"worldRows","id":"map","rows":[
@@ -833,7 +825,7 @@ mod tests {
             "baseGeneration":0,"generation":1,"reset":true,"present":true,
             "operations":[
                 {"op":"put","kind":"world","id":"map","value":{
-                    "columns":1,"rows":1,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
+                    "columns":1,"rows":1,"cellSize":10,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
                 {"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{
                     "glyph":".","foreground":null,"background":null,
                     "displayWidth":1,"ownerLayerId":"map:terrain"}]}]}

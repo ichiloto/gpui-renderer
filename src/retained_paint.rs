@@ -20,6 +20,7 @@ struct OccludingCell {
 /// Screen text is opaque even when it contains a space. Keep its coverage in
 /// surface coordinates so both zoomed field text and unzoomed UI can clear an
 /// intersected wide world glyph without introducing a terminal-only rule.
+/// Field-member text uses the square field cell; other text uses the grid.
 pub struct TextOcclusion {
     band_height: f32,
     bands: HashMap<i32, Vec<OccludingCell>>,
@@ -30,6 +31,7 @@ impl TextOcclusion {
         layers: &[TextLayer],
         viewport: &Viewport,
         grid: Grid,
+        field_cell: f32,
         base: ViewportTransform,
     ) -> Self {
         let band_height = (grid.cell_height as f32 * base.scale).max(1.0);
@@ -42,15 +44,29 @@ impl TextOcclusion {
         );
         for layer in layers {
             let selected = viewport.text_layer_ids.contains(&layer.id);
-            let scale = if selected { viewport.scale } else { 1.0 };
-            let origin_x = if selected { viewport.origin.x } else { 0.0 };
-            let origin_y = if selected { viewport.origin.y } else { 0.0 };
+            let (scale, origin_x, origin_y, cell_width, cell_height) = if selected {
+                (
+                    viewport.scale,
+                    viewport.origin.x,
+                    viewport.origin.y,
+                    field_cell,
+                    field_cell,
+                )
+            } else {
+                (
+                    1.0,
+                    0.0,
+                    0.0,
+                    grid.cell_width as f32,
+                    grid.cell_height as f32,
+                )
+            };
             for cell in crate::state::painted_cells(layer) {
                 let rect = base.surface_rect(
-                    origin_x + cell.column as f32 * grid.cell_width as f32 * scale,
-                    origin_y + cell.row as f32 * grid.cell_height as f32 * scale,
-                    grid.cell_width as f32 * scale,
-                    grid.cell_height as f32 * scale,
+                    origin_x + cell.column as f32 * cell_width * scale,
+                    origin_y + cell.row as f32 * cell_height * scale,
+                    cell_width * scale,
+                    cell_height * scale,
                 );
                 let visible = if selected {
                     intersection(rect, clip)
@@ -87,29 +103,27 @@ fn vertical_bands(bounds: PaintRect, height: f32) -> impl Iterator<Item = i32> {
     first..=last
 }
 
-pub fn project_world(
-    world: &PreparedWorld,
-    viewport: &Viewport,
-    grid: Grid,
-) -> Arc<Vec<ProjectedCell>> {
+pub fn project_world(world: &PreparedWorld, viewport: &Viewport) -> Arc<Vec<ProjectedCell>> {
     let mut cells = Vec::new();
     world
         .source
-        .project_visible(viewport, grid, |projected, _| cells.push(projected));
+        .project_visible(viewport, |projected, _| cells.push(projected));
     Arc::new(cells)
 }
 
+/// A projected world cell's square bounds at the field's own pitch.
 pub fn cell_bounds(
     cell: ProjectedCell,
-    grid: Grid,
+    field_cell: f32,
     base: ViewportTransform,
     viewport: &Viewport,
 ) -> PaintRect {
+    let pitch = field_cell * viewport.scale;
     base.surface_rect(
-        viewport.origin.x + cell.screen_column as f32 * grid.cell_width as f32 * viewport.scale,
-        viewport.origin.y + cell.screen_row as f32 * grid.cell_height as f32 * viewport.scale,
-        grid.cell_width as f32 * viewport.scale,
-        grid.cell_height as f32 * viewport.scale,
+        viewport.origin.x + cell.screen_column as f32 * pitch,
+        viewport.origin.y + cell.screen_row as f32 * pitch,
+        pitch,
+        pitch,
     )
 }
 
@@ -117,7 +131,6 @@ pub fn tile_element(
     world: Arc<PreparedWorld>,
     layer_index: usize,
     cells: Arc<Vec<ProjectedCell>>,
-    grid: Grid,
     base: ViewportTransform,
     viewport: Viewport,
     samples: Rc<RefCell<DisplayRasterCache>>,
@@ -126,6 +139,7 @@ pub fn tile_element(
         |_, _, _| (),
         move |bounds, (), window, _| {
             let layer = &world.layers[layer_index];
+            let field_cell = world.source.cell_size();
             let clip = base.surface_rect(
                 viewport.clip_rect.x,
                 viewport.clip_rect.y,
@@ -141,7 +155,7 @@ pub fn tile_element(
                 else {
                     continue;
                 };
-                let relative = cell_bounds(cell, grid, base, &viewport);
+                let relative = cell_bounds(cell, field_cell, base, &viewport);
                 let destination = PaintRect {
                     left: f32::from(bounds.origin.x) + relative.left,
                     top: f32::from(bounds.origin.y) + relative.top,
@@ -244,7 +258,8 @@ mod tests {
                 "textLayerIds":if selected { vec!["ui"] } else { vec![] }
             }))
             .unwrap();
-            let coverage = TextOcclusion::new(&text, &viewport, grid, base);
+            // A selected (field) layer sits on the square field cell.
+            let coverage = TextOcclusion::new(&text, &viewport, grid, 10.0, base);
             let wide = base.surface_rect(0.0, 0.0, 40.0, 40.0);
             assert!(coverage.covers_wide_glyph(wide, -99));
             assert!(!coverage.covers_wide_glyph(wide, 2000));

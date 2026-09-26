@@ -469,7 +469,7 @@ A frame changes identified presentation entities rather than replacing every
 cell. For example:
 
 ```json
-{"protocol":2,"type":"frame","frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":false,"operations":[{"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"layers":[{"id":"map:terrain","layer":-99,"kind":"gameplay"}]}},{"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{"glyph":".","foreground":null,"background":null,"displayWidth":1,"ownerLayerId":"map:terrain"},{"glyph":" ","foreground":null,"background":null,"displayWidth":1,"ownerLayerId":"map:terrain"}]}]}]}
+{"protocol":2,"type":"frame","frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":false,"operations":[{"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"cellSize":48,"layers":[{"id":"map:terrain","layer":-99,"kind":"gameplay"}]}},{"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{"glyph":".","foreground":null,"background":null,"displayWidth":1,"ownerLayerId":"map:terrain"},{"glyph":" ","foreground":null,"background":null,"displayWidth":1,"ownerLayerId":"map:terrain"}]}]}]}
 {"protocol":2,"type":"frame","frame":1,"baseGeneration":1,"generation":2,"present":true,"operations":[],"viewport":{"scale":1,"origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":1350,"height":720},"worldId":"map","worldOrigin":{"column":0,"row":0},"textLayerIds":[],"spriteIds":[]}}
 ```
 
@@ -502,8 +502,12 @@ Operations use one of these shapes:
 | `worldTiles` with `id`, `layerId`, `rows` | Replace indexed, sparse tile-candidate rows of one world layer. |
 | `textRows` with `id`, `rows` | Replace indexed runs of one screen text layer; an empty row clears it. |
 
-A world definition supplies bounded logical `columns`, `rows`, and ordered
-layers. Each layer has an `id`, numeric `layer`, `kind` (`gameplay` or
+A world definition supplies bounded logical `columns`, `rows`, its square
+`cellSize` in logical pixels (1 to 256; Ichiloto uses 48, RPG Maker's tile
+size), and ordered layers. The field is drawn at that pitch, independent of the
+session text grid: world cells, field glyph text (with a font fitted to the
+square cell), and the text layers and sprites named by the viewport all use it.
+Only unlisted screen text and sprites keep the text grid's cell pitch. Each layer has an `id`, numeric `layer`, `kind` (`gameplay` or
 `decoration`), and optionally an asset-root-relative atlas and source-rectangle
 catalog. Every world row must be supplied before presentation; a row may be
 shorter than `columns`, leaving an unpainted trailing background. Owner cells
@@ -621,6 +625,10 @@ feetY = (y + 1.0) * cellHeight
 left  = feetX - width / 2
 top   = feetY - height
 ```
+
+`cellWidth` and `cellHeight` are the world's square `cellSize` for sprites
+named by a world viewport, and the session grid's cell otherwise. A one-cell
+field character sent at `width = height = cellSize` fills exactly its cell.
 
 Geometry uses logical presentation pixels (1× corresponds to macOS points).
 The viewport transform below places the grid inside native content, below the
