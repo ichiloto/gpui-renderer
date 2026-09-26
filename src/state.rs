@@ -178,6 +178,17 @@ impl<'a> FrameImages<'a> {
 }
 
 impl PreparedFrame {
+    /// The layer a plan item paints at; the plan is in ascending layer order.
+    pub fn get_item_layer(&self, item: &PaintItem) -> i32 {
+        match *item {
+            PaintItem::Tiles(i) => self.tile_batches[i].batch.layer,
+            PaintItem::Text(i) => self.text_layers[i].layer,
+            PaintItem::Sprite(i) => self.sprites[i].sprite.layer,
+            #[cfg(test)]
+            PaintItem::LegacyText => i32::MIN,
+        }
+    }
+
     #[cfg(test)]
     pub fn prepare(frame: Frame, grid: Grid, assets: &AssetRoot) -> Result<Self, String> {
         frame.validate(grid)?;

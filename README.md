@@ -501,6 +501,7 @@ Operations use one of these shapes:
 | `put` with `kind`, `id`, `value` | Insert or replace a `world`, `text`, `sprite`, `canvas`, `canvas_image`, `canvas_indicator`, `canvas_text`, or `canvas_composite` entity. |
 | `remove` with `kind`, `id` | Remove that entity. |
 | `worldRows` with `id`, `rows` | Replace complete, indexed owner-glyph rows of a world. |
+| `worldTiles` with `id`, `layerId`, `rows` | Replace indexed tile rows of one `tiles` layer; an empty row clears it. |
 | `textRows` with `id`, `rows` | Replace indexed runs of one screen text layer; an empty row clears it. |
 
 A world definition supplies bounded logical `columns`, `rows`, its square
@@ -513,7 +514,7 @@ the viewport, keep `cellColumns` columns per cell with a font fitted to that
 column, so an unpainted map looks like its terminal presentation scaled.
 Sprites named by the viewport are placed by whole cells. Only unlisted screen
 text and sprites keep the text grid's cell pitch. Each layer has an `id`,
-numeric `layer` and `kind` (`gameplay` or `decoration`). Every world row must
+numeric `layer` and `kind` (`gameplay`, `decoration` or `tiles`). Every world row must
 be supplied before presentation; a row may be shorter than `columns`, leaving
 an unpainted trailing background. Owner cells carry the cell's text (at most 8
 characters), nullable structured foreground/background, and the owning
@@ -526,10 +527,38 @@ sum of live prepared images referenced by a retained scene is limited to 256 MiB
 Existing 64 MiB limits still apply independently to decoded PNG sources,
 prepared regions, and composite output work.
 The world source estimate is `sum(64 + UTF-8 glyph bytes + UTF-8 owner-layer ID
-bytes)` for supplied owner cells, plus `8192` per world layer. The logical cell
+bytes)` for supplied owner cells, plus `8192` per world layer, `16` per tile cell, and `32` per tileset piece plus
+the tileset's sheet path bytes. The logical cell
 ceiling does not guarantee that a fully populated world fits the separate
 source budget; producers should preflight both limits before uploading it.
 Malformed entity values and exceeded budgets reject the update.
+
+A world may carry a `tileset` for its `tiles` layers, which own no glyphs; a
+`tiles` layer requires one. The renderer knows tiles only as pieces copied from
+sheets, so layouts and autotile rules stay in the Engine:
+
+```json
+{"tileSize":48,"sheets":["tilesets/home.png"],"tiles":[{"frames":[[{"sheet":0,"x":0,"y":0,"width":24,"height":48,"left":0,"top":0},{"sheet":0,"x":72,"y":0,"width":24,"height":48,"left":24,"top":0}]]}]}
+```
+
+`tileSize` is an even 2 to 256 pixels and `sheets` holds 1 to 16 asset-relative
+PNG paths. The catalog has 1 to 8192 tiles, each with 1 to 4 frames of 1 to 8
+pieces. A piece copies its `x`, `y`, `width`, `height` rectangle of sheet
+`sheet` unscaled to `left`, `top` inside the tile, and must fit there; pieces
+compose in order with source-over. `worldTiles` rows list `{"column","tile"}`
+cells with a catalog index and unique columns. Listed rows are replaced, an
+empty row clears one, and omitted rows persist until the world is put again. A
+world holds at most 1,048,576 tile cells. The viewport's optional `tileFrame`
+(default 0) shows frame `tileFrame % frames` of every tile, so animation is a
+camera-only frame.
+
+Each tile frame is composed once per world definition, within 64 MiB. A sheet
+that cannot be loaded, or a piece outside its sheet, is diagnosed once per sheet
+and makes only the tiles using it unavailable; the scene is still accepted. A
+cell with an available tile in any tiles layer shows no owner glyph or
+background, even where the tile is transparent; other cells keep their glyph.
+World layers paint interleaved with screen text and sprites by `layer`, a world
+layer first on a tie, so tiles at layer 900 draw above characters at 100.
 
 Screen `text` values contain `id`, numeric `layer`, stable `order`, and
 `runs`; each run has `row`, `column`, `text`, and required nullable
@@ -550,8 +579,7 @@ world subtracts `worldOrigin`. Named `textLayerIds` and `spriteIds` are
 already screen-projected; they receive the scale, origin, and clip but no world
 subtraction. Unlisted text and sprites keep their ordinary screen position.
 The complete logical surface is then fitted and centered in the resizable native
-window. Wide world glyphs use their full display width; a later opaque screen
-cell covering either half suppresses the whole underlay glyph.
+window.
 
 ### Structured colour
 

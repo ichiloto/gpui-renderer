@@ -4,9 +4,21 @@ use crate::color::ColorSpec;
 use crate::protocol::{Grid, ViewportPoint, ViewportRect};
 use serde::Deserialize;
 use serde_json::Value;
+use std::path::PathBuf;
 
 pub const MAX_WORLD_LAYERS: usize = 64;
 pub const MAX_WORLD_CELLS: usize = 1_048_576;
+/// Most tile cells across all tiles layers of one world.
+pub const MAX_WORLD_TILE_CELLS: usize = 1_048_576;
+/// Tileset bounds. The renderer knows tiles only as frames of pieces copied
+/// from sheets; every layout and composition rule stays with the producer.
+pub const MAX_TILE_SIZE: u32 = 256;
+pub const MAX_TILESET_SHEETS: usize = 16;
+pub const MAX_TILESET_TILES: usize = 8192;
+pub const MAX_TILE_FRAMES: usize = 4;
+pub const MAX_TILE_PIECES: usize = 8;
+/// Source-state charge for one tile piece.
+pub const TILE_PIECE_BYTES: usize = 32;
 /// Largest square field cell, in logical pixels. The field unit is its own
 /// pitch, independent of the session text grid that UI text uses.
 pub const MAX_WORLD_CELL_SIZE: u32 = 256;
@@ -86,7 +98,11 @@ pub enum Operation {
         id: String,
         rows: Vec<WorldRow>,
     },
-
+    WorldTiles {
+        id: String,
+        layer_id: String,
+        rows: Vec<WorldTileRow>,
+    },
     TextRows {
         id: String,
         rows: Vec<TextRow>,
@@ -117,6 +133,102 @@ pub struct WorldDefinition {
     /// text member keep this many columns per square, as in the terminal.
     pub cell_columns: u32,
     pub layers: Vec<WorldLayer>,
+    /// Graphics for `tiles` layers. Absent for a glyph-only world.
+    #[serde(default)]
+    pub tileset: Option<Tileset>,
+}
+
+/// A catalog of square tiles, each composed from pieces of sheet images.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Tileset {
+    /// Side of one composed tile in source pixels.
+    pub tile_size: u32,
+    /// Asset-root-relative sheet images that pieces index.
+    pub sheets: Vec<PathBuf>,
+    pub tiles: Vec<TileDefinition>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TileDefinition {
+    /// Animation frames; each is its pieces in paint order.
+    pub frames: Vec<Vec<TilePiece>>,
+}
+
+/// A source rectangle of one sheet copied unscaled to (left, top) of the tile.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct TilePiece {
+    pub sheet: u32,
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    pub left: u32,
+    pub top: u32,
+}
+
+impl Tileset {
+    pub fn validate(&self) -> Result<(), String> {
+        if !(2..=MAX_TILE_SIZE).contains(&self.tile_size) || !self.tile_size.is_multiple_of(2) {
+            return Err("tileset tileSize must be an even 2..256 pixels".into());
+        }
+        if self.sheets.is_empty() || self.sheets.len() > MAX_TILESET_SHEETS {
+            return Err("tileset requires 1..16 sheets".into());
+        }
+        for sheet in &self.sheets {
+            if sheet.as_os_str().is_empty()
+                || sheet.is_absolute()
+                || sheet.as_os_str().len() > crate::protocol::MAX_TILE_ASSET_BYTES
+            {
+                return Err("tileset sheets must be nonempty relative asset paths".into());
+            }
+        }
+        if self.tiles.is_empty() || self.tiles.len() > MAX_TILESET_TILES {
+            return Err("tileset requires 1..8192 tiles".into());
+        }
+        let size = u64::from(self.tile_size);
+        for tile in &self.tiles {
+            if tile.frames.is_empty() || tile.frames.len() > MAX_TILE_FRAMES {
+                return Err("tileset tiles require 1..4 frames".into());
+            }
+            for frame in &tile.frames {
+                if frame.is_empty() || frame.len() > MAX_TILE_PIECES {
+                    return Err("tileset tile frames require 1..8 pieces".into());
+                }
+                for piece in frame {
+                    if piece.sheet as usize >= self.sheets.len()
+                        || piece.width == 0
+                        || piece.height == 0
+                        || u64::from(piece.left) + u64::from(piece.width) > size
+                        || u64::from(piece.top) + u64::from(piece.height) > size
+                    {
+                        return Err(
+                            "tileset piece must name a sheet and fit inside its tile".into()
+                        );
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Source-state estimate: a fixed charge per piece plus the sheet paths.
+    pub fn estimated_bytes(&self) -> usize {
+        let pieces: usize = self
+            .tiles
+            .iter()
+            .flat_map(|tile| &tile.frames)
+            .map(Vec::len)
+            .sum();
+        pieces * TILE_PIECE_BYTES
+            + self
+                .sheets
+                .iter()
+                .map(|sheet| sheet.as_os_str().len())
+                .sum::<usize>()
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
@@ -124,6 +236,8 @@ pub struct WorldDefinition {
 pub enum WorldLayerKind {
     Gameplay,
     Decoration,
+    /// Graphics from the world's tileset; owns no glyphs.
+    Tiles,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -159,6 +273,12 @@ impl WorldDefinition {
             if !ids.insert(layer.id.as_str()) {
                 return Err("world layer ids must be unique".into());
             }
+            if layer.kind == WorldLayerKind::Tiles && self.tileset.is_none() {
+                return Err("a tiles world layer requires the world's tileset".into());
+            }
+        }
+        if let Some(tileset) = &self.tileset {
+            tileset.validate()?;
         }
         Ok(())
     }
@@ -178,6 +298,21 @@ pub struct WorldCell {
     pub foreground: Option<ColorSpec>,
     pub background: Option<ColorSpec>,
     pub owner_layer_id: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct WorldTileRow {
+    pub row: u32,
+    pub cells: Vec<WorldTileCell>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct WorldTileCell {
+    pub column: u32,
+    /// Index into the world tileset's tiles.
+    pub tile: u32,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -227,6 +362,9 @@ pub struct Viewport {
     pub text_layer_ids: Vec<String>,
     #[serde(default)]
     pub sprite_ids: Vec<String>,
+    /// Animation counter; a tile with N frames shows frame tileFrame % N.
+    #[serde(default)]
+    pub tile_frame: u32,
 }
 
 impl Viewport {

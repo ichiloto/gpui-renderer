@@ -1,9 +1,12 @@
 use crate::app::Output;
 use crate::color::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
+use crate::display_cache::DisplayRasterCache;
 use crate::input;
 use crate::protocol::{Anchor, Event, FrameViewport, SourceRect, Sprite};
-use crate::retained_prepared::PreparedScene;
-use crate::retained_protocol::Viewport as RetainedViewport;
+use crate::retained_paint::FieldPaint;
+use crate::retained_prepared::{PreparedScene, PreparedWorld};
+use crate::retained_protocol::{Viewport as RetainedViewport, WorldLayerKind};
+use crate::retained_world::ProjectedCell;
 use crate::state::{PaintItem, RendererState, painted_cells};
 use crate::viewport::{PaintRect, ViewportTransform};
 use gpui::{
@@ -180,6 +183,15 @@ impl Render for Renderer {
             );
         }
         active_regions.extend(self.glyph_frame.images.values().map(|image| image.id));
+        if let Some(scene) = &self.retained_scene {
+            active_regions.extend(
+                scene
+                    .worlds
+                    .values()
+                    .flat_map(|world| world.get_images())
+                    .map(|image| image.id),
+            );
+        }
         for retired in self
             .tile_samples
             .borrow_mut()
@@ -331,62 +343,41 @@ impl Render for Renderer {
             } else {
                 self.canvas_fonts.clear();
             }
-            if let (Some(scene), Some(view)) = (&self.retained_scene, &self.retained_viewport)
-                && let Some(world_id) = &view.world_id
-                && let Some(world) = scene.get_world(world_id)
-            {
-                let field = world.source.cell_size();
-                let text_column = field / world.source.cell_columns();
-                let field_font = fit_cell_font(text_column, field, advance, line_em);
-                let projected = crate::retained_paint::project_world(world, view);
-                let clip = transform.surface_rect(
-                    view.clip_rect.x,
-                    view.clip_rect.y,
-                    view.clip_rect.width,
-                    view.clip_rect.height,
-                );
-                for layer in &world.layers {
-                    let mut text = div()
-                        .absolute()
-                        .size_full()
-                        .text_size(px(field_font * transform.scale * view.scale))
-                        .line_height(px(field * transform.scale * view.scale));
-                    for &projected_cell in projected.iter() {
-                        let Some(row) = world.source.get_row(projected_cell.world_row) else {
-                            continue;
-                        };
-                        let source = &row.cells[projected_cell.world_column as usize];
-                        if source.owner_layer_id != layer.id {
-                            continue;
+            // World layers interleave with the plan by layer, so a tiles
+            // layer above characters paints above their sprites.
+            let field_world = self
+                .retained_viewport
+                .as_ref()
+                .zip(self.retained_scene.as_ref())
+                .and_then(|(view, scene)| Some((view, scene.get_world(view.world_id.as_ref()?)?)));
+            let world_layers: Vec<i32> = field_world.map_or_else(Vec::new, |(_, world)| {
+                world.layers.iter().map(|layer| layer.layer).collect()
+            });
+            let plan_layers: Vec<i32> = frame
+                .plan
+                .iter()
+                .map(|item| frame.get_item_layer(item))
+                .collect();
+            let projected =
+                field_world.map(|(view, world)| crate::retained_paint::project_world(world, view));
+            for step in crate::retained_paint::merge_paint_order(&world_layers, &plan_layers) {
+                let item = match step {
+                    FieldPaint::World(index) => {
+                        if let (Some((view, world)), Some(projected)) = (field_world, &projected) {
+                            surface = surface.child(world_layer_element(
+                                world,
+                                index,
+                                view,
+                                projected,
+                                transform,
+                                field_font_size.unwrap_or_default(),
+                                &self.tile_samples,
+                            ));
                         }
-                        let mut bounds = crate::retained_paint::cell_bounds(
-                            projected_cell,
-                            field,
-                            transform,
-                            view,
-                        );
-                        bounds.left -= clip.left;
-                        bounds.top -= clip.top;
-                        let mut painted = positioned(div(), bounds)
-                            .overflow_hidden()
-                            .text_center()
-                            .bg(rgb(source
-                                .background
-                                .as_ref()
-                                .map_or(DEFAULT_BACKGROUND, crate::color::ColorSpec::rgb)))
-                            .text_color(rgb(source
-                                .foreground
-                                .as_ref()
-                                .map_or(DEFAULT_FOREGROUND, crate::color::ColorSpec::rgb)));
-                        if !source.glyph.trim().is_empty() {
-                            painted = painted.child(source.glyph.clone());
-                        }
-                        text = text.child(painted);
+                        continue;
                     }
-                    surface = surface.child(positioned(div(), clip).overflow_hidden().child(text));
-                }
-            }
-            for item in &frame.plan {
+                    FieldPaint::Plan(index) => &frame.plan[index],
+                };
                 let retained_member = self.retained_viewport.as_ref().filter(|view| match *item {
                     PaintItem::Text(index) => {
                         view.text_layer_ids.contains(&frame.text_layers[index].id)
@@ -527,6 +518,75 @@ impl Render for Renderer {
         let root = root.child(surface);
         crate::render_trace::observe(root, &self.output.diagnostics, observation)
     }
+}
+
+/// One world layer. A tiles layer paints its composed tiles; a glyph layer
+/// paints the owner cells it owns, except where any tiles layer paints a tile.
+fn world_layer_element(
+    world: &Arc<PreparedWorld>,
+    index: usize,
+    view: &RetainedViewport,
+    projected: &[ProjectedCell],
+    transform: ViewportTransform,
+    field_font: f32,
+    samples: &Rc<RefCell<DisplayRasterCache>>,
+) -> gpui::AnyElement {
+    let layer = &world.layers[index];
+    if layer.kind == WorldLayerKind::Tiles {
+        return crate::retained_paint::tile_element(
+            world.clone(),
+            index,
+            transform,
+            view.clone(),
+            samples.clone(),
+        )
+        .into_any_element();
+    }
+    let field = world.source.cell_size();
+    let clip = transform.surface_rect(
+        view.clip_rect.x,
+        view.clip_rect.y,
+        view.clip_rect.width,
+        view.clip_rect.height,
+    );
+    let mut text = div()
+        .absolute()
+        .size_full()
+        .text_size(px(field_font * transform.scale * view.scale))
+        .line_height(px(field * transform.scale * view.scale));
+    for &projected_cell in projected {
+        let Some(row) = world.source.get_row(projected_cell.world_row) else {
+            continue;
+        };
+        let source = &row.cells[projected_cell.world_column as usize];
+        if source.owner_layer_id != layer.id
+            || world.has_painted_tile(projected_cell.world_column, projected_cell.world_row)
+        {
+            continue;
+        }
+        let mut bounds = crate::retained_paint::cell_bounds(projected_cell, field, transform, view);
+        bounds.left -= clip.left;
+        bounds.top -= clip.top;
+        let mut painted = positioned(div(), bounds)
+            .overflow_hidden()
+            .text_center()
+            .bg(rgb(source
+                .background
+                .as_ref()
+                .map_or(DEFAULT_BACKGROUND, crate::color::ColorSpec::rgb)))
+            .text_color(rgb(source
+                .foreground
+                .as_ref()
+                .map_or(DEFAULT_FOREGROUND, crate::color::ColorSpec::rgb)));
+        if !source.glyph.trim().is_empty() {
+            painted = painted.child(source.glyph.clone());
+        }
+        text = text.child(painted);
+    }
+    positioned(div(), clip)
+        .overflow_hidden()
+        .child(text)
+        .into_any_element()
 }
 
 fn add_item(surface: gpui::Div, item: impl IntoElement, clip: Option<PaintRect>) -> gpui::Div {

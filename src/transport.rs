@@ -579,6 +579,70 @@ mod tests {
     }
 
     #[test]
+    fn retained_wire_tiles_survive_missing_sheets_and_animate_by_camera() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures");
+        let mut session = Session::default();
+        let hello = json!({"protocol":2,"type":"hello","title":"Tiles",
+            "assetRoot":root,"grid":{"columns":4,"rows":2,"cellWidth":10,"cellHeight":20}});
+        assert!(matches!(
+            session.prepare(protocol::parse(&serde_json::to_vec(&hello).unwrap()).unwrap()),
+            Ok(Update::Hello(..))
+        ));
+        let piece = |sheet: u32, x: u32| json!([{"sheet":sheet,"x":x,"y":0,"width":16,"height":16,"left":0,"top":0}]);
+        let cell = json!({"glyph":"..","foreground":null,"background":null,
+            "ownerLayerId":"map:terrain"});
+        let viewport = |frame: u32| {
+            json!({"scale":1,"origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":40,"height":40},
+                "worldId":"map","tileFrame":frame})
+        };
+        let put = json!({"protocol":2,"type":"frame","frame":1,"baseGeneration":0,
+        "generation":1,"reset":true,"present":true,"operations":[
+            {"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"cellSize":10,
+                "cellColumns":2,"layers":[
+                    {"id":"map:ground","layer":-100,"kind":"tiles"},
+                    {"id":"map:terrain","layer":-99,"kind":"gameplay"}],
+                "tileset":{"tileSize":16,"sheets":["test-sprite.png","missing-tiles.png"],
+                    "tiles":[{"frames":[piece(0,0),piece(0,16)]},{"frames":[piece(1,0)]}]}}},
+            {"op":"worldRows","id":"map","rows":[{"row":0,"cells":[cell.clone(),cell]}]},
+            {"op":"worldTiles","id":"map","layerId":"map:ground","rows":[
+                {"row":0,"cells":[{"column":0,"tile":0},{"column":1,"tile":1}]}]}
+        ],"viewport":viewport(0)});
+        let Update::RetainedFrame(first) = session
+            .prepare(protocol::parse(&serde_json::to_vec(&put).unwrap()).unwrap())
+            .unwrap()
+        else {
+            panic!("a missing sheet must not reject the scene")
+        };
+        let world = &first.scene.worlds["map"];
+        assert!(world.has_painted_tile(0, 0));
+        assert!(!world.has_painted_tile(1, 0));
+        let still = world.get_tile_image(0, 0).unwrap().id;
+        // Animation is a camera-only frame that reuses the prepared scene.
+        let animate = json!({"protocol":2,"type":"frame","frame":2,"baseGeneration":1,
+            "generation":2,"present":true,"operations":[],"viewport":viewport(3)});
+        let Update::RetainedFrame(second) = session
+            .prepare(protocol::parse(&serde_json::to_vec(&animate).unwrap()).unwrap())
+            .unwrap()
+        else {
+            panic!("expected camera frame")
+        };
+        assert!(Arc::ptr_eq(&first.scene, &second.scene));
+        let frame = second.viewport.as_ref().unwrap().tile_frame;
+        assert_eq!(frame, 3);
+        assert_ne!(world.get_tile_image(0, frame).unwrap().id, still);
+        let bad = json!({"protocol":2,"type":"frame","frame":3,"baseGeneration":2,
+            "generation":3,"present":true,"operations":[
+                {"op":"worldTiles","id":"map","layerId":"map:terrain","rows":[
+                    {"row":0,"cells":[{"column":0,"tile":0}]}]}]});
+        assert!(matches!(
+            session
+                .prepare(protocol::parse(&serde_json::to_vec(&bad).unwrap()).unwrap())
+                .unwrap(),
+            Update::RetainedRejected { .. }
+        ));
+    }
+
+    #[test]
     fn retained_canvas_composite_matches_historical_cpu_pixels() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures");
         let raw: serde_json::Value =

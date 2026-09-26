@@ -32,6 +32,7 @@ mod retained_paint;
 mod retained_prepared;
 mod retained_protocol;
 mod retained_state;
+mod retained_tileset;
 mod retained_world;
 mod state;
 mod tile_regions;

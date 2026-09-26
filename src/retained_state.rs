@@ -124,7 +124,13 @@ impl SceneSource {
                     .ok_or("worldRows references an unknown world")?;
                 Arc::make_mut(world).replace_rows(rows)?;
             }
-
+            Operation::WorldTiles { id, layer_id, rows } => {
+                let world = self
+                    .worlds
+                    .get_mut(&id)
+                    .ok_or("worldTiles references an unknown world")?;
+                Arc::make_mut(world).replace_tile_rows(&layer_id, rows)?;
+            }
             Operation::TextRows { id, rows } => {
                 let text = self
                     .text
