@@ -875,6 +875,7 @@ mod tests {
                 hello: Hello {
                     title: "Home".into(),
                     required_capabilities: vec![],
+                    icon: None,
                     asset_root,
                     grid: Grid {
                         columns: 80,

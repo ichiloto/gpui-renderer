@@ -132,6 +132,13 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                     Update::Hello(version, hello) => {
                         let capabilities = hello.get_enabled_capabilities(version);
                         output.version = version;
+                        if let Some(icon) = &hello.icon
+                            && let Err(error) = crate::app_icon::apply(&hello.asset_root, icon)
+                        {
+                            crate::protocol::diagnostic(format!(
+                                "keeping the renderer icon: {error}"
+                            ));
+                        }
                         let grid = hello.grid;
                         let initial = match crate::window_layout::initial_window(
                             grid,

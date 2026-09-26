@@ -1,4 +1,5 @@
 mod app;
+mod app_icon;
 mod assets;
 mod canvas;
 #[cfg(test)]

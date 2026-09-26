@@ -460,7 +460,9 @@ for the session, independently of the native window size. Hello opens one
 resizable window and emits `ready`. A second hello or a mixed-version message is
 an error. `requiredCapabilities` is a mandatory minimum; `ready.capabilities`
 reports the available drawing features. `window_activation` is an explicit
-event subscription. Before hello succeeds, an error may use the protocol 1
+event subscription. An optional `icon` names the game's application icon, a PNG
+or ICNS path inside `assetRoot`; on macOS it replaces the renderer's own in the
+Dock. An unreadable icon is diagnosed and the renderer keeps its own. Before hello succeeds, an error may use the protocol 1
 envelope; this is not a downgrade.
 
 ### Retained frames

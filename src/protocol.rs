@@ -69,6 +69,9 @@ pub struct Hello {
     pub grid: Grid,
     #[serde(default)]
     pub required_capabilities: Vec<Capability>,
+    /// The game's application icon, relative to assetRoot.
+    #[serde(default)]
+    pub icon: Option<PathBuf>,
 }
 
 impl Hello {
@@ -592,6 +595,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         }
         if hello.title.is_empty() || hello.title.chars().any(char::is_control) {
             return Err("title must be nonempty and contain no control characters".into());
+        }
+        if let Some(icon) = &hello.icon {
+            crate::app_icon::validate(icon)?;
         }
         let unique: std::collections::HashSet<_> = hello.required_capabilities.iter().collect();
         if unique.len() != hello.required_capabilities.len() {
