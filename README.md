@@ -471,7 +471,7 @@ A frame changes identified presentation entities rather than replacing every
 cell. For example:
 
 ```json
-{"protocol":2,"type":"frame","frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":false,"operations":[{"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"cellSize":48,"layers":[{"id":"map:terrain","layer":-99,"kind":"gameplay"}]}},{"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{"glyph":".","foreground":null,"background":null,"displayWidth":1,"ownerLayerId":"map:terrain"},{"glyph":" ","foreground":null,"background":null,"displayWidth":1,"ownerLayerId":"map:terrain"}]}]}]}
+{"protocol":2,"type":"frame","frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":false,"operations":[{"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"cellSize":48,"cellColumns":2,"layers":[{"id":"map:terrain","layer":-99,"kind":"gameplay"}]}},{"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{"glyph":"..","foreground":null,"background":null,"ownerLayerId":"map:terrain"},{"glyph":"  ","foreground":null,"background":null,"ownerLayerId":"map:terrain"}]}]}]}
 {"protocol":2,"type":"frame","frame":1,"baseGeneration":1,"generation":2,"present":true,"operations":[],"viewport":{"scale":1,"origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":1350,"height":720},"worldId":"map","worldOrigin":{"column":0,"row":0},"textLayerIds":[],"spriteIds":[]}}
 ```
 
@@ -501,38 +501,35 @@ Operations use one of these shapes:
 | `put` with `kind`, `id`, `value` | Insert or replace a `world`, `text`, `sprite`, `canvas`, `canvas_image`, `canvas_indicator`, `canvas_text`, or `canvas_composite` entity. |
 | `remove` with `kind`, `id` | Remove that entity. |
 | `worldRows` with `id`, `rows` | Replace complete, indexed owner-glyph rows of a world. |
-| `worldTiles` with `id`, `layerId`, `rows` | Replace indexed, sparse tile-candidate rows of one world layer. |
 | `textRows` with `id`, `rows` | Replace indexed runs of one screen text layer; an empty row clears it. |
 
 A world definition supplies bounded logical `columns`, `rows`, its square
 `cellSize` in logical pixels (1 to 256; Ichiloto uses 48, RPG Maker's tile
-size), and ordered layers. The field is drawn at that pitch, independent of the
-session text grid: world cells, field glyph text (with a font fitted to the
-square cell), and the text layers and sprites named by the viewport all use it.
-Only unlisted screen text and sprites keep the text grid's cell pitch. Each layer has an `id`, numeric `layer`, `kind` (`gameplay` or
-`decoration`), and optionally an asset-root-relative atlas and source-rectangle
-catalog. Every world row must be supplied before presentation; a row may be
-shorter than `columns`, leaving an unpainted trailing background. Owner cells
-carry one glyph, nullable structured foreground/background, display width, and
-the owning gameplay layer ID. Tile candidates refer to source indexes at world
-coordinates. The renderer projects only visible rows and columns; camera
+size), `cellColumns`, the terminal text columns one cell holds (1 to 4;
+Ichiloto uses 2, which is square on a terminal), and ordered layers. The field
+is drawn at that pitch, independent of the session text grid. Every world cell
+is one square cell whatever its text; its text, and the text layers named by
+the viewport, keep `cellColumns` columns per cell with a font fitted to that
+column, so an unpainted map looks like its terminal presentation scaled.
+Sprites named by the viewport are placed by whole cells. Only unlisted screen
+text and sprites keep the text grid's cell pitch. Each layer has an `id`,
+numeric `layer` and `kind` (`gameplay` or `decoration`). Every world row must
+be supplied before presentation; a row may be shorter than `columns`, leaving
+an unpainted trailing background. Owner cells carry the cell's text (at most 8
+characters), nullable structured foreground/background, and the owning
+gameplay layer ID. The renderer projects only visible rows and columns; camera
 movement does not resend the map. World limits are 16,384 on each axis and
-1,048,576 logical cells and tile candidates, with at most 64 layers. Retained
+1,048,576 logical cells, with at most 64 layers. Retained
 source data has a 64 MiB budget; staged plus visible source data is bounded at
 128 MiB. These are source-state estimates, separate from decoded images; the
 sum of live prepared images referenced by a retained scene is limited to 256 MiB.
 Existing 64 MiB limits still apply independently to decoded PNG sources,
 prepared regions, and composite output work.
 The world source estimate is `sum(64 + UTF-8 glyph bytes + UTF-8 owner-layer ID
-bytes)` for supplied owner cells, plus `16` per retained tile candidate and
-`8192` per world layer. The logical cell ceiling does not guarantee that a
-fully populated world fits the separate source budget; producers should
-preflight both limits before uploading it.
-
-A missing, corrupt, inaccessible, or out-of-range world atlas is diagnosed and that
-layer paints its retained glyph fallback. It does not reject an otherwise valid
-scene or hide an asset problem. Asset resolution never reads outside the asset
-root. Malformed entity values and exceeded budgets reject the update.
+bytes)` for supplied owner cells, plus `8192` per world layer. The logical cell
+ceiling does not guarantee that a fully populated world fits the separate
+source budget; producers should preflight both limits before uploading it.
+Malformed entity values and exceeded budgets reject the update.
 
 Screen `text` values contain `id`, numeric `layer`, stable `order`, and
 `runs`; each run has `row`, `column`, `text`, and required nullable
@@ -629,7 +626,8 @@ top   = feetY - height
 ```
 
 `cellWidth` and `cellHeight` are the world's square `cellSize` for sprites
-named by a world viewport, and the session grid's cell otherwise. A one-cell
+named by a world viewport (their `x` and `y` are whole field cells), and the
+session grid's cell otherwise. A one-cell
 field character sent at `width = height = cellSize` fills exactly its cell.
 
 Geometry uses logical presentation pixels (1× corresponds to macOS points).

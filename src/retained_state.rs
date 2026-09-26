@@ -124,13 +124,7 @@ impl SceneSource {
                     .ok_or("worldRows references an unknown world")?;
                 Arc::make_mut(world).replace_rows(rows)?;
             }
-            Operation::WorldTiles { id, layer_id, rows } => {
-                let world = self
-                    .worlds
-                    .get_mut(&id)
-                    .ok_or("worldTiles references an unknown world")?;
-                Arc::make_mut(world).replace_tile_rows(&layer_id, rows)?;
-            }
+
             Operation::TextRows { id, rows } => {
                 let text = self
                     .text
@@ -436,8 +430,8 @@ mod tests {
 
     fn row(row: u32, widths: &[u8]) -> Value {
         json!({"row":row,"cells":widths.iter().map(|width| json!({
-            "glyph":if *width == 2 {"界"} else {"."},
-            "foreground":null,"background":null,"displayWidth":width,
+            "glyph":if *width == 2 {"界"} else {".."},
+            "foreground":null,"background":null,
             "ownerLayerId":"map:terrain"
         })).collect::<Vec<_>>()})
     }
@@ -460,7 +454,7 @@ mod tests {
 
     fn world() -> Value {
         json!({"op":"put","kind":"world","id":"map","value":{
-            "columns":4,"rows":2,"cellSize":10,"layers":[{"id":"map:terrain","layer":-100,
+            "columns":4,"rows":2,"cellSize":10,"cellColumns":2,"layers":[{"id":"map:terrain","layer":-100,
                 "kind":"gameplay"}]}})
     }
 
@@ -524,7 +518,8 @@ mod tests {
             projected.push(cell)
         });
         assert_eq!(projected[0].world_column, 1);
-        assert!(!projected[1].tile_eligible); // a prior wide glyph shifted the row
+        // A two-column glyph is one cell like any other; it shifts nothing.
+        assert_eq!(projected[1].screen_column, 1);
         assert_eq!(session.expected_generation(), 4);
     }
 

@@ -4,14 +4,14 @@ use crate::color::ColorSpec;
 use crate::protocol::{Grid, ViewportPoint, ViewportRect};
 use serde::Deserialize;
 use serde_json::Value;
-use std::path::PathBuf;
 
 pub const MAX_WORLD_LAYERS: usize = 64;
 pub const MAX_WORLD_CELLS: usize = 1_048_576;
-pub const MAX_WORLD_TILE_CELLS: usize = 1_048_576;
 /// Largest square field cell, in logical pixels. The field unit is its own
 /// pitch, independent of the session text grid that UI text uses.
 pub const MAX_WORLD_CELL_SIZE: u32 = 256;
+/// Most terminal text columns one field cell holds.
+pub const MAX_WORLD_CELL_COLUMNS: u32 = 4;
 pub const MAX_RETAINED_BYTES: usize = 64 * 1024 * 1024;
 pub const MAX_STAGING_AND_VISIBLE_BYTES: usize = 128 * 1024 * 1024;
 
@@ -86,11 +86,7 @@ pub enum Operation {
         id: String,
         rows: Vec<WorldRow>,
     },
-    WorldTiles {
-        id: String,
-        layer_id: String,
-        rows: Vec<WorldTileRow>,
-    },
+
     TextRows {
         id: String,
         rows: Vec<TextRow>,
@@ -117,6 +113,9 @@ pub struct WorldDefinition {
     pub rows: u32,
     /// Side of one square field cell in logical pixels, before viewport scale.
     pub cell_size: u32,
+    /// Terminal text columns in one field cell. A cell's text and every field
+    /// text member keep this many columns per square, as in the terminal.
+    pub cell_columns: u32,
     pub layers: Vec<WorldLayer>,
 }
 
@@ -133,10 +132,6 @@ pub struct WorldLayer {
     pub id: String,
     pub layer: i32,
     pub kind: WorldLayerKind,
-    #[serde(default)]
-    pub asset: Option<PathBuf>,
-    #[serde(default)]
-    pub sources: Vec<crate::protocol::SourceRect>,
 }
 
 impl WorldDefinition {
@@ -152,6 +147,9 @@ impl WorldDefinition {
         if self.cell_size == 0 || self.cell_size > MAX_WORLD_CELL_SIZE {
             return Err("world cellSize must be 1..256 logical pixels".into());
         }
+        if self.cell_columns == 0 || self.cell_columns > MAX_WORLD_CELL_COLUMNS {
+            return Err("world cellColumns must be 1..4 terminal columns".into());
+        }
         if self.layers.is_empty() || self.layers.len() > MAX_WORLD_LAYERS {
             return Err("world requires 1..64 layers".into());
         }
@@ -160,20 +158,6 @@ impl WorldDefinition {
             validate_id(&layer.id)?;
             if !ids.insert(layer.id.as_str()) {
                 return Err("world layer ids must be unique".into());
-            }
-            if layer.sources.len() > crate::protocol::MAX_BATCH_SOURCES {
-                return Err("world layer exceeds 256 tile sources".into());
-            }
-            match (&layer.asset, layer.sources.is_empty()) {
-                (None, true) => {}
-                (Some(asset), false)
-                    if !asset.as_os_str().is_empty()
-                        && !asset.is_absolute()
-                        && asset.as_os_str().len() <= crate::protocol::MAX_TILE_ASSET_BYTES => {}
-                _ => return Err("world tile atlas and source catalog must appear together".into()),
-            }
-            for source in &layer.sources {
-                source.validate()?;
             }
         }
         Ok(())
@@ -193,22 +177,7 @@ pub struct WorldCell {
     pub glyph: String,
     pub foreground: Option<ColorSpec>,
     pub background: Option<ColorSpec>,
-    pub display_width: u8,
     pub owner_layer_id: String,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct WorldTileRow {
-    pub row: u32,
-    pub cells: Vec<WorldTileCell>,
-}
-
-#[derive(Clone, Copy, Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct WorldTileCell {
-    pub column: u32,
-    pub source: u32,
 }
 
 #[derive(Clone, Debug, Deserialize)]

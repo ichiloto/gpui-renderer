@@ -180,15 +180,6 @@ impl Render for Renderer {
             );
         }
         active_regions.extend(self.glyph_frame.images.values().map(|image| image.id));
-        if let Some(scene) = &self.retained_scene {
-            active_regions.extend(
-                scene
-                    .worlds
-                    .values()
-                    .flat_map(|world| &world.images)
-                    .map(|image| image.id),
-            );
-        }
         for retired in self
             .tile_samples
             .borrow_mut()
@@ -311,14 +302,16 @@ impl Render for Renderer {
             return crate::render_trace::observe(root, &self.output.diagnostics, observation);
         }
         // The field has its own square cell, carried by the world the retained
-        // viewport presents. UI text keeps the session grid's pitch.
+        // viewport presents, holding cell_columns text columns as in the
+        // terminal. UI text keeps the session grid's pitch.
         let field_cell = self
             .retained_viewport
             .as_ref()
             .and_then(|view| view.world_id.as_ref())
             .and_then(|id| self.retained_scene.as_ref()?.get_world(id))
-            .map(|world| world.source.cell_size());
-        let field_font_size = field_cell.map(|cell| fit_cell_font(cell, cell, advance, line_em));
+            .map(|world| (world.source.cell_size(), world.source.cell_columns()));
+        let field_font_size =
+            field_cell.map(|(cell, columns)| fit_cell_font(cell / columns, cell, advance, line_em));
         let bounds = transform.surface_bounds();
         let mut surface = positioned(div(), bounds)
             .overflow_hidden()
@@ -343,41 +336,16 @@ impl Render for Renderer {
                 && let Some(world) = scene.get_world(world_id)
             {
                 let field = world.source.cell_size();
-                let field_font = fit_cell_font(field, field, advance, line_em);
+                let text_column = field / world.source.cell_columns();
+                let field_font = fit_cell_font(text_column, field, advance, line_em);
                 let projected = crate::retained_paint::project_world(world, view);
-                let occlusion = projected
-                    .iter()
-                    .any(|cell| {
-                        world.source.get_row(cell.world_row).is_some_and(|row| {
-                            row.cells[cell.world_column as usize].display_width > 1
-                        })
-                    })
-                    .then(|| {
-                        crate::retained_paint::TextOcclusion::new(
-                            &frame.text_layers,
-                            view,
-                            grid,
-                            field,
-                            transform,
-                        )
-                    });
                 let clip = transform.surface_rect(
                     view.clip_rect.x,
                     view.clip_rect.y,
                     view.clip_rect.width,
                     view.clip_rect.height,
                 );
-                for (index, layer) in world.layers.iter().enumerate() {
-                    if !layer.regions.is_empty() {
-                        surface = surface.child(crate::retained_paint::tile_element(
-                            world.clone(),
-                            index,
-                            projected.clone(),
-                            transform,
-                            view.clone(),
-                            self.tile_samples.clone(),
-                        ));
-                    }
+                for layer in &world.layers {
                     let mut text = div()
                         .absolute()
                         .size_full()
@@ -391,31 +359,12 @@ impl Render for Renderer {
                         if source.owner_layer_id != layer.id {
                             continue;
                         }
-                        if projected_cell.tile_eligible
-                            && world
-                                .get_source(
-                                    layer,
-                                    projected_cell.world_column,
-                                    projected_cell.world_row,
-                                )
-                                .is_some()
-                        {
-                            continue;
-                        }
                         let mut bounds = crate::retained_paint::cell_bounds(
                             projected_cell,
                             field,
                             transform,
                             view,
                         );
-                        if source.display_width > 1 {
-                            bounds.width *= f32::from(source.display_width);
-                            if occlusion.as_ref().is_some_and(|coverage| {
-                                coverage.covers_wide_glyph(bounds, layer.layer)
-                            }) {
-                                continue;
-                            }
-                        }
                         bounds.left -= clip.left;
                         bounds.top -= clip.top;
                         let mut painted = positioned(div(), bounds)
@@ -429,7 +378,7 @@ impl Render for Renderer {
                                 .foreground
                                 .as_ref()
                                 .map_or(DEFAULT_FOREGROUND, crate::color::ColorSpec::rgb)));
-                        if source.glyph != " " {
+                        if !source.glyph.trim().is_empty() {
                             painted = painted.child(source.glyph.clone());
                         }
                         text = text.child(painted);
@@ -458,11 +407,14 @@ impl Render for Renderer {
                     #[cfg(test)]
                     PaintItem::LegacyText => false,
                 });
-                // Field members share the world's square cell and its font.
-                let (pitch_width, pitch_height, item_font) =
+                // Field members share the world's square cell: text keeps its
+                // terminal columns per cell, sprites are placed by whole cells.
+                let (pitch_width, pitch_height, item_font, sprite_pitch) =
                     match (retained_member.is_some(), field_cell, field_font_size) {
-                        (true, Some(cell), Some(font)) => (cell, cell, font),
-                        _ => (cw, ch, logical_font_size),
+                        (true, Some((cell, columns)), Some(font)) => {
+                            (cell / columns, cell, font, (cell, cell))
+                        }
+                        _ => (cw, ch, logical_font_size, (cw, ch)),
                     };
                 let (item_transform, clip) = if let Some(view) = retained_member {
                     let (content, clip) = content_geometry_retained(transform, view);
@@ -525,7 +477,8 @@ impl Render for Renderer {
 
                     PaintItem::Sprite(index) => {
                         let item = &frame.sprites[index];
-                        let (left, top) = sprite_origin(&item.sprite, pitch_width, pitch_height);
+                        let (left, top) =
+                            sprite_origin(&item.sprite, sprite_pitch.0, sprite_pitch.1);
                         let bounds = item_transform.surface_rect(
                             left,
                             top,

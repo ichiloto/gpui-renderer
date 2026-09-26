@@ -484,167 +484,6 @@ mod tests {
                             }
                         }
                     }
-                    if let Some((baseline, viewport)) = baseline
-                        .as_ref()
-                        .zip(frame.viewport.as_ref())
-                        .filter(|(_, viewport)| viewport.world_id.is_some())
-                    {
-                        let old_number = if frame.frame >= 6 {
-                            frame.frame + 1
-                        } else {
-                            frame.frame
-                        };
-                        let old = &baseline[&old_number];
-                        let world = frame
-                            .scene
-                            .get_world(viewport.world_id.as_ref().unwrap())
-                            .unwrap();
-                        let mut actual =
-                            std::collections::BTreeMap::<String, Vec<(u32, u32, u32)>>::new();
-                        world.source.project_visible(viewport, |cell, _| {
-                            if !cell.tile_eligible
-                                || cell.screen_column < 0
-                                || cell.screen_row < 0
-                                || cell.screen_column >= grid.unwrap().columns as i32
-                                || cell.screen_row >= grid.unwrap().rows as i32
-                            {
-                                return;
-                            }
-                            for layer in &world.layers {
-                                if let Some(source) =
-                                    world.get_source(layer, cell.world_column, cell.world_row)
-                                {
-                                    actual.entry(layer.id.clone()).or_default().push((
-                                        cell.screen_column as u32,
-                                        cell.screen_row as u32,
-                                        source as u32,
-                                    ));
-                                }
-                            }
-                        });
-                        let mut expected =
-                            std::collections::BTreeMap::<String, Vec<(u32, u32, u32)>>::new();
-                        for batch in old.tile_batches.iter().flatten() {
-                            expected.insert(
-                                batch.id.clone(),
-                                batch
-                                    .cells
-                                    .iter()
-                                    .map(|cell| (cell.column, cell.row, cell.source))
-                                    .collect(),
-                            );
-                        }
-                        for cells in actual.values_mut() {
-                            cells.sort_unstable();
-                        }
-                        for cells in expected.values_mut() {
-                            cells.sort_unstable();
-                        }
-                        assert_eq!(
-                            actual, expected,
-                            "tile projection differs at retained frame {}",
-                            frame.frame
-                        );
-                        let mut old_paint = std::collections::BTreeMap::new();
-                        let mut old_order = Vec::new();
-                        for (index, batch) in old.tile_batches.iter().flatten().enumerate() {
-                            old_order.push((batch.layer, 0, index));
-                        }
-                        for (index, layer) in old.text_layers.iter().enumerate() {
-                            old_order.push((layer.layer, 1, index));
-                        }
-                        old_order.sort_by_key(|(layer, kind, _)| (*layer, *kind));
-                        for (_, kind, index) in old_order {
-                            if kind == 0 {
-                                let batch = &old.tile_batches.as_ref().unwrap()[index];
-                                for cell in &batch.cells {
-                                    old_paint.insert(
-                                        (cell.column, cell.row),
-                                        format!("tile:{}:{}", batch.id, cell.source),
-                                    );
-                                }
-                            } else {
-                                for cell in crate::state::painted_cells(&old.text_layers[index]) {
-                                    old_paint.insert(
-                                        (cell.column, cell.row),
-                                        format!(
-                                            "glyph:{}:{:06x}:{:06x}",
-                                            cell.glyph.unwrap_or(' '),
-                                            cell.foreground,
-                                            cell.background
-                                        ),
-                                    );
-                                }
-                            }
-                        }
-                        let mut current_paint = std::collections::BTreeMap::new();
-                        for layer in &world.layers {
-                            world.source.project_visible(viewport, |cell, owner| {
-                                if cell.screen_column < 0
-                                    || cell.screen_row < 0
-                                    || cell.screen_column >= grid.unwrap().columns as i32
-                                    || cell.screen_row >= grid.unwrap().rows as i32
-                                {
-                                    return;
-                                }
-                                let point = (cell.screen_column as u32, cell.screen_row as u32);
-                                let crop = cell
-                                    .tile_eligible
-                                    .then(|| {
-                                        world.get_source(layer, cell.world_column, cell.world_row)
-                                    })
-                                    .flatten();
-                                if let Some(source) = crop {
-                                    current_paint
-                                        .insert(point, format!("tile:{}:{}", layer.id, source));
-                                }
-                                if owner.owner_layer_id == layer.id && crop.is_none() {
-                                    current_paint.insert(
-                                        point,
-                                        format!(
-                                            "glyph:{}:{:06x}:{:06x}",
-                                            owner.glyph,
-                                            owner.foreground.as_ref().map_or(
-                                                crate::color::DEFAULT_FOREGROUND,
-                                                crate::color::ColorSpec::rgb
-                                            ),
-                                            owner.background.as_ref().map_or(
-                                                crate::color::DEFAULT_BACKGROUND,
-                                                crate::color::ColorSpec::rgb
-                                            )
-                                        ),
-                                    );
-                                }
-                            });
-                        }
-                        let default_blank = format!(
-                            "glyph: :{:06x}:{:06x}",
-                            crate::color::DEFAULT_FOREGROUND,
-                            crate::color::DEFAULT_BACKGROUND
-                        );
-                        let differences: Vec<_> = (0..grid.unwrap().rows)
-                            .flat_map(|row| {
-                                (0..grid.unwrap().columns).map(move |column| (column, row))
-                            })
-                            .filter_map(|point| {
-                                let old = old_paint
-                                    .get(&point)
-                                    .filter(|value| **value != default_blank);
-                                let current = current_paint
-                                    .get(&point)
-                                    .filter(|value| **value != default_blank);
-                                (old != current).then(|| {
-                                    (point, old_paint.get(&point), current_paint.get(&point))
-                                })
-                            })
-                            .take(8)
-                            .collect();
-                        assert!(
-                            differences.is_empty(),
-                            "glyph/tile paint differs at retained frame {}: {differences:?}",
-                            frame.frame
-                        );
-                    }
                     reports.push(json!({"line":index+1,"frame":frame.frame,
                         "generation":frame.generation,"parseMs":parse_ms,"totalMs":total_ms,
                         "worlds":frame.scene.worlds.len(),
@@ -673,18 +512,15 @@ mod tests {
             session.prepare(protocol::parse(&serde_json::to_vec(&hello).unwrap()).unwrap()),
             Ok(Update::Hello(..))
         ));
-        let cell = json!({"glyph":".","foreground":null,"background":null,
-            "displayWidth":1,"ownerLayerId":"map:terrain"});
+        let cell = json!({"glyph":"..","foreground":null,"background":null,
+            "ownerLayerId":"map:terrain"});
         let stage = json!({"protocol":2,"type":"frame","frame":1,"baseGeneration":0,
         "generation":1,"reset":true,"present":false,"operations":[
             {"op":"put","kind":"world","id":"map","value":{"columns":4,"rows":2,"cellSize":10,
-                "layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay",
-                    "asset":"test-sprite.png","sources":[{"x":0,"y":0,"width":1,"height":1}]}]}},
+                "cellColumns":2,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
             {"op":"worldRows","id":"map","rows":[
                 {"row":0,"cells":vec![cell.clone();4]},
-                {"row":1,"cells":vec![cell;4]}]},
-            {"op":"worldTiles","id":"map","layerId":"map:terrain","rows":[
-                {"row":0,"cells":[{"column":0,"source":0},{"column":1,"source":0}]}]}
+                {"row":1,"cells":vec![cell;4]}]}
         ]});
         let value = session
             .prepare(protocol::parse(&serde_json::to_vec(&stage).unwrap()).unwrap())
@@ -701,8 +537,11 @@ mod tests {
         else {
             panic!("expected retained commit")
         };
-        assert_eq!(first.scene.worlds["map"].layers[0].regions.len(), 1);
-        assert_eq!(first.scene.worlds["map"].source.tile_count(), 2);
+        assert_eq!(first.scene.worlds["map"].layers[0].id, "map:terrain");
+        assert_eq!(
+            first.scene.worlds["map"].source.get_row(0).unwrap().cells[0].glyph,
+            ".."
+        );
         let scroll = json!({"protocol":2,"type":"frame","frame":2,"baseGeneration":2,
             "generation":3,"present":true,"operations":[],"viewport":viewport});
         let Update::RetainedFrame(second) = session
@@ -737,21 +576,6 @@ mod tests {
                 ..
             }
         ));
-        let mut fallback = stage;
-        fallback["baseGeneration"] = json!(3);
-        fallback["generation"] = json!(6);
-        fallback["present"] = json!(true);
-        fallback["viewport"] = viewport;
-        fallback["operations"][0]["value"]["layers"][0]["asset"] = json!("missing-tiles.png");
-        let Update::RetainedFrame(fallback) = session
-            .prepare(protocol::parse(&serde_json::to_vec(&fallback).unwrap()).unwrap())
-            .unwrap()
-        else {
-            panic!("missing atlas must retain the glyph-backed frame")
-        };
-        let world = &fallback.scene.worlds["map"];
-        assert!(world.layers[0].regions.is_empty());
-        assert!(world.get_source(&world.layers[0], 0, 0).is_none());
     }
 
     #[test]
@@ -825,10 +649,10 @@ mod tests {
             "baseGeneration":0,"generation":1,"reset":true,"present":true,
             "operations":[
                 {"op":"put","kind":"world","id":"map","value":{
-                    "columns":1,"rows":1,"cellSize":10,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
+                    "columns":1,"rows":1,"cellSize":10,"cellColumns":2,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
                 {"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{
-                    "glyph":".","foreground":null,"background":null,
-                    "displayWidth":1,"ownerLayerId":"map:terrain"}]}]}
+                    "glyph":"..","foreground":null,"background":null,
+                    "ownerLayerId":"map:terrain"}]}]}
             ],"viewport":{"worldId":"map","scale":1,
                 "origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":10,"height":20}}});
         let visible = session
