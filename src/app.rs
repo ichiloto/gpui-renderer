@@ -175,6 +175,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         output: view_output,
                                         last_viewport: None,
                                         last_logical_size: None,
+                                        last_device_scale: None,
                                         cached_images: vec![],
                                         logical_font_size: None,
                                         canvas_fonts: Default::default(),
@@ -182,6 +183,10 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         glyph_fonts: Default::default(),
                                         glyph_frame: Default::default(),
                                         glyph_density: None,
+                                        retained_scene: None,
+                                        retained_viewport: None,
+                                        retained_observation: None,
+                                        retained_needs_reset: false,
                                         activation: Default::default(),
                                         activation_subscription: None,
                                     }
@@ -206,6 +211,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                             }
                         }
                     }
+                    #[cfg(test)]
                     Update::Frame(frame) => {
                         if let Some(window) = window {
                             let number = frame.number;
@@ -265,6 +271,120 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                 output.fatal(format!("cannot present frame {number}: {error}"), cx);
                             }
                         }
+                    }
+                    Update::RetainedFrame(frame) => {
+                        if let Some(window) = window {
+                            let generation = frame.generation;
+                            let number = frame.frame;
+                            if let Err(error) = window.update(cx, |view, window, cx| {
+                                if view.retained_needs_reset && !frame.reset {
+                                    view.output.emit(
+                                        Event::FrameRejected {
+                                            generation,
+                                            expected_generation: generation,
+                                            message:
+                                                "native presentation requires a retained reset"
+                                                    .into(),
+                                            resync_required: true,
+                                        },
+                                        cx,
+                                    );
+                                    return;
+                                }
+                                let screen = &frame.scene.screen;
+                                let grid = view.state.hello.grid;
+                                let (width, height) = screen.canvas.as_ref().map_or(
+                                    (
+                                        (grid.columns * grid.cell_width) as f32,
+                                        (grid.rows * grid.cell_height) as f32,
+                                    ),
+                                    |canvas| {
+                                        (canvas.source.width as f32, canvas.source.height as f32)
+                                    },
+                                );
+                                let viewport = window.viewport_size();
+                                let fit = crate::viewport::ViewportTransform::fit(
+                                    width,
+                                    height,
+                                    viewport.width.into(),
+                                    viewport.height.into(),
+                                );
+                                let density = fit.scale.max(1.0 / 256.0) * window.scale_factor();
+                                let glyphs = match crate::glyph_cache::prepare(
+                                    screen,
+                                    density,
+                                    &mut view.glyph_fonts,
+                                    &mut view.tile_samples.borrow_mut(),
+                                ) {
+                                    Ok(glyphs) => glyphs,
+                                    Err(message) => {
+                                        view.retained_needs_reset = true;
+                                        view.output.emit(
+                                            Event::FrameRejected {
+                                                generation,
+                                                expected_generation: generation,
+                                                message,
+                                                resync_required: true,
+                                            },
+                                            cx,
+                                        );
+                                        return;
+                                    }
+                                };
+                                view.glyph_frame = glyphs;
+                                view.glyph_density = Some(density);
+                                view.output
+                                    .diagnostics
+                                    .frame_stage(frame.observation, "replace_begin");
+                                view.state.replace_shared(screen.clone());
+                                view.retained_scene = Some(frame.scene.clone());
+                                view.retained_viewport = frame.viewport.clone();
+                                view.retained_observation = frame.observation;
+                                view.retained_needs_reset = false;
+                                view.output
+                                    .diagnostics
+                                    .frame_stage(frame.observation, "replaced");
+                                cx.notify();
+                                view.output.emit(
+                                    Event::FrameAck {
+                                        generation,
+                                        frame: number,
+                                        presented: true,
+                                    },
+                                    cx,
+                                );
+                            }) {
+                                output.fatal(
+                                    format!("cannot present retained frame {number}: {error}"),
+                                    cx,
+                                );
+                            }
+                        }
+                    }
+                    Update::RetainedAck { generation, frame } => {
+                        output.emit(
+                            Event::FrameAck {
+                                generation,
+                                frame,
+                                presented: false,
+                            },
+                            cx,
+                        );
+                    }
+                    Update::RetainedRejected {
+                        generation,
+                        expected_generation,
+                        message,
+                    } => {
+                        output.emit(
+                            Event::FrameRejected {
+                                generation,
+                                expected_generation,
+                                message,
+                                resync_required: true,
+                            },
+                            cx,
+                        );
                     }
                     Update::Error(message) => {
                         output.emit(Event::Error { message }, cx);

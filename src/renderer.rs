@@ -2,6 +2,8 @@ use crate::app::Output;
 use crate::color::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
 use crate::input;
 use crate::protocol::{Anchor, Event, FrameViewport, Grid, SourceRect, Sprite};
+use crate::retained_prepared::PreparedScene;
+use crate::retained_protocol::Viewport as RetainedViewport;
 use crate::state::{PaintItem, RendererState, painted_cells};
 use crate::viewport::{PaintRect, ViewportTransform};
 use gpui::{
@@ -16,6 +18,7 @@ pub struct Renderer {
     pub output: Output,
     pub last_viewport: Option<gpui::Size<gpui::Pixels>>,
     pub last_logical_size: Option<(f32, f32)>,
+    pub last_device_scale: Option<f32>,
     pub cached_images: Vec<Arc<RenderImage>>,
     pub logical_font_size: Option<f32>,
     pub canvas_fonts: std::collections::HashMap<(u32, u32), f32>,
@@ -23,6 +26,10 @@ pub struct Renderer {
     pub glyph_fonts: crate::glyph_raster::FontCatalog,
     pub glyph_frame: crate::glyph_cache::GlyphFrame,
     pub glyph_density: Option<f32>,
+    pub retained_scene: Option<Arc<PreparedScene>>,
+    pub retained_viewport: Option<RetainedViewport>,
+    pub retained_observation: Option<crate::diagnostics::FrameTrace>,
+    pub retained_needs_reset: bool,
     pub activation: crate::window_activation::ActivationState,
     pub activation_subscription: Option<gpui::Subscription>,
 }
@@ -116,17 +123,23 @@ impl Render for Renderer {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         // Observes callback entry only: GPUI can coalesce frames or repaint the
         // same snapshot. This is not GPU completion or proof of visible pixels.
-        let observation = self
-            .state
-            .frame
-            .as_ref()
-            .and_then(|frame| frame.observation);
+        let observation = self.retained_observation.or_else(|| {
+            self.state
+                .frame
+                .as_ref()
+                .and_then(|frame| frame.observation)
+        });
         self.output
             .diagnostics
             .frame_stage(observation, "render_callback");
         if let Some(frame) = &self.state.frame {
-            let retained: std::collections::HashSet<_> =
-                frame.cached_images.iter().map(|image| image.id).collect();
+            let retained: std::collections::HashSet<_> = self
+                .retained_scene
+                .as_ref()
+                .map_or(&frame.cached_images, |scene| &scene.images)
+                .iter()
+                .map(|image| image.id)
+                .collect();
             for previous in &self.cached_images {
                 if !retained.contains(&previous.id)
                     && let Err(error) = window.drop_image(previous.clone())
@@ -134,7 +147,11 @@ impl Render for Renderer {
                     crate::protocol::diagnostic(format!("cannot retire cached image: {error}"));
                 }
             }
-            self.cached_images.clone_from(&frame.cached_images);
+            self.cached_images.clone_from(
+                self.retained_scene
+                    .as_ref()
+                    .map_or(&frame.cached_images, |scene| &scene.images),
+            );
         }
         let mut active_regions: std::collections::HashSet<_> = self
             .state
@@ -159,6 +176,15 @@ impl Render for Renderer {
             );
         }
         active_regions.extend(self.glyph_frame.images.values().map(|image| image.id));
+        if let Some(scene) = &self.retained_scene {
+            active_regions.extend(
+                scene
+                    .worlds
+                    .values()
+                    .flat_map(|world| &world.images)
+                    .map(|image| image.id),
+            );
+        }
         for retired in self
             .tile_samples
             .borrow_mut()
@@ -214,11 +240,19 @@ impl Render for Renderer {
                 }
             }
         }
+        if self.last_viewport.is_some()
+            && (self.last_viewport != Some(viewport)
+                || self.last_device_scale != Some(window.scale_factor()))
+        {
+            self.output.emit(Event::Resized, cx);
+        }
         if self.last_viewport != Some(viewport)
             || self.last_logical_size != Some((logical_width, logical_height))
+            || self.last_device_scale != Some(window.scale_factor())
         {
             self.last_viewport = Some(viewport);
             self.last_logical_size = Some((logical_width, logical_height));
+            self.last_device_scale = Some(window.scale_factor());
             self.output.diagnostics.geometry("viewport", || {
                 let bounds = window.bounds();
                 vec![
@@ -260,7 +294,12 @@ impl Render for Renderer {
             .relative()
             .size_full()
             .overflow_hidden()
-            .bg(rgb(DEFAULT_BACKGROUND));
+            .bg(rgb(self
+                .retained_scene
+                .as_ref()
+                .and_then(|scene| scene.source.canvas.as_ref())
+                .and_then(|canvas| canvas.background.as_ref())
+                .map_or(DEFAULT_BACKGROUND, crate::color::ColorSpec::rgb)));
         if transform.scale == 0.0 {
             return crate::render_trace::observe(root, &self.output.diagnostics, observation);
         }
@@ -283,7 +322,113 @@ impl Render for Renderer {
             } else {
                 self.canvas_fonts.clear();
             }
+            if let (Some(scene), Some(view)) = (&self.retained_scene, &self.retained_viewport)
+                && let Some(world_id) = &view.world_id
+                && let Some(world) = scene.get_world(world_id)
+            {
+                let projected = crate::retained_paint::project_world(world, view, grid);
+                let occlusion = projected
+                    .iter()
+                    .any(|cell| {
+                        world.source.get_row(cell.world_row).is_some_and(|row| {
+                            row.cells[cell.world_column as usize].display_width > 1
+                        })
+                    })
+                    .then(|| {
+                        crate::retained_paint::TextOcclusion::new(
+                            &frame.text_layers,
+                            view,
+                            grid,
+                            transform,
+                        )
+                    });
+                let clip = transform.surface_rect(
+                    view.clip_rect.x,
+                    view.clip_rect.y,
+                    view.clip_rect.width,
+                    view.clip_rect.height,
+                );
+                for (index, layer) in world.layers.iter().enumerate() {
+                    if !layer.regions.is_empty() {
+                        surface = surface.child(crate::retained_paint::tile_element(
+                            world.clone(),
+                            index,
+                            projected.clone(),
+                            grid,
+                            transform,
+                            view.clone(),
+                            self.tile_samples.clone(),
+                        ));
+                    }
+                    let mut text = div()
+                        .absolute()
+                        .size_full()
+                        .text_size(px(logical_font_size * transform.scale * view.scale))
+                        .line_height(px(ch * transform.scale * view.scale));
+                    for &projected_cell in projected.iter() {
+                        let Some(row) = world.source.get_row(projected_cell.world_row) else {
+                            continue;
+                        };
+                        let source = &row.cells[projected_cell.world_column as usize];
+                        if source.owner_layer_id != layer.id {
+                            continue;
+                        }
+                        if projected_cell.tile_eligible
+                            && world
+                                .get_source(
+                                    layer,
+                                    projected_cell.world_column,
+                                    projected_cell.world_row,
+                                )
+                                .is_some()
+                        {
+                            continue;
+                        }
+                        let mut bounds = crate::retained_paint::cell_bounds(
+                            projected_cell,
+                            grid,
+                            transform,
+                            view,
+                        );
+                        if source.display_width > 1 {
+                            bounds.width *= f32::from(source.display_width);
+                            if occlusion.as_ref().is_some_and(|coverage| {
+                                coverage.covers_wide_glyph(bounds, layer.layer)
+                            }) {
+                                continue;
+                            }
+                        }
+                        bounds.left -= clip.left;
+                        bounds.top -= clip.top;
+                        let mut painted = positioned(div(), bounds)
+                            .overflow_hidden()
+                            .text_center()
+                            .bg(rgb(source
+                                .background
+                                .as_ref()
+                                .map_or(DEFAULT_BACKGROUND, crate::color::ColorSpec::rgb)))
+                            .text_color(rgb(source
+                                .foreground
+                                .as_ref()
+                                .map_or(DEFAULT_FOREGROUND, crate::color::ColorSpec::rgb)));
+                        if source.glyph != " " {
+                            painted = painted.child(source.glyph.clone());
+                        }
+                        text = text.child(painted);
+                    }
+                    surface = surface.child(positioned(div(), clip).overflow_hidden().child(text));
+                }
+            }
             for item in &frame.plan {
+                let retained_member = self.retained_viewport.as_ref().filter(|view| match *item {
+                    PaintItem::Text(index) => {
+                        view.text_layer_ids.contains(&frame.text_layers[index].id)
+                    }
+                    PaintItem::Sprite(index) => {
+                        view.sprite_ids.contains(&frame.sprites[index].sprite.id)
+                    }
+                    _ => false,
+                });
                 let member = frame.viewport.as_ref().filter(|view| match *item {
                     PaintItem::Tiles(index) => {
                         view.contains_tile(&frame.tile_batches[index].batch.id)
@@ -292,12 +437,18 @@ impl Render for Renderer {
                     PaintItem::Sprite(index) => {
                         view.contains_sprite(&frame.sprites[index].sprite.id)
                     }
+                    #[cfg(test)]
                     PaintItem::LegacyText => false,
                 });
-                let (item_transform, clip) = member.map_or((transform, None), |view| {
-                    let (content, clip) = content_geometry(transform, &view.geometry);
+                let (item_transform, clip) = if let Some(view) = retained_member {
+                    let (content, clip) = content_geometry_retained(transform, view);
                     (content, Some(clip))
-                });
+                } else {
+                    member.map_or((transform, None), |view| {
+                        let (content, clip) = content_geometry(transform, &view.geometry);
+                        (content, Some(clip))
+                    })
+                };
                 match *item {
                     PaintItem::Tiles(index) => {
                         surface = add_item(
@@ -311,6 +462,7 @@ impl Render for Renderer {
                             clip,
                         );
                     }
+                    #[cfg(test)]
                     PaintItem::LegacyText => {
                         for (row, text) in frame.text.iter().enumerate() {
                             for (column, glyph) in text.chars().enumerate() {
@@ -405,6 +557,20 @@ fn add_item(surface: gpui::Div, item: impl IntoElement, clip: Option<PaintRect>)
 fn content_geometry(
     base: ViewportTransform,
     viewport: &FrameViewport,
+) -> (ViewportTransform, PaintRect) {
+    let rect = viewport.clip_rect;
+    let clip = base.surface_rect(rect.x, rect.y, rect.width, rect.height);
+    let content = base.transform_content(
+        viewport.scale,
+        viewport.origin.x - rect.x,
+        viewport.origin.y - rect.y,
+    );
+    (content, clip)
+}
+
+fn content_geometry_retained(
+    base: ViewportTransform,
+    viewport: &RetainedViewport,
 ) -> (ViewportTransform, PaintRect) {
     let rect = viewport.clip_rect;
     let clip = base.surface_rect(rect.x, rect.y, rect.width, rect.height);

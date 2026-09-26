@@ -50,7 +50,7 @@ fn clipping_wire_corpus_negotiates_validates_and_preserves_accepted_frames() {
         let original_source = accepted.canvas.as_ref().unwrap().source.clone();
         let mut state = RendererState {
             hello: config.clone(),
-            frame: Some(accepted),
+            frame: Some(accepted.into()),
         };
         if let Some(caps) = case.get("capabilities") {
             config.required_capabilities = serde_json::from_value(caps.clone()).unwrap();

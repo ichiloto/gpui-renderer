@@ -47,6 +47,7 @@ enum Record {
         #[serde(skip_serializing_if = "Option::is_none")]
         queue_capacity: Option<usize>,
     },
+    #[cfg(test)]
     FrameResources {
         sequence: u64,
         protocol: u32,
@@ -221,6 +222,7 @@ impl Diagnostics {
         }
     }
 
+    #[cfg(test)]
     pub fn frame_resources(
         &self,
         trace: Option<FrameTrace>,

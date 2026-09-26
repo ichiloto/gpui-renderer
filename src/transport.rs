@@ -1,12 +1,39 @@
 use crate::assets::AssetRoot;
 use crate::diagnostics::Diagnostics;
-use crate::protocol::{self, Capability, Hello, Incoming, Message, Sprite, Version};
+use crate::protocol::{self, Hello, Incoming, Message, Version};
+#[cfg(test)]
+use crate::protocol::{Capability, Sprite};
+use crate::retained_prepared::PreparedScene;
+use crate::retained_protocol::Viewport;
+use crate::retained_state::RetainedSession;
+#[cfg(test)]
 use crate::state::PreparedFrame;
 use std::io::{BufRead, Read};
+use std::sync::Arc;
+
+pub struct RetainedDisplay {
+    pub generation: u64,
+    pub frame: u64,
+    pub reset: bool,
+    pub scene: Arc<PreparedScene>,
+    pub viewport: Option<Viewport>,
+    pub observation: Option<crate::diagnostics::FrameTrace>,
+}
 
 pub enum Update {
     Hello(Version, Hello),
+    #[cfg(test)]
     Frame(Box<PreparedFrame>),
+    RetainedFrame(Box<RetainedDisplay>),
+    RetainedAck {
+        generation: u64,
+        frame: u64,
+    },
+    RetainedRejected {
+        generation: u64,
+        expected_generation: u64,
+        message: String,
+    },
     Error(String),
     Fatal(String),
     Shutdown,
@@ -16,7 +43,9 @@ pub enum Update {
 impl Update {
     pub fn observation(&self) -> Option<crate::diagnostics::FrameTrace> {
         match self {
+            #[cfg(test)]
             Self::Frame(frame) => frame.observation,
+            Self::RetainedFrame(frame) => frame.observation,
             _ => None,
         }
     }
@@ -25,9 +54,33 @@ impl Update {
 #[derive(Default)]
 pub struct Session {
     initialized: Option<(Version, Hello, AssetRoot)>,
+    retained: RetainedSession,
+    prepared: Option<Arc<PreparedScene>>,
 }
 
 impl Session {
+    fn reject_malformed(&mut self, line: &[u8], message: String) -> Update {
+        let Ok(value) = serde_json::from_slice::<serde_json::Value>(line) else {
+            return Update::Error(message);
+        };
+        if value.get("protocol").and_then(serde_json::Value::as_u64) != Some(2)
+            || value.get("type").and_then(serde_json::Value::as_str) != Some("frame")
+            || value.get("generation").is_none()
+            || !matches!(self.initialized, Some((Version::V2, _, _)))
+        {
+            return Update::Error(message);
+        }
+        self.retained.require_reset();
+        Update::RetainedRejected {
+            generation: value
+                .get("generation")
+                .and_then(serde_json::Value::as_u64)
+                .unwrap_or(0),
+            expected_generation: self.retained.expected_generation(),
+            message,
+        }
+    }
+
     pub fn prepare(&mut self, incoming: Incoming) -> Result<Update, String> {
         if let Some((version, _, _)) = &self.initialized
             && *version != incoming.version
@@ -47,6 +100,7 @@ impl Session {
                 self.initialized = Some((incoming.version, hello.clone(), assets));
                 Ok(Update::Hello(incoming.version, hello))
             }
+            #[cfg(test)]
             Message::Frame(frame) => {
                 let (version, hello, assets) = self
                     .initialized
@@ -57,6 +111,7 @@ impl Session {
                     frame, hello.grid, assets,
                 )?)))
             }
+            #[cfg(test)]
             Message::FrameV2(frame) => {
                 let (version, hello, assets) = self
                     .initialized
@@ -120,11 +175,72 @@ impl Session {
                     frame, hello.grid, assets,
                 )?)))
             }
+            Message::RetainedFrame(frame) => {
+                let (_, hello, assets) = self
+                    .initialized
+                    .as_ref()
+                    .ok_or("frame requires a successful hello")?;
+                let generation = frame.generation;
+                let number = frame.frame;
+                let mut candidate = self.retained.clone();
+                let accepted = match candidate.apply(frame, hello.grid) {
+                    Ok(accepted) => accepted,
+                    Err(message) => {
+                        self.retained.require_reset();
+                        return Ok(Update::RetainedRejected {
+                            generation,
+                            expected_generation: self.retained.expected_generation(),
+                            message,
+                        });
+                    }
+                };
+                if !accepted.visible {
+                    self.retained = candidate;
+                    return Ok(Update::RetainedAck {
+                        generation,
+                        frame: accepted.frame,
+                    });
+                }
+                let prepared = if let Some(previous) = &self.prepared
+                    && Arc::ptr_eq(&previous.source, &accepted.scene)
+                {
+                    previous.clone()
+                } else {
+                    match PreparedScene::prepare(
+                        accepted.scene,
+                        number,
+                        hello.grid,
+                        assets,
+                        self.prepared.as_deref(),
+                    ) {
+                        Ok(prepared) => Arc::new(prepared),
+                        Err(message) => {
+                            self.retained.require_reset();
+                            return Ok(Update::RetainedRejected {
+                                generation,
+                                expected_generation: self.retained.expected_generation(),
+                                message,
+                            });
+                        }
+                    }
+                };
+                self.retained = candidate;
+                self.prepared = Some(prepared.clone());
+                Ok(Update::RetainedFrame(Box::new(RetainedDisplay {
+                    generation,
+                    frame: accepted.frame,
+                    reset: accepted.reset,
+                    scene: prepared,
+                    viewport: accepted.viewport,
+                    observation: None,
+                })))
+            }
             Message::Shutdown => Ok(Update::Shutdown),
         }
     }
 }
 
+#[cfg(test)]
 fn validate_capabilities(sprites: &[Sprite], enabled: &[Capability]) -> Result<(), String> {
     if sprites.iter().any(|sprite| sprite.source_rect.is_some())
         && !enabled.contains(&Capability::SpriteSourceRect)
@@ -206,12 +322,19 @@ fn read_protocol_observed(
         let update = protocol::parse(&bytes)
             .and_then(|incoming| {
                 let observation = match &incoming.message {
+                    #[cfg(test)]
                     Message::Frame(frame) => diagnostics.frame_received(
                         incoming.version.number(),
                         frame.frame,
                         received_at,
                     ),
+                    #[cfg(test)]
                     Message::FrameV2(frame) => diagnostics.frame_received(
+                        incoming.version.number(),
+                        frame.frame,
+                        received_at,
+                    ),
+                    Message::RetainedFrame(frame) => diagnostics.frame_received(
                         incoming.version.number(),
                         frame.frame,
                         received_at,
@@ -219,14 +342,19 @@ fn read_protocol_observed(
                     _ => None,
                 };
                 let mut update = session.prepare(incoming)?;
+                #[cfg(test)]
                 if let Update::Frame(frame) = &mut update {
                     frame.observation = observation;
                     diagnostics.frame_stage(observation, "accepted");
                     diagnostics.frame_resources(observation, frame.resources.clone());
                 }
+                if let Update::RetainedFrame(frame) = &mut update {
+                    frame.observation = observation;
+                    diagnostics.frame_stage(observation, "accepted");
+                }
                 Ok(update)
             })
-            .unwrap_or_else(Update::Error);
+            .unwrap_or_else(|message| session.reject_malformed(&bytes, message));
         let shutdown = matches!(update, Update::Shutdown);
         if !send(update) || shutdown {
             break;
@@ -237,6 +365,508 @@ fn read_protocol_observed(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+
+    #[test]
+    #[ignore = "requires ICHILOTO_RETAINED_REPLAY NDJSON"]
+    fn replay_engine_retained_packets_without_a_native_window() {
+        let input =
+            std::fs::read_to_string(std::env::var("ICHILOTO_RETAINED_REPLAY").unwrap()).unwrap();
+        let baseline = std::env::var("ICHILOTO_RETAINED_BASELINE")
+            .ok()
+            .map(|path| {
+                std::fs::read_to_string(path)
+                    .unwrap()
+                    .lines()
+                    .filter_map(|line| {
+                        let parsed = protocol::parse(line.as_bytes()).unwrap();
+                        match parsed.message {
+                            Message::FrameV2(frame) => Some((frame.frame, frame)),
+                            _ => None,
+                        }
+                    })
+                    .collect::<std::collections::BTreeMap<_, _>>()
+            });
+        let mut session = Session::default();
+        let mut grid = None;
+        let mut staged = 0;
+        let mut presented = 0;
+        let mut reports = Vec::new();
+        for (index, line) in input.lines().filter(|line| !line.is_empty()).enumerate() {
+            let started = std::time::Instant::now();
+            let parsed = protocol::parse(line.as_bytes())
+                .unwrap_or_else(|error| panic!("line {}: {error}", index + 1));
+            if let Message::Hello(hello) = &parsed.message {
+                grid = Some(hello.grid);
+            }
+            let parse_ms = started.elapsed().as_secs_f64() * 1000.0;
+            let prepared = session
+                .prepare(parsed)
+                .unwrap_or_else(|error| panic!("line {}: {error}", index + 1));
+            let total_ms = started.elapsed().as_secs_f64() * 1000.0;
+            match prepared {
+                Update::Hello(..) => {}
+                Update::RetainedAck { .. } => staged += 1,
+                Update::RetainedFrame(frame) => {
+                    presented += 1;
+                    if std::env::var_os("ICHILOTO_RETAINED_SCREEN_PARITY").is_some() {
+                        let baseline = baseline.as_ref().expect("screen parity requires baseline");
+                        let skipped = std::env::var("ICHILOTO_RETAINED_BASELINE_SKIP_AT")
+                            .ok()
+                            .and_then(|value| value.parse::<u64>().ok());
+                        let old_number = frame.frame
+                            + u64::from(skipped.is_some_and(|number| frame.frame >= number));
+                        let old = &baseline[&old_number];
+                        let current = frame.scene.source.materialize_screen(frame.frame).unwrap();
+                        assert_eq!(
+                            current.text_layers, old.text_layers,
+                            "text frame {}",
+                            frame.frame
+                        );
+                        assert_eq!(
+                            current.sprites, old.sprites,
+                            "sprites frame {}",
+                            frame.frame
+                        );
+                        let mut canvas = current.canvas;
+                        if let Some(canvas) = &mut canvas
+                            && canvas.composites.as_ref().is_some_and(Vec::is_empty)
+                        {
+                            canvas.composites = None;
+                        }
+                        assert_eq!(canvas, old.canvas, "canvas frame {}", frame.frame);
+                        if old
+                            .canvas
+                            .as_ref()
+                            .and_then(|canvas| canvas.composites.as_ref())
+                            .is_some_and(|composites| !composites.is_empty())
+                        {
+                            let assets = &session.initialized.as_ref().unwrap().2;
+                            let original =
+                                PreparedFrame::prepare_v2(old.clone(), grid.unwrap(), assets)
+                                    .unwrap();
+                            let original = original.canvas.unwrap();
+                            let retained = frame.scene.screen.canvas.as_ref().unwrap();
+                            assert_eq!(retained.composites.len(), original.composites.len());
+                            for (index, (retained, original)) in retained
+                                .composites
+                                .iter()
+                                .zip(&original.composites)
+                                .enumerate()
+                            {
+                                assert_eq!(retained.as_bytes(0), original.as_bytes(0));
+                                if let Ok(directory) = std::env::var("ICHILOTO_RETAINED_PNG_DIR") {
+                                    std::fs::create_dir_all(&directory).unwrap();
+                                    let label = std::env::var("ICHILOTO_RETAINED_LABEL").unwrap();
+                                    for (kind, image) in
+                                        [("reference", original), ("retained", retained)]
+                                    {
+                                        let size = image.size(0);
+                                        let width = size.width.0 as u32;
+                                        let height = size.height.0 as u32;
+                                        let pixels = image.as_bytes(0).unwrap();
+                                        let rgba =
+                                            image::RgbaImage::from_fn(width, height, |x, y| {
+                                                let at = ((y * width + x) * 4) as usize;
+                                                image::Rgba([
+                                                    pixels[at + 2],
+                                                    pixels[at + 1],
+                                                    pixels[at],
+                                                    pixels[at + 3],
+                                                ])
+                                            });
+                                        rgba.save(format!(
+                                            "{directory}/{label}-frame-{old_number:03}-composite-{index}-{kind}.png"
+                                        ))
+                                        .unwrap();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if let Some((baseline, viewport)) = baseline
+                        .as_ref()
+                        .zip(frame.viewport.as_ref())
+                        .filter(|(_, viewport)| viewport.world_id.is_some())
+                    {
+                        let old_number = if frame.frame >= 6 {
+                            frame.frame + 1
+                        } else {
+                            frame.frame
+                        };
+                        let old = &baseline[&old_number];
+                        let world = frame
+                            .scene
+                            .get_world(viewport.world_id.as_ref().unwrap())
+                            .unwrap();
+                        let mut actual =
+                            std::collections::BTreeMap::<String, Vec<(u32, u32, u32)>>::new();
+                        world
+                            .source
+                            .project_visible(viewport, grid.unwrap(), |cell, _| {
+                                if !cell.tile_eligible
+                                    || cell.screen_column < 0
+                                    || cell.screen_row < 0
+                                    || cell.screen_column >= grid.unwrap().columns as i32
+                                    || cell.screen_row >= grid.unwrap().rows as i32
+                                {
+                                    return;
+                                }
+                                for layer in &world.layers {
+                                    if let Some(source) =
+                                        world.get_source(layer, cell.world_column, cell.world_row)
+                                    {
+                                        actual.entry(layer.id.clone()).or_default().push((
+                                            cell.screen_column as u32,
+                                            cell.screen_row as u32,
+                                            source as u32,
+                                        ));
+                                    }
+                                }
+                            });
+                        let mut expected =
+                            std::collections::BTreeMap::<String, Vec<(u32, u32, u32)>>::new();
+                        for batch in old.tile_batches.iter().flatten() {
+                            expected.insert(
+                                batch.id.clone(),
+                                batch
+                                    .cells
+                                    .iter()
+                                    .map(|cell| (cell.column, cell.row, cell.source))
+                                    .collect(),
+                            );
+                        }
+                        for cells in actual.values_mut() {
+                            cells.sort_unstable();
+                        }
+                        for cells in expected.values_mut() {
+                            cells.sort_unstable();
+                        }
+                        assert_eq!(
+                            actual, expected,
+                            "tile projection differs at retained frame {}",
+                            frame.frame
+                        );
+                        let mut old_paint = std::collections::BTreeMap::new();
+                        let mut old_order = Vec::new();
+                        for (index, batch) in old.tile_batches.iter().flatten().enumerate() {
+                            old_order.push((batch.layer, 0, index));
+                        }
+                        for (index, layer) in old.text_layers.iter().enumerate() {
+                            old_order.push((layer.layer, 1, index));
+                        }
+                        old_order.sort_by_key(|(layer, kind, _)| (*layer, *kind));
+                        for (_, kind, index) in old_order {
+                            if kind == 0 {
+                                let batch = &old.tile_batches.as_ref().unwrap()[index];
+                                for cell in &batch.cells {
+                                    old_paint.insert(
+                                        (cell.column, cell.row),
+                                        format!("tile:{}:{}", batch.id, cell.source),
+                                    );
+                                }
+                            } else {
+                                for cell in crate::state::painted_cells(&old.text_layers[index]) {
+                                    old_paint.insert(
+                                        (cell.column, cell.row),
+                                        format!(
+                                            "glyph:{}:{:06x}:{:06x}",
+                                            cell.glyph.unwrap_or(' '),
+                                            cell.foreground,
+                                            cell.background
+                                        ),
+                                    );
+                                }
+                            }
+                        }
+                        let mut current_paint = std::collections::BTreeMap::new();
+                        for layer in &world.layers {
+                            world
+                                .source
+                                .project_visible(viewport, grid.unwrap(), |cell, owner| {
+                                    if cell.screen_column < 0
+                                        || cell.screen_row < 0
+                                        || cell.screen_column >= grid.unwrap().columns as i32
+                                        || cell.screen_row >= grid.unwrap().rows as i32
+                                    {
+                                        return;
+                                    }
+                                    let point = (cell.screen_column as u32, cell.screen_row as u32);
+                                    let crop = cell
+                                        .tile_eligible
+                                        .then(|| {
+                                            world.get_source(
+                                                layer,
+                                                cell.world_column,
+                                                cell.world_row,
+                                            )
+                                        })
+                                        .flatten();
+                                    if let Some(source) = crop {
+                                        current_paint
+                                            .insert(point, format!("tile:{}:{}", layer.id, source));
+                                    }
+                                    if owner.owner_layer_id == layer.id && crop.is_none() {
+                                        current_paint.insert(
+                                            point,
+                                            format!(
+                                                "glyph:{}:{:06x}:{:06x}",
+                                                owner.glyph,
+                                                owner.foreground.as_ref().map_or(
+                                                    crate::color::DEFAULT_FOREGROUND,
+                                                    crate::color::ColorSpec::rgb
+                                                ),
+                                                owner.background.as_ref().map_or(
+                                                    crate::color::DEFAULT_BACKGROUND,
+                                                    crate::color::ColorSpec::rgb
+                                                )
+                                            ),
+                                        );
+                                    }
+                                });
+                        }
+                        let default_blank = format!(
+                            "glyph: :{:06x}:{:06x}",
+                            crate::color::DEFAULT_FOREGROUND,
+                            crate::color::DEFAULT_BACKGROUND
+                        );
+                        let differences: Vec<_> = (0..grid.unwrap().rows)
+                            .flat_map(|row| {
+                                (0..grid.unwrap().columns).map(move |column| (column, row))
+                            })
+                            .filter_map(|point| {
+                                let old = old_paint
+                                    .get(&point)
+                                    .filter(|value| **value != default_blank);
+                                let current = current_paint
+                                    .get(&point)
+                                    .filter(|value| **value != default_blank);
+                                (old != current).then(|| {
+                                    (point, old_paint.get(&point), current_paint.get(&point))
+                                })
+                            })
+                            .take(8)
+                            .collect();
+                        assert!(
+                            differences.is_empty(),
+                            "glyph/tile paint differs at retained frame {}: {differences:?}",
+                            frame.frame
+                        );
+                    }
+                    reports.push(json!({"line":index+1,"frame":frame.frame,
+                        "generation":frame.generation,"parseMs":parse_ms,"totalMs":total_ms,
+                        "worlds":frame.scene.worlds.len(),
+                        "sourceBytes":frame.scene.source.estimated_bytes()}));
+                }
+                Update::RetainedRejected { message, .. } => {
+                    panic!("line {} rejected: {message}", index + 1)
+                }
+                _ => panic!("unexpected update at line {}", index + 1),
+            }
+        }
+        if let Ok(report) = std::env::var("ICHILOTO_RETAINED_REPORT") {
+            std::fs::write(report, serde_json::to_vec_pretty(&reports).unwrap()).unwrap();
+        }
+        assert!(presented > 0);
+        eprintln!("retained replay: {staged} staged, {presented} presented");
+    }
+
+    #[test]
+    fn retained_wire_stages_world_reuses_prepared_scene_and_rejects_bad_delta() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures");
+        let mut session = Session::default();
+        let hello = json!({"protocol":2,"type":"hello","title":"Retained",
+            "assetRoot":root,"grid":{"columns":4,"rows":2,"cellWidth":10,"cellHeight":20}});
+        assert!(matches!(
+            session.prepare(protocol::parse(&serde_json::to_vec(&hello).unwrap()).unwrap()),
+            Ok(Update::Hello(..))
+        ));
+        let cell = json!({"glyph":".","foreground":null,"background":null,
+            "displayWidth":1,"ownerLayerId":"map:terrain"});
+        let stage = json!({"protocol":2,"type":"frame","frame":1,"baseGeneration":0,
+        "generation":1,"reset":true,"present":false,"operations":[
+            {"op":"put","kind":"world","id":"map","value":{"columns":4,"rows":2,
+                "layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay",
+                    "asset":"test-sprite.png","sources":[{"x":0,"y":0,"width":1,"height":1}]}]}},
+            {"op":"worldRows","id":"map","rows":[
+                {"row":0,"cells":vec![cell.clone();4]},
+                {"row":1,"cells":vec![cell;4]}]},
+            {"op":"worldTiles","id":"map","layerId":"map:terrain","rows":[
+                {"row":0,"cells":[{"column":0,"source":0},{"column":1,"source":0}]}]}
+        ]});
+        let value = session
+            .prepare(protocol::parse(&serde_json::to_vec(&stage).unwrap()).unwrap())
+            .unwrap();
+        assert!(matches!(value, Update::RetainedAck { generation: 1, .. }));
+        let viewport = json!({"scale":1,"origin":{"x":0,"y":0},
+            "worldOrigin":{"column":0,"row":0},
+            "clipRect":{"x":0,"y":0,"width":40,"height":40},"worldId":"map"});
+        let commit = json!({"protocol":2,"type":"frame","frame":1,"baseGeneration":1,
+            "generation":2,"present":true,"operations":[],"viewport":viewport});
+        let Update::RetainedFrame(first) = session
+            .prepare(protocol::parse(&serde_json::to_vec(&commit).unwrap()).unwrap())
+            .unwrap()
+        else {
+            panic!("expected retained commit")
+        };
+        assert_eq!(first.scene.worlds["map"].layers[0].regions.len(), 1);
+        assert_eq!(first.scene.worlds["map"].source.tile_count(), 2);
+        let scroll = json!({"protocol":2,"type":"frame","frame":2,"baseGeneration":2,
+            "generation":3,"present":true,"operations":[],"viewport":viewport});
+        let Update::RetainedFrame(second) = session
+            .prepare(protocol::parse(&serde_json::to_vec(&scroll).unwrap()).unwrap())
+            .unwrap()
+        else {
+            panic!("expected camera frame")
+        };
+        assert!(Arc::ptr_eq(&first.scene, &second.scene));
+        let bad = json!({"protocol":2,"type":"frame","frame":3,"baseGeneration":2,
+            "generation":4,"present":true,"operations":[]});
+        let Update::RetainedRejected {
+            expected_generation,
+            ..
+        } = session
+            .prepare(protocol::parse(&serde_json::to_vec(&bad).unwrap()).unwrap())
+            .unwrap()
+        else {
+            panic!("expected rejection")
+        };
+        assert_eq!(expected_generation, 3);
+        let malformed = json!({"protocol":2,"type":"frame","frame":4,
+            "baseGeneration":3,"generation":5,"present":true,"operations":[],
+            "unexpected":true});
+        let bytes = serde_json::to_vec(&malformed).unwrap();
+        let error = protocol::parse(&bytes).unwrap_err();
+        assert!(matches!(
+            session.reject_malformed(&bytes, error),
+            Update::RetainedRejected {
+                generation: 5,
+                expected_generation: 3,
+                ..
+            }
+        ));
+        let mut fallback = stage;
+        fallback["baseGeneration"] = json!(3);
+        fallback["generation"] = json!(6);
+        fallback["present"] = json!(true);
+        fallback["viewport"] = viewport;
+        fallback["operations"][0]["value"]["layers"][0]["asset"] = json!("missing-tiles.png");
+        let Update::RetainedFrame(fallback) = session
+            .prepare(protocol::parse(&serde_json::to_vec(&fallback).unwrap()).unwrap())
+            .unwrap()
+        else {
+            panic!("missing atlas must retain the glyph-backed frame")
+        };
+        let world = &fallback.scene.worlds["map"];
+        assert!(world.layers[0].regions.is_empty());
+        assert!(world.get_source(&world.layers[0], 0, 0).is_none());
+    }
+
+    #[test]
+    fn retained_canvas_composite_matches_historical_cpu_pixels() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures");
+        let raw: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(root.join("compositing/frame.json")).unwrap())
+                .unwrap();
+        let Message::FrameV2(reference) = protocol::parse(&serde_json::to_vec(&raw).unwrap())
+            .unwrap()
+            .message
+        else {
+            panic!("reference frame")
+        };
+        let grid = protocol::Grid {
+            columns: 64,
+            rows: 48,
+            cell_width: 1,
+            cell_height: 1,
+        };
+        let assets = AssetRoot::new(&root).unwrap();
+        let reference_canvas = PreparedFrame::prepare_v2(reference.clone(), grid, &assets)
+            .unwrap()
+            .canvas
+            .unwrap();
+        let reference_pixels = reference_canvas.composites[0].as_bytes(0).unwrap();
+        let mut session = Session::default();
+        let hello = json!({"protocol":2,"type":"hello","title":"Retained canvas",
+            "assetRoot":root,"grid":{"columns":64,"rows":48,"cellWidth":1,"cellHeight":1}});
+        session
+            .prepare(protocol::parse(&serde_json::to_vec(&hello).unwrap()).unwrap())
+            .unwrap();
+        let canvas = &raw["canvas"];
+        let mut operations = vec![json!({"op":"put","kind":"canvas","id":"canvas",
+            "value":{"id":"canvas","width":canvas["width"],"height":canvas["height"]}})];
+        for (order, composite) in canvas["composites"].as_array().unwrap().iter().enumerate() {
+            let mut value = composite.clone();
+            value["order"] = json!(order);
+            operations.push(json!({"op":"put","kind":"canvas_composite",
+                "id":composite["id"],"value":value}));
+        }
+        let update = json!({"protocol":2,"type":"frame","frame":1,
+            "baseGeneration":0,"generation":1,"reset":true,"present":true,
+            "operations":operations,"viewport":null});
+        let Update::RetainedFrame(retained) = session
+            .prepare(protocol::parse(&serde_json::to_vec(&update).unwrap()).unwrap())
+            .unwrap()
+        else {
+            panic!("retained composite frame")
+        };
+        assert_eq!(
+            retained.scene.source.materialize_canvas().unwrap(),
+            reference.canvas
+        );
+        let retained_pixels = retained.scene.screen.canvas.as_ref().unwrap().composites[0]
+            .as_bytes(0)
+            .unwrap();
+        assert_eq!(retained_pixels, reference_pixels);
+    }
+
+    #[test]
+    fn retained_reset_releases_old_world_after_rejected_update() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("fixtures");
+        let mut session = Session::default();
+        let hello = json!({"protocol":2,"type":"hello","title":"Retained lifecycle",
+            "assetRoot":root,"grid":{"columns":1,"rows":1,"cellWidth":10,"cellHeight":20}});
+        session
+            .prepare(protocol::parse(&serde_json::to_vec(&hello).unwrap()).unwrap())
+            .unwrap();
+        let first = json!({"protocol":2,"type":"frame","frame":1,
+            "baseGeneration":0,"generation":1,"reset":true,"present":true,
+            "operations":[
+                {"op":"put","kind":"world","id":"map","value":{
+                    "columns":1,"rows":1,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
+                {"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{
+                    "glyph":".","foreground":null,"background":null,
+                    "displayWidth":1,"ownerLayerId":"map:terrain"}]}]}
+            ],"viewport":{"worldId":"map","scale":1,
+                "origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":10,"height":20}}});
+        let visible = session
+            .prepare(protocol::parse(&serde_json::to_vec(&first).unwrap()).unwrap())
+            .unwrap();
+        let old_scene = Arc::downgrade(session.prepared.as_ref().unwrap());
+        let old_world = Arc::downgrade(&session.prepared.as_ref().unwrap().source.worlds["map"]);
+        drop(visible);
+
+        let invalid = json!({"protocol":2,"type":"frame","frame":2,
+            "baseGeneration":0,"generation":2,"operations":[]});
+        assert!(matches!(
+            session
+                .prepare(protocol::parse(&serde_json::to_vec(&invalid).unwrap()).unwrap())
+                .unwrap(),
+            Update::RetainedRejected { .. }
+        ));
+        assert!(old_scene.upgrade().is_some());
+        assert!(old_world.upgrade().is_some());
+
+        let reset = json!({"protocol":2,"type":"frame","frame":3,
+            "baseGeneration":1,"generation":3,"reset":true,"present":true,
+            "operations":[],"viewport":null});
+        let replacement = session
+            .prepare(protocol::parse(&serde_json::to_vec(&reset).unwrap()).unwrap())
+            .unwrap();
+        assert!(matches!(replacement, Update::RetainedFrame(_)));
+        assert!(old_scene.upgrade().is_none());
+        assert!(old_world.upgrade().is_none());
+    }
 
     #[test]
     fn cross_language_tile_fixtures_validate_exact_payloads_and_keep_last_display_on_error() {

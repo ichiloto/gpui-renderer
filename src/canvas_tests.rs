@@ -337,7 +337,7 @@ fn exact_wire_corpus_matches_stages_and_preserves_the_previous_display_on_error(
         let assets = AssetRoot::new(&root()).unwrap();
         let mut state = RendererState {
             hello: config.clone(),
-            frame: Some(prepared("valid-full-canvas.json", &config, &assets)),
+            frame: Some(prepared("valid-full-canvas.json", &config, &assets).into()),
         };
         let original = state
             .frame
@@ -479,7 +479,7 @@ fn canvas_size_and_fractional_geometry_ignore_the_legacy_cell_metrics() {
         config.grid.cell_height = ch;
         let mut state = RendererState {
             hello: config.clone(),
-            frame: Some(prepared("valid-fractional-crop.json", &config, &assets)),
+            frame: Some(prepared("valid-fractional-crop.json", &config, &assets).into()),
         };
         assert_eq!(state.logical_size(), (1350.0, 720.0));
         let rect = state
@@ -544,7 +544,7 @@ fn full_replacement_reuses_source_images_and_clears_all_canvas_collections() {
     );
     let mut state = RendererState {
         hello: config.clone(),
-        frame: Some(first),
+        frame: Some(first.into()),
     };
     let survivor = prepared("valid-reordered-survivor.json", &config, &assets);
     assert_eq!(survivor.resources.png_decodes, 0);

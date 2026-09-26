@@ -1,5 +1,7 @@
 use crate::assets::AssetRoot;
-use crate::protocol::{Frame, FrameV2, FrameViewport, Grid, Hello, Sprite, TextLayer, TileBatch};
+#[cfg(test)]
+use crate::protocol::Frame;
+use crate::protocol::{FrameV2, FrameViewport, Grid, Hello, Sprite, TextLayer, TileBatch};
 use gpui::RenderImage;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -13,6 +15,7 @@ pub struct PreparedSprite {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum PaintItem {
+    #[cfg(test)]
     LegacyText,
     Text(usize),
     Sprite(usize),
@@ -22,13 +25,16 @@ pub enum PaintItem {
 #[derive(Debug)]
 pub struct PreparedFrame {
     pub observation: Option<crate::diagnostics::FrameTrace>,
+    #[allow(dead_code)] // Test reference labels remain useful for parity fixtures.
     pub number: u64,
+    #[allow(dead_code)] // Historical v1 text is constructed only in tests.
     pub text: Vec<String>,
     pub sprites: Vec<PreparedSprite>,
     pub text_layers: Vec<TextLayer>,
     pub plan: Vec<PaintItem>,
     pub cached_images: Vec<Arc<RenderImage>>,
     pub tile_batches: Vec<Arc<PreparedTileBatch>>,
+    #[allow(dead_code)] // Resource counters are retained for headless parity reports.
     pub resources: FrameResources,
     pub canvas: Option<Box<crate::canvas::PreparedCanvas>>,
     pub viewport: Option<PreparedViewport>,
@@ -172,6 +178,7 @@ impl<'a> FrameImages<'a> {
 }
 
 impl PreparedFrame {
+    #[cfg(test)]
     pub fn prepare(frame: Frame, grid: Grid, assets: &AssetRoot) -> Result<Self, String> {
         frame.validate(grid)?;
         assets.prepare_composites(&[], &Default::default())?;
@@ -262,6 +269,7 @@ impl PreparedFrame {
             PaintItem::Tiles(i) => tile_batches[i].batch.layer,
             PaintItem::Text(i) => frame.text_layers[i].layer,
             PaintItem::Sprite(i) => sprites[i].sprite.layer,
+            #[cfg(test)]
             PaintItem::LegacyText => unreachable!(),
         });
         let (mut cached_images, resources) = images.finish();
@@ -332,7 +340,7 @@ pub fn painted_cells(layer: &TextLayer) -> impl Iterator<Item = TextCell> + '_ {
 
 pub struct RendererState {
     pub hello: Hello,
-    pub frame: Option<PreparedFrame>,
+    pub frame: Option<Arc<PreparedFrame>>,
 }
 
 impl RendererState {
@@ -352,7 +360,12 @@ impl RendererState {
             )
     }
 
+    #[cfg(test)]
     pub fn replace(&mut self, frame: PreparedFrame) {
+        self.frame = Some(Arc::new(frame));
+    }
+
+    pub fn replace_shared(&mut self, frame: Arc<PreparedFrame>) {
         self.frame = Some(frame);
     }
 }

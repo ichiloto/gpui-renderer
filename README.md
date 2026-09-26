@@ -1,6 +1,8 @@
 # Ichiloto GPUI renderer
 
-The negotiated v2 `graphical_canvas` extension draws images at explicit graphical
+The protocol 2 retained renderer draws maps, sprites, text and canvas entities
+without resending the whole scene for every camera movement. The negotiated
+`graphical_canvas` capability draws images at explicit graphical
 rectangles, with outlines/underlines and locally positioned text. PHP resolves
 image pivots, contain-fit geometry and presentation state. Native resizing fits
 the complete canvas uniformly and centers it. Existing field sprite/tile grid
@@ -10,11 +12,11 @@ Project-owned image cursors use the existing canvas image path; see
 [cursor presentation](#cursor-presentation) for ownership and limits.
 
 The [G1 wire corpus](fixtures/graphical-canvas/manifest.json) and its
-[hash manifest](fixtures/graphical-canvas/SHA256SUMS) freeze the shared boundary.
-Each accepted canvas fully replaces the previous one; omitting it clears all
-canvas content and resumes the legacy frame. Canvas text uses transparent null
-backgrounds, while explicit colors paint opaque cells. Legacy text backgrounds
-are unchanged. Canvas and nonempty legacy collections cannot share a frame.
+[hash manifest](fixtures/graphical-canvas/SHA256SUMS) remain historical
+stateless validation references. In the current contract, identified canvas
+elements persist until replaced or removed through retained operations. Canvas
+text uses transparent null backgrounds, while explicit colors paint opaque cells.
+Canvas and visible world content remain separate presentations.
 
 The additional v2 `canvas_clip_opacity` capability requires `graphical_canvas` in
 the enabled capability set advertised in ready. It adds optional `clipRect` to canvas
@@ -35,8 +37,8 @@ Text opacity accepts finite values from 0 through 1 and applies to glyphs and
 explicit cell backgrounds. Omission means full opacity. Presence of either new
 field, including explicit text opacity `1`, requires negotiation; explicit null
 and unknown fields are rejected. Existing image opacity requires only
-`graphical_canvas`. Omitting the fields on a later full frame removes the previous
-clip/fade. Source crops, caches, budgets and legacy text behavior are unchanged;
+`graphical_canvas`. Replacing an element without those fields removes its previous
+clip/fade. Source crops, caches, budgets and screen text behavior are unchanged;
 PHP continues to resolve motion and fade timing.
 
 This extension has headless macOS validation. Text clipping/fading also passed
@@ -75,16 +77,17 @@ glyph contours; unavailable system glyphs reject the complete candidate before
 visible replacement instead of substituting an approximation. See
 [glyph implementation and validation](docs/glyph-effects-validation.md).
 
-Run `scripts/native-tile-smoke.php --canvas --binary <installed-executable>
---evidence-dir <directory>` for one silent native check. Optional
-`--observe-seconds 45` holds its first frame for inspection, then closes the
-owned window automatically. This synthetic check is not real-game acceptance.
+Historical stateless native fixture results remain in the linked validation
+documents. For this retained build, use the Engine's fixture-only
+`tools/gpui-frame-smoke.php` with a local `--renderer` path and an absolute
+`--asset-root`; it has no Game audio path. Native validation of this change
+remains pending while the host is locked.
 
 ## Local image compositing
 
 The optional v2 capability `canvas_compositing` requires `graphical_canvas`.
-It adds `canvas.composites`; presence (including `[]`) requires negotiation,
-omission/`[]` clears, and null is rejected. The local development installation
+It adds retained `canvas_composite` entities; adding one requires negotiation,
+and `remove` clears it. The local development installation
 described below includes this capability; it is not a published renderer release.
 See the [sample frame](fixtures/compositing/frame.json), using the existing
 `fixtures/test-sprite.png` and `fixtures` as its asset root.
@@ -242,9 +245,9 @@ Hidden/minimized/occluded status is not reported or inferred from paint cadence.
 No native platform lifecycle acceptance is implied by CPU protocol tests.
 
 A standalone native presentation and keyboard surface using pinned **GPUI 0.2.2**.
-It supports protocol v1 and v2 sessions. PHP owns actions, input bindings, movement,
+Its production input accepts retained protocol 2 sessions. PHP owns actions, input bindings, movement,
 collision, scenes, battle state, camera conversion, timing and saves. Rust receives
-complete presentation snapshots and forwards key identities. It has no game loop,
+bounded presentation changes and forwards key identities. It has no game loop,
 audio, ANSI parser, terminal emulator or gameplay meaning for layer IDs/numbers.
 
 ## Availability and installation
@@ -317,12 +320,17 @@ cargo test --locked
 cargo fmt --check
 cargo clippy --all-targets --locked -- -D warnings
 cargo build --release --locked
-php scripts/native-smoke.php --binary target/release/gpui-renderer
+php ../engine/tools/gpui-frame-smoke.php --renderer="$PWD/target/release/gpui-renderer" --asset-root="$PWD/fixtures" --duration=15 --change-after=7
 ```
 
-For a single silent window checking both negotiated capabilities, full-viewport
-terrain and frame clearing, run `scripts/native-tile-smoke.php` with `--binary`
-and `--evidence-dir`. See the [installed-renderer check](docs/s8-b-installation.md).
+The Engine fixture smoke is silent and opens one bounded window. The older
+`scripts/native-tile-smoke.php` and its [installed-renderer check](docs/s8-b-installation.md)
+describe the prior stateless endpoint and are historical evidence only.
+For a retained wire capture, `scripts/native-retained-replay.php --binary
+target/release/gpui-renderer --replay /absolute/capture.ndjson --evidence-dir
+/absolute/output --hold-frame 1 --observe-seconds 15` opens one silent fixture
+window, checks every generation acknowledgement, and closes it automatically.
+The tool runs only the renderer; it does not start the Game or its audio system.
 
 Ordinary gameplay uses Engine's installed optimized executable. When a new build
 is necessary, `target/release/gpui-renderer` is the packaging and performance
@@ -408,13 +416,12 @@ Engine's GPUI launch now retains the shared presentation buffer while skipping
 physical terminal drawing. The [Garden of Roads comparison](docs/garden-performance.md)
 records that improvement, the shared style-processing fix, and validation limits.
 
-The native smoke suite opens **sequential silent windows** on a graphical desktop.
-It tests both versions and IPC/lifecycle failures; it does not synthesize keyboard
-proof or assert visual pixels. Use the interactive fixture below for those checks.
-Optional `--binary PATH` selects an executable, and `--evidence-dir PATH` records
-per-case stdout, stderr and exit status. `--trace` validates enabled diagnostic
-stderr separately from ordinary errors while retaining the same stdout assertions;
-the default smoke run explicitly disables tracing.
+The earlier `scripts/native-smoke.php` exercises stateless protocol 1 and 2
+fixtures and is historical evidence; it cannot validate this retained build.
+Use the Engine's silent retained fixture smoke or `scripts/native-retained-replay.php`
+on a graphical desktop. The replay checks acknowledgements and bounded process
+lifecycle, but does not prove keyboard input or visible GPU pixels. Its
+`--evidence-dir` records the input, output, and receipt.
 
 Native startup uses one window policy across GPUI backends: request desktop-managed
 maximization, with a centered restore size fitted to GPUI's suggested window bounds.
@@ -430,187 +437,118 @@ validation on those platforms; the renderer has no operating-system startup
 rejection. Native renderer backend support alone does not establish support for
 Engine's process transport or availability of an installed platform package. Upstream
 `block 0.1.6` and `proc-macro-error2 2.0.1` report future-compatibility warnings.
-The accepted source passed 106 optimized tests, Clippy and the recorded native
-checks; see [glyph-effects validation](docs/glyph-effects-validation.md), the
+The earlier glyph-effects source passed 106 optimized tests, Clippy and its
+recorded native checks; see [glyph-effects validation](docs/glyph-effects-validation.md), the
 earlier [S7-R validation](docs/s7-r-validation.md) and [S1 validation](docs/s1-validation.md).
 
 ## Session and channel contract
 
-One UTF-8 JSON object per NDJSON line. **stdin is protocol input only; stdout is
-protocol output only; stderr is diagnostics only.** No ANSI sequences or arbitrary
-CSS colours are accepted. Required fields are typed; unknown fields, message types,
-anchors and unsupported versions are rejected. Protocol messages use `protocol:1`
-or `protocol:2`; one successful hello selects the version for the entire process.
+The production renderer accepts **protocol 2 retained sessions**. One UTF-8 JSON
+object travels on each NDJSON line: stdin is input, stdout is protocol output,
+and stderr is diagnostics. The previous protocol 1 and stateless protocol 2
+frame decoders remain available only to historical tests. They are removed
+from the production input path.
+
+A session begins with one hello:
 
 ```json
 {"protocol":2,"type":"hello","title":"Last Legend","assetRoot":"/absolute/path/to/assets","grid":{"columns":135,"rows":36,"cellWidth":10,"cellHeight":20}}
 ```
 
-The hello shape is identical in both versions. Dimensions must satisfy the bounds
-below. `assetRoot` must be absolute and canonicalize to an existing directory; title
-must be nonempty without control characters. A successful hello opens one resizable
-native window, then emits `ready`. The version is latched before opening it, so even
-a window-creation error uses that version. A second hello cannot open another window.
+`assetRoot` must resolve to an existing directory. The grid fixes cell geometry
+for the session, independently of the native window size. Hello opens one
+resizable window and emits `ready`. A second hello or a mixed-version message is
+an error. `requiredCapabilities` is a mandatory minimum; `ready.capabilities`
+reports the available drawing features. `window_activation` is an explicit
+event subscription. Before hello succeeds, an error may use the protocol 1
+envelope; this is not a downgrade.
 
-For v2, `hello.requiredCapabilities` declares the mandatory minimum, not an
-allowlist. `ready.capabilities` advertises all supported v2 drawing features:
-`sprite_source_rect`, `tile_batches`, `graphical_canvas`, `canvas_clip_opacity`,
-`canvas_glyph_effects`, `canvas_compositing` and `frame_viewport`. Frame validation and renderer
-state use that same enabled set. Clients may use additional advertised drawing
-features; Engine retains the known v2 drawing capabilities and selects a useful
-fallback per surface when a renderer does not advertise a feature. Unknown or
-duplicate required capabilities are rejected. `window_activation` is a separate,
-explicit opt-in event subscription; it is never enabled merely because drawing
-capabilities are available.
+### Retained frames
 
-V1 retains opt-in sprite cropping: request
-`"requiredCapabilities":["sprite_source_rect"]` and verify its acknowledgment
-before sending crops. Missing or empty v1 requirements retain the legacy ready
-shape without a capabilities field. V1 cannot enable the v2 drawing extensions.
-Existing v2 renderers that echo only requested capabilities continue to work;
-clients must use their actual ready response and must not assume extra support.
-No new hello wire field is needed, preserving older strict hello parsers.
-
-Every `tileBatches` field, including an empty array, requires `tile_batches` in
-ready. See the [tile contract](docs/tile-batches.md).
-Before a successfully validated hello, errors use the legacy `protocol:1` envelope,
-**including errors for invalid v2 hellos**. That is a pre-session exception, not
-negotiation or downgrade. Once initialized, every `ready`, `key`, `close_requested`
-and `error` uses the selected version. Mixed-version frames, hellos and shutdowns
-are errors; they do not replace the display, reinitialize or stop the session.
-
-Frames require a successful hello. Each accepted frame atomically replaces the
-entire previous snapshot. A malformed frame, invalid text or failed PNG load leaves
-the last accepted display unchanged. Labels are unsigned 64-bit integers, not clocks:
-duplicate/decreasing labels apply in arrival order. There is no frame acknowledgement,
-deduplication, interpolation or renderer timing. Every accepted frame notifies GPUI,
-including colour-only updates with unchanged glyphs or labels.
-
-## Protocol v1 compatibility
-
-The v1 frame schema and historical drawing order remain intact:
+A frame changes identified presentation entities rather than replacing every
+cell. For example:
 
 ```json
-{"protocol":1,"type":"frame","frame":1,"text":["row one","row two"],"sprites":[{"id":"player","asset":"South.png","x":8,"y":4,"width":32,"height":48,"anchor":"bottom_center","layer":100}]}
+{"protocol":2,"type":"frame","frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":false,"operations":[{"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"layers":[{"id":"map:terrain","layer":-99,"kind":"gameplay"}]}},{"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{"glyph":".","foreground":null,"background":null,"displayWidth":1,"ownerLayerId":"map:terrain"},{"glyph":" ","foreground":null,"background":null,"displayWidth":1,"ownerLayerId":"map:terrain"}]}]}]}
+{"protocol":2,"type":"frame","frame":1,"baseGeneration":1,"generation":2,"present":true,"operations":[],"viewport":{"scale":1,"origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":1350,"height":720},"worldId":"map","worldOrigin":{"column":0,"row":0},"textLayerIds":[],"spriteIds":[]}}
 ```
 
-Text uses the default colours. Missing rows/trailing cells are blank; `text:[]`
-clears all text, and `sprites:[]` clears all sprites. Overlong rows, too many rows
-and control characters are rejected. One Unicode scalar occupies one fixed cell.
-The complete text plane paints first, then sprites sorted by ascending layer with
-stable array order on ties. Even a sprite at `i32::MIN` paints after v1 text.
-V2 fields such as `textLayers` are not accepted in v1 frames.
+`generation` is a positive, strictly increasing delivery number;
+`baseGeneration` must equal the last accepted generation, except on `reset`.
+`frame` labels the presentation transaction and is independent of generation.
+`reset:true` starts a fresh retained scene and can recover after a rejected or
+lost update. Each line is limited to 4 MiB and 4096 operations. A
+`present:false` chunk stages changes without changing the visible scene; its
+viewport must be omitted. The final `present:true` chunk validates and commits
+the complete scene atomically. An empty operations list with a changed viewport
+is a camera-only frame; unchanged scenes are not decoded again.
 
-## Protocol v2
+Accepted chunks emit
+`{"protocol":2,"type":"frame_ack","generation":2,"frame":1,"presented":true}`.
+The same event uses `presented:false` for a staged chunk. A rejected update
+keeps the last visible scene and emits `frame_rejected` with `generation`,
+`expectedGeneration`, `message`, and `resyncRequired:true`. The sender must
+reset rather than retry a dependent delta. Native content-size or device-scale
+changes emit `{"protocol":2,"type":"resized"}`; the Engine coalesces this signal
+and sends an updated presentation. `shutdown` closes the session.
 
-```json
-{
-  "protocol": 2,
-  "type": "frame",
-  "frame": 1,
-  "textLayers": [
-    {"id":"world","layer":0,"runs":[
-      {"row":4,"column":2,"text":"Hello","foreground":{"kind":"ansi16","index":14},"background":null}
-    ]},
-    {"id":"ui","layer":1000,"runs":[
-      {"row":4,"column":8,"text":"     ","foreground":null,"background":null}
-    ]}
-  ],
-  "sprites": [
-    {"id":"player","asset":"South.png","x":8,"y":4,"width":32,"height":48,"anchor":"bottom_center","layer":100}
-  ]
-}
-```
+Operations use one of these shapes:
 
-All shown frame/layer/run fields are required; empty arrays are allowed. Layer IDs
-are nonempty UTF-8 strings, unique among text layers in a frame, at most 256 UTF-8
-bytes. They are presentation identities only. Sprite IDs have their existing
-separate uniqueness domain. Layers are signed 32-bit integers.
+| Operation | Effect |
+| --- | --- |
+| `put` with `kind`, `id`, `value` | Insert or replace a `world`, `text`, `sprite`, `canvas`, `canvas_image`, `canvas_indicator`, `canvas_text`, or `canvas_composite` entity. |
+| `remove` with `kind`, `id` | Remove that entity. |
+| `worldRows` with `id`, `rows` | Replace complete, indexed owner-glyph rows of a world. |
+| `worldTiles` with `id`, `layerId`, `rows` | Replace indexed, sparse tile-candidate rows of one world layer. |
+| `textRows` with `id`, `rows` | Replace indexed runs of one screen text layer; an empty row clears it. |
 
-Runs contain a zero-based `row`, zero-based starting `column`, UTF-8 `text`, and
-required nullable `foreground`/`background`. Omission is malformed; explicit null
-means the renderer default. Every Unicode scalar advances exactly one grid cell,
-independent of byte length, glyph width or font advance. Grapheme clustering and
-terminal wide-character continuation cells are not inferred. Controls, tabs and
-newlines are rejected. The complete run must fit; invalid runs are never clipped.
-An empty run paints nothing, but its row and column must still be inside the grid.
+A world definition supplies bounded logical `columns`, `rows`, and ordered
+layers. Each layer has an `id`, numeric `layer`, `kind` (`gameplay` or
+`decoration`), and optionally an asset-root-relative atlas and source-rectangle
+catalog. Every world row must be supplied before presentation; a row may be
+shorter than `columns`, leaving an unpainted trailing background. Owner cells
+carry one glyph, nullable structured foreground/background, display width, and
+the owning gameplay layer ID. Tile candidates refer to source indexes at world
+coordinates. The renderer projects only visible rows and columns; camera
+movement does not resend the map. World limits are 16,384 on each axis and
+1,048,576 logical cells and tile candidates, with at most 64 layers. Retained
+source data has a 64 MiB budget; staged plus visible source data is bounded at
+128 MiB. These are source-state estimates, separate from decoded images; the
+sum of live prepared images referenced by a retained scene is limited to 256 MiB.
+Existing 64 MiB limits still apply independently to decoded PNG sources,
+prepared regions, and composite output work.
+The world source estimate is `sum(64 + UTF-8 glyph bytes + UTF-8 owner-layer ID
+bytes)` for supplied owner cells, plus `16` per retained tile candidate and
+`8192` per world layer. The logical cell ceiling does not guarantee that a
+fully populated world fits the separate source budget; producers should
+preflight both limits before uploading it.
 
-**Every covered cell is opaque, including spaces.** Its background rectangle uses
-the explicit colour or default background. A non-space scalar paints over that
-rectangle using the explicit foreground or default text colour. A space paints just
-the background. Cells absent from runs are transparent to lower layers. Overlapping
-runs execute in their array order, so later cells replace earlier cells.
+A missing, corrupt, inaccessible, or out-of-range world atlas is diagnosed and that
+layer paints its retained glyph fallback. It does not reject an otherwise valid
+scene or hide an asset problem. Asset resolution never reads outside the asset
+root. Malformed entity values and exceeded budgets reject the update.
 
-For v2, tile batches, text layers and sprites share one ascending numeric order:
+Screen `text` values contain `id`, numeric `layer`, stable `order`, and
+`runs`; each run has `row`, `column`, `text`, and required nullable
+`foreground`/`background`. Every covered cell is opaque, including a space.
+Absent cells are transparent. A `sprite` value uses the shared sprite fields
+plus `order`. Canvas uses a `canvas` root with `id:"canvas"`, width and height,
+and the existing image, indicator, text, and composite DTOs as individually
+identified operations. Canvas and a world viewport cannot be visible together.
 
-1. Lower layers paint before higher layers.
-2. Equal-layer tile batches paint first, preserving batch and cell array order.
-3. Equal-layer text layers paint next, preserving their frame array order.
-4. Equal-layer sprites paint last, preserving their frame array order.
+### Camera and selected content
 
-Use distinct layers for specific cross-type occlusion. Values such as world `0`,
-sprite `100` and UI `1000` are caller policy, never hardcoded gameplay rules.
-`textLayers:[]` removes all previous text layers. Together with `sprites:[]` and
-omitted or empty `tileBatches`, it
-clears the entire snapshot to the default surface background.
-
-### Selected frame viewport
-
-The optional `frame_viewport` capability lets a caller enlarge selected field
-content while leaving menus, status and other frame items at their normal size.
-Use it only when `ready.capabilities` advertises support. It is a presentation
-transform, not a map or camera: the caller projects the visible world into the
-session grid and decides which existing item IDs belong to the field. For
-example, a 2× field may show roughly half as many source columns and rows while
-the session grid and UI remain 135 × 36.
-
-```json
-"viewport": {
-  "scale": 2,
-  "origin": {"x": 0, "y": 0},
-  "clipRect": {"x": 0, "y": 0, "width": 1350, "height": 720},
-  "textLayerIds": ["world"],
-  "spriteIds": ["player"],
-  "tileBatchIds": ["terrain"]
-}
-```
-
-`origin` and `clipRect` are in session logical pixels. The source grid's (0, 0)
-maps to `origin`; each referenced text layer, sprite or tile batch is uniformly
-scaled from there, then clipped to `clipRect`, before the entire session surface
-is fitted to the native window. Before that final window fit, a source point
-`(x, y)` maps to `(origin.x + scale * x, origin.y + scale * y)`.
-IDs must refer to items already present in the same frame and cannot repeat in
-their list. Unlisted items retain their existing position, size and drawing
-order. The transform supports finite positive scales through 8×, finite bounded
-origins, and a positive clip rectangle inside the session surface. It does not
-relax existing frame resource limits. An invalid viewport rejects the complete
-frame. Omission clears the transform; explicit `null` is invalid. It cannot be
-combined with a graphical `canvas` frame. Older renderers remain usable because
-clients can omit this field and send the same 1× content.
-
-### Tile batches
-
-With `tile_batches` negotiated, v2 frames may include:
-
-```json
-"tileBatches":[{"id":"terrain","asset":"Field.png","layer":-100,"sources":[{"x":0,"y":0,"width":16,"height":32}],"cells":[{"column":8,"row":3,"source":0}]}]
-```
-
-Cells are already Camera-projected, unsigned grid coordinates. Each fills one
-session cell; `source` indexes image-pixel rectangles in the batch catalog.
-There is no map interpretation or terrain animation in Rust. Omission and `[]`
-clear previous tiles; explicit null is invalid. A malformed batch, invalid crop
-or budget failure rejects the entire frame, preserving the accepted display.
-
-Terrain has an independent 32768-cell budget and one canvas/layout element per
-batch, while each cell still emits an image primitive. Guarded source regions
-are prepared and cached for reuse, with separate byte/count accounting; they
-isolate neighbouring atlas tiles. Cached device-pixel samples compensate for
-GPUI's image-bound rounding, preserving the selected artwork's full mapping at
-fractional scales and positions. Unchanged samples are reused across cells/frames.
-See [S8-B implementation and validation](docs/s8-b-validation.md) and the
-[shared exact wire fixtures](fixtures/tile-batches/manifest.json).
+`viewport` omission keeps the last transform; explicit `null` clears it. A
+viewport has a finite positive scale through 8, a logical-pixel origin and clip
+rectangle inside the session surface. `worldId` and signed
+`worldOrigin:{column,row}` select the retained map. `worldId` may be omitted
+for screen-only zoom, in which case the world origin must be zero. Only the
+world subtracts `worldOrigin`. Named `textLayerIds` and `spriteIds` are
+already screen-projected; they receive the scale, origin, and clip but no world
+subtraction. Unlisted text and sprites keep their ordinary screen position.
+The complete logical surface is then fitted and centered in the resizable native
+window. Wide world glyphs use their full display width; a later opaque screen
+cell covering either half suppresses the whole underlay glyph.
 
 ### Structured colour
 
@@ -940,7 +878,7 @@ Glyph raster dimensions are bounded to 16384 device pixels per axis, and a bound
 cache-miss work check applies before preparation. These are native resource checks,
 not increases or replacements of the wire layer/run/scalar limits.
 
-## Key identities (both versions)
+## Key identities
 
 ```json
 {"protocol":2,"type":"key","key":"C"}
@@ -969,8 +907,7 @@ not browser `KeyboardEvent` names. Shift on other named keys adds no chord ident
 
 OS repeats are forwarded; key-up events are not. The renderer never emits actions
 such as `cancel`, `map`, `move_up`, `confirm` or `quit`. **PHP owns input bindings.**
-This expansion also applies to v1; existing v1 key identities are unchanged.
-Native validation covers the required C/M/T/Tab/Shift-Tab/F5 and legacy keys.
+Historical native validation covered C/M/T/Tab/Shift-Tab/F5 and legacy keys.
 F0, Insert and uncommon keys still depend on platform availability; see the explicit
 native-evidence limitations in the validation document.
 
@@ -984,34 +921,19 @@ native-evidence limitations in the validation document.
 | Out | `error`, with `message` | Recoverable rejection retains display; fatal errors exit nonzero |
 
 Each object includes its selected numeric `protocol` and string `type`. Shutdown
-before hello is allowed for either supported version and emits nothing. EOF after
+before hello is allowed for protocol 2 and emits nothing. EOF after
 hello keeps the window and keyboard active. EOF before a successful hello is fatal.
 Broken/full stdout or window-creation failure is fatal. Shutdown allows two seconds
 to drain output; an unavailable output channel can only report diagnostics to stderr.
 
 ## Native fixtures
 
-```sh
-# Existing v1 fixture; EOF leaves the native window open.
-php scripts/fixture.php | target/release/gpui-renderer
-# V2 first visual frame; --frame second selects the changed style snapshot.
-php scripts/fixture.php --protocol 2 --frame first | target/release/gpui-renderer
-# Controlled single-window fixture, with protocol logs captured separately.
-php scripts/inspect-fixture.php --binary target/release/gpui-renderer > /tmp/events.ndjson 2> /tmp/renderer.log
-```
-
-For the controlled fixture, type commands into its launching terminal: `second`
-changes colours without changing text; `first` restores; `invalid` attempts a missing
-asset; `clear` empties the snapshot; `shutdown` exits via the protocol. Use the native
-window for actual keyboard testing. Native close also ends the driver. `--protocol 1`
-selects the original Home calibration fixture. `--binary PATH` supports a local app
-bundle executable. `--geometry last-legend` selects 135×36 at10×20 and adds a complete
-grid border; `--geometry oversized` selects 135×36 at20×40 (2700×1440 logical).
-`--geometry oversized-tall` selects 135×36 at20×80 to exercise height/chrome fitting.
-The unused area is intentional; these are alignment fixtures, not game screens.
-All fixture assets belong to this repository; no Ichiloto/PHP,
-game checkout, game process or audio is used. Check existing processes first and
-keep only one interactive fixture window open.
+The original `scripts/fixture.php` and `scripts/inspect-fixture.php` emit
+stateless protocol 1 or 2 frames and remain historical calibration fixtures;
+they cannot drive the production retained renderer. Use the retained replay tool
+above with an NDJSON capture for native presentation inspection, or the Engine's
+retained fixture smoke for a small controlled window. Both are fixture-only and
+silent. Check existing processes first and keep only one inspection window open.
 
 ## Implementation boundaries
 

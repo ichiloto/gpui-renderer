@@ -574,7 +574,9 @@ fn replay_engine_composite_packets_without_a_native_window() {
             .unwrap_or("frame")
             .to_owned();
         let wire = serde_json::to_vec(value.get("message").unwrap_or(&value)).unwrap();
+        let parse_start = std::time::Instant::now();
         let parsed = parse(&wire).unwrap();
+        let parse_ms = parse_start.elapsed().as_secs_f64() * 1000.;
         if !matches!(parsed.message, Message::FrameV2(_)) {
             session.prepare(parsed).unwrap();
             continue;
@@ -584,7 +586,7 @@ fn replay_engine_composite_packets_without_a_native_window() {
         let elapsed = start.elapsed().as_secs_f64() * 1000.;
         match prepared {
             Ok(Update::Frame(frame)) => {
-                results.push(json!({"index":index,"label":label,"elapsedMs":elapsed,"resources":frame.resources}));
+                results.push(json!({"index":index,"label":label,"parseMs":parse_ms,"elapsedMs":elapsed,"totalMs":parse_ms+elapsed,"resources":frame.resources}));
                 if (results.len() - 1) % capture_every == 0
                     && let Some(canvas) = &frame.canvas
                 {
@@ -607,7 +609,7 @@ fn replay_engine_composite_packets_without_a_native_window() {
             Err(error) => {
                 failures.push(format!("{index}/{label}: {error}"));
                 results
-                    .push(json!({"index":index,"label":label,"elapsedMs":elapsed,"error":error}));
+                    .push(json!({"index":index,"label":label,"parseMs":parse_ms,"elapsedMs":elapsed,"totalMs":parse_ms+elapsed,"error":error}));
             }
             _ => panic!("expected a prepared frame"),
         }

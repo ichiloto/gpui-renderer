@@ -29,8 +29,11 @@ pub struct Incoming {
 #[derive(Debug)]
 pub enum Message {
     Hello(Hello),
+    #[cfg(test)]
     Frame(Frame),
+    #[cfg(test)]
     FrameV2(FrameV2),
+    RetainedFrame(crate::retained_protocol::FrameUpdate),
     Shutdown,
 }
 
@@ -134,6 +137,7 @@ impl Grid {
     }
 }
 
+#[cfg(test)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Frame {
@@ -142,6 +146,7 @@ pub struct Frame {
     pub sprites: Vec<Sprite>,
 }
 
+#[cfg(test)]
 impl Frame {
     pub fn validate(&self, grid: Grid) -> Result<(), String> {
         if self.text.len() > grid.rows as usize
@@ -531,26 +536,53 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
     let probe: VersionProbe =
         serde_json::from_slice(line).map_err(|e| format!("invalid protocol message: {e}"))?;
     let (version, message) = match probe.protocol {
-        1 => (
-            Version::V1,
-            match decode::<Frame>(line)? {
-                WireMessage::Hello(h) => Message::Hello(h),
-                WireMessage::Frame(f) => Message::Frame(f),
-                WireMessage::Shutdown(_) => Message::Shutdown,
-            },
-        ),
-        2 => (
-            Version::V2,
-            match decode::<FrameV2>(line)? {
-                WireMessage::Hello(h) => Message::Hello(h),
-                WireMessage::Frame(f) => Message::FrameV2(f),
-                WireMessage::Shutdown(_) => Message::Shutdown,
-            },
-        ),
+        1 => {
+            #[cfg(not(test))]
+            return Err("protocol v1 is no longer accepted by the native renderer".into());
+            #[cfg(test)]
+            {
+                (
+                    Version::V1,
+                    match decode::<Frame>(line)? {
+                        WireMessage::Hello(h) => Message::Hello(h),
+                        WireMessage::Frame(f) => Message::Frame(f),
+                        WireMessage::Shutdown(_) => Message::Shutdown,
+                    },
+                )
+            }
+        }
+        2 => {
+            let retained = decode::<crate::retained_protocol::FrameUpdate>(line);
+            let message = match retained {
+                Ok(WireMessage::Hello(h)) => Message::Hello(h),
+                Ok(WireMessage::Frame(f)) => Message::RetainedFrame(f),
+                Ok(WireMessage::Shutdown(_)) => Message::Shutdown,
+                Err(_error) => {
+                    #[cfg(test)]
+                    {
+                        // Historical full-frame fixtures remain readable in tests
+                        // while the production v2 endpoint accepts retained updates.
+                        match decode::<FrameV2>(line).map_err(|legacy_error| {
+                            format!("retained: {_error}; legacy: {legacy_error}")
+                        })? {
+                            WireMessage::Hello(h) => Message::Hello(h),
+                            WireMessage::Frame(f) => Message::FrameV2(f),
+                            WireMessage::Shutdown(_) => Message::Shutdown,
+                        }
+                    }
+                    #[cfg(not(test))]
+                    return Err(_error);
+                }
+            };
+            (Version::V2, message)
+        }
         other => {
+            #[cfg(test)]
             return Err(format!(
                 "unsupported protocol version {other}; expected 1 or 2"
             ));
+            #[cfg(not(test))]
+            return Err(format!("unsupported protocol version {other}; expected 2"));
         }
     };
     if let Message::Hello(hello) = &message {
@@ -613,8 +645,22 @@ pub enum Event {
         key: String,
     },
     CloseRequested,
+    Resized,
     Error {
         message: String,
+    },
+    FrameAck {
+        generation: u64,
+        frame: u64,
+        presented: bool,
+    },
+    FrameRejected {
+        generation: u64,
+        #[serde(rename = "expectedGeneration")]
+        expected_generation: u64,
+        message: String,
+        #[serde(rename = "resyncRequired")]
+        resync_required: bool,
     },
 }
 
