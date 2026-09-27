@@ -547,18 +547,22 @@ pieces. A piece copies its `x`, `y`, `width`, `height` rectangle of sheet
 compose in order with source-over. `worldTiles` rows list `{"column","tile"}`
 cells with a catalog index and unique columns. Listed rows are replaced, an
 empty row clears one, and omitted rows persist until the world is put again. A
-world holds at most 1,048,576 tile cells. A tile is drawn as a square one cell
-tall from its cell's top-left corner, so with 24 x 48 cells it covers its cell
-and the next one across; tiles placed just left of the camera still paint the
-part that reaches into it. The viewport's optional `tileFrame`
+world holds at most 1,048,576 tile cells. A tile is `tileSize` pixels tall and
+drawn one cell tall. It may set its own `width` (1 to `tileSize`, default
+`tileSize`) and `left`, the offset of its left edge from its cell's in source
+pixels (-`tileSize` to `tileSize`, default 0), so a tile can be a slice as narrow
+as one cell or a whole tile centred on a narrower cell. Tiles placed just left of
+the camera still paint the part that overhangs into it. The viewport's optional
+`tileFrame`
 (default 0) shows frame `tileFrame % frames` of every tile, so animation is a
 camera-only frame.
 
 Each tile frame is composed once per world definition, within 64 MiB. A sheet
 that cannot be loaded, or a piece outside its sheet, is diagnosed once per sheet
 and makes only the tiles using it unavailable; the scene is still accepted. A
-cell covered by an available tile in any tiles layer shows no owner glyph or
-background, even where the tile is transparent; other cells keep their glyph.
+cell where an available tile is placed in any tiles layer shows no owner glyph
+or background, even where the tile is transparent; other cells keep their glyph,
+including cells a tile only overhangs.
 World layers paint interleaved with screen text and sprites by `layer`, a world
 layer first on a tie, so tiles at layer 900 draw above characters at 100.
 

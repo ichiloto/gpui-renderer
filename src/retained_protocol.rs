@@ -136,9 +136,10 @@ pub struct WorldDefinition {
     pub tileset: Option<Tileset>,
 }
 
-/// A catalog of square tiles, each composed from pieces of sheet images. A
-/// tile is drawn one world cell tall from its cell's top-left corner, so it
-/// may cover several cells across.
+/// A catalog of tiles, each composed from pieces of sheet images. A tile is
+/// `tileSize` source pixels tall and drawn one world cell tall; its own width
+/// and left offset (in source pixels, from its cell's left edge) let it be a
+/// slice narrower than a cell or overhang the cells beside it.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Tileset {
@@ -152,8 +153,21 @@ pub struct Tileset {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TileDefinition {
+    /// Width in source pixels, 1 to `tileSize`; `tileSize` when absent.
+    #[serde(default)]
+    pub width: Option<u32>,
+    /// Source pixels from the cell's left edge to the tile's, -`tileSize` to
+    /// `tileSize`.
+    #[serde(default)]
+    pub left: i32,
     /// Animation frames; each is its pieces in paint order.
     pub frames: Vec<Vec<TilePiece>>,
+}
+
+impl TileDefinition {
+    pub fn get_width(&self, tile_size: u32) -> u32 {
+        self.width.unwrap_or(tile_size)
+    }
 }
 
 /// A source rectangle of one sheet copied unscaled to (left, top) of the tile.
@@ -190,6 +204,12 @@ impl Tileset {
         }
         let size = u64::from(self.tile_size);
         for tile in &self.tiles {
+            let width = tile.get_width(self.tile_size);
+            if width == 0 || width > self.tile_size || tile.left.unsigned_abs() > self.tile_size {
+                return Err(
+                    "tileset tile width must be 1..tileSize and left within tileSize".into(),
+                );
+            }
             if tile.frames.is_empty() || tile.frames.len() > MAX_TILE_FRAMES {
                 return Err("tileset tiles require 1..4 frames".into());
             }
@@ -201,7 +221,7 @@ impl Tileset {
                     if piece.sheet as usize >= self.sheets.len()
                         || piece.width == 0
                         || piece.height == 0
-                        || u64::from(piece.left) + u64::from(piece.width) > size
+                        || u64::from(piece.left) + u64::from(piece.width) > u64::from(width)
                         || u64::from(piece.top) + u64::from(piece.height) > size
                     {
                         return Err(

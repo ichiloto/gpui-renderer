@@ -561,8 +561,13 @@ fn world_layer_element(
         {
             continue;
         }
-        let mut bounds =
-            crate::retained_paint::cell_bounds(projected_cell, field, field.0, transform, view);
+        let mut bounds = crate::retained_paint::cell_bounds(
+            projected_cell,
+            field,
+            (0.0, field.0),
+            transform,
+            view,
+        );
         bounds.left -= clip.left;
         bounds.top -= clip.top;
         let mut painted = positioned(div(), bounds)

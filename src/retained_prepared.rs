@@ -63,12 +63,9 @@ impl PreparedWorld {
         };
         let mut painted = PaintedCells::new(source.definition.columns, source.definition.rows);
         if let Some(tileset) = &tileset {
-            let span = source.get_tile_columns();
             source.visit_tiles(|column, row, tile| {
                 if tileset.is_available(tile) {
-                    for covered in column..column.saturating_add(span) {
-                        painted.mark(covered, row);
-                    }
+                    painted.mark(column, row);
                 }
             });
         }
@@ -80,8 +77,9 @@ impl PreparedWorld {
         }
     }
 
-    /// Whether any tiles layer paints an available tile over this cell. Such a
-    /// cell does not show its glyph, even where the tile is transparent.
+    /// Whether any tiles layer places an available tile at this cell. Such a
+    /// cell does not show its glyph, even where the tile is transparent; a
+    /// tile's overhang into the cells beside it does not hide theirs.
     pub fn has_painted_tile(&self, column: u32, row: u32) -> bool {
         self.painted.contains(column, row)
     }
@@ -266,10 +264,9 @@ mod tests {
                 .filter(|(column, row)| world.has_painted_tile(*column, *row))
                 .collect::<Vec<_>>()
         };
-        // A tile covers its cell and the next across (24 x 48 cells, square
-        // tiles), within the world. Tile 1 uses the missing sheet, so its cell
-        // keeps the glyph.
-        assert_eq!(painted(world), [(0, 0), (1, 0), (2, 1)]);
+        // A tile hides only its own cell's glyph. Tile 1 uses the missing
+        // sheet, so its cell keeps the glyph.
+        assert_eq!(painted(world), [(0, 0), (2, 1)]);
         assert!(!world.has_painted_tile(3, 0));
         assert!(world.get_tile_image(1, 0).is_none());
         let composed = world.get_tile_image(0, 0).unwrap();
@@ -294,7 +291,7 @@ mod tests {
             world.tileset.as_ref().unwrap(),
             updated.tileset.as_ref().unwrap()
         ));
-        assert_eq!(painted(updated), [(1, 0), (2, 0), (2, 1)]);
+        assert_eq!(painted(updated), [(1, 0), (2, 1)]);
 
         // Putting the world again clears its tiles and composes afresh.
         apply(

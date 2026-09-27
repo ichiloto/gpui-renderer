@@ -1,8 +1,8 @@
 //! Retained, source-coordinate map data and the camera's logical-cell projection.
 //! Only the visible rows are visited during a scroll. Every world cell is one
 //! terminal cell drawn at the world's cell size. Tile rows are graphics on the
-//! same grid, independent of the owner glyphs; a tile is a square one cell
-//! tall, covering the cells beside it too.
+//! same grid, independent of the owner glyphs; a tile is placed at one cell
+//! and may overhang the cells beside it.
 use crate::retained_protocol::{
     MAX_WORLD_TILE_CELLS, Viewport, WorldCell, WorldDefinition, WorldLayerKind, WorldRow,
     WorldTileCell, WorldTileRow,
@@ -218,11 +218,23 @@ impl World {
         )
     }
 
-    /// World cells a tile covers across: a tile is a square one cell tall.
-    pub fn get_tile_columns(&self) -> u32 {
-        self.definition
-            .cell_height
-            .div_ceil(self.definition.cell_width)
+    /// Cells to the right of its own that the widest-reaching tile overhangs,
+    /// so tiles placed just left of the camera still paint what reaches it.
+    pub fn get_tile_reach(&self) -> u32 {
+        let Some(tileset) = &self.definition.tileset else {
+            return 0;
+        };
+        let (width, height) = self.cell_size();
+        let ratio = height / tileset.tile_size as f32;
+        tileset
+            .tiles
+            .iter()
+            .map(|tile| {
+                let right = (tile.left as f32 + tile.get_width(tileset.tile_size) as f32) * ratio;
+                ((right - width).max(0.0) / width).ceil() as u32
+            })
+            .max()
+            .unwrap_or(0)
     }
 
     fn get_visible_range(&self, viewport: &Viewport) -> VisibleRange {
@@ -293,10 +305,7 @@ impl World {
             let Some(cells) = rows[y as usize].as_deref() else {
                 continue;
             };
-            let reach = range
-                .columns
-                .start
-                .saturating_sub(self.get_tile_columns() - 1);
+            let reach = range.columns.start.saturating_sub(self.get_tile_reach());
             let first = cells.partition_point(|cell| cell.column < reach);
             for cell in cells[first..]
                 .iter()
@@ -376,7 +385,7 @@ mod tests {
         assert_eq!(columns, HashSet::from([0, 1, 2, 3]));
         assert!(visible.iter().all(|(_, glyph)| glyph == "#"));
         assert_eq!(world.cell_size(), (24.0, 48.0));
-        assert_eq!(world.get_tile_columns(), 2);
+        assert_eq!(world.get_tile_reach(), 0);
         for (width, height) in [(0, 48), (24, 0), (257, 48), (24, 257)] {
             assert!(
                 World::new(
@@ -406,6 +415,39 @@ mod tests {
 
     fn validate(value: serde_json::Value) -> Result<(), String> {
         World::new(from_value(value).map_err(|error| error.to_string())?).map(|_| ())
+    }
+
+    #[test]
+    fn tiles_may_be_narrower_than_a_cell_or_overhang_its_neighbours() {
+        let half = json!({"sheet":0,"x":0,"y":0,"width":24,"height":48,"left":0,"top":0});
+        let with = |width: u32, left: i32, piece: &serde_json::Value| {
+            let mut value = tiled(tileset(1));
+            value["tileset"]["tiles"][0] = json!({"width":width,"left":left,"frames":[[piece]]});
+            validate(value)
+        };
+        assert!(with(24, 0, &half).is_ok());
+        assert!(with(48, -48, &half).is_ok());
+        assert!(with(48, 48, &half).is_ok());
+        for (width, left) in [(0, 0), (49, 0), (48, -49), (48, 49)] {
+            assert!(with(width, left, &half).is_err(), "{width} {left}");
+        }
+        let mut wide = half.clone();
+        wide["width"] = json!(25);
+        assert!(with(24, 0, &wide).is_err());
+        // With 24 x 48 cells and 48-pixel tiles, a whole tile centred on its
+        // cell overhangs half a cell to the right; a half tile does not.
+        let reach = |width: u32, left: i32| {
+            let mut value = tiled(tileset(1));
+            value["tileset"]["tiles"][0] =
+                json!({"width":width,"left":left,"frames":[[half.clone()]]});
+            World::new(from_value(value).unwrap())
+                .unwrap()
+                .get_tile_reach()
+        };
+        assert_eq!(reach(24, 0), 0);
+        assert_eq!(reach(48, -12), 1);
+        assert_eq!(reach(48, 0), 1);
+        assert_eq!(World::new(definition(48)).unwrap().get_tile_reach(), 0);
     }
 
     #[test]

@@ -73,8 +73,6 @@ impl PreparedTileset {
                 ));
             }
         }
-        let side = (tileset.tile_size + 2 * GUARD) as usize;
-        let frame_bytes = side * side * 4;
         let mut composed_bytes = 0;
         let mut tiles = Vec::with_capacity(tileset.tiles.len());
         let mut images = Vec::new();
@@ -83,7 +81,9 @@ impl PreparedTileset {
                 tiles.push(Vec::new());
                 continue;
             }
-            let bytes = frame_bytes * tile.frames.len();
+            let width = tile.get_width(tileset.tile_size);
+            let bytes = ((width + 2 * GUARD) * (tileset.tile_size + 2 * GUARD) * 4) as usize
+                * tile.frames.len();
             if composed_bytes + bytes > MAX_COMPOSED_BYTES {
                 diagnostics.push(format!(
                     "tileset composition exceeds 64 MiB at tile {index}; later tiles show glyphs"
@@ -94,7 +94,7 @@ impl PreparedTileset {
             let frames: Vec<_> = tile
                 .frames
                 .iter()
-                .map(|pieces| compose(pieces, &sheets, tileset.tile_size))
+                .map(|pieces| compose(pieces, &sheets, width, tileset.tile_size))
                 .collect();
             images.extend(frames.iter().cloned());
             tiles.push(frames);
@@ -146,8 +146,13 @@ impl Sheet {
 
 /// Composes pieces in order with premultiplied source-over, then extends the
 /// edges into the guard border. Bytes stay GPUI's straight-alpha BGRA.
-fn compose(pieces: &[TilePiece], sheets: &[Option<Sheet>], size: u32) -> Arc<RenderImage> {
-    let mut tile: Vec<Pixel> = vec![[0.0; 4]; (size * size) as usize];
+fn compose(
+    pieces: &[TilePiece],
+    sheets: &[Option<Sheet>],
+    width: u32,
+    height: u32,
+) -> Arc<RenderImage> {
+    let mut tile: Vec<Pixel> = vec![[0.0; 4]; (width * height) as usize];
     for piece in pieces {
         let sheet = sheets[piece.sheet as usize]
             .as_ref()
@@ -157,7 +162,7 @@ fn compose(pieces: &[TilePiece], sheets: &[Option<Sheet>], size: u32) -> Arc<Ren
             for x in 0..piece.width {
                 let source =
                     ((piece.y + y) as usize * sheet.width as usize + (piece.x + x) as usize) * 4;
-                let target = ((piece.top + y) * size + piece.left + x) as usize;
+                let target = ((piece.top + y) * width + piece.left + x) as usize;
                 tile[target] = blend(
                     unpack(&bytes[source..source + 4]),
                     tile[target],
@@ -166,12 +171,11 @@ fn compose(pieces: &[TilePiece], sheets: &[Option<Sheet>], size: u32) -> Arc<Ren
             }
         }
     }
-    let side = size + 2 * GUARD;
-    let mut pixels = image::RgbaImage::new(side, side);
+    let mut pixels = image::RgbaImage::new(width + 2 * GUARD, height + 2 * GUARD);
     for (x, y, pixel) in pixels.enumerate_pixels_mut() {
-        let tx = x.saturating_sub(GUARD).min(size - 1);
-        let ty = y.saturating_sub(GUARD).min(size - 1);
-        write(&mut pixel.0, tile[(ty * size + tx) as usize]);
+        let tx = x.saturating_sub(GUARD).min(width - 1);
+        let ty = y.saturating_sub(GUARD).min(height - 1);
+        write(&mut pixel.0, tile[(ty * width + tx) as usize]);
     }
     Arc::new(RenderImage::new(vec![image::Frame::new(pixels)]))
 }
@@ -255,6 +259,23 @@ mod tests {
         assert_eq!(prepared.images.len(), 1);
     }
 
+    #[test]
+    fn a_narrow_tile_composes_at_its_own_width() {
+        let (_directory, assets) = assets();
+        let tileset = tileset(
+            json!({"tileSize":2,"sheets":["sheet.png"],"tiles":[{"width":1,"left":0,"frames":[[
+                {"sheet":0,"x":2,"y":0,"width":1,"height":2,"left":0,"top":0}
+            ]]}]}),
+        );
+        let (prepared, diagnostics) = PreparedTileset::prepare(&tileset, &assets);
+        assert!(diagnostics.is_empty());
+        let image = prepared.get_frame(0, 0).unwrap();
+        assert_eq!(
+            (image.size(0).width.0, image.size(0).height.0),
+            ((1 + 2 * GUARD) as i32, (2 + 2 * GUARD) as i32)
+        );
+        assert_eq!(pixel(image, GUARD, GUARD), [255, 0, 0, 128]);
+    }
     #[test]
     fn missing_sheets_and_outside_pieces_leave_only_their_tiles_unavailable() {
         let (_directory, assets) = assets();
