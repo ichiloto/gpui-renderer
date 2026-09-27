@@ -115,8 +115,8 @@ pub(crate) fn sheet_bounds(
 }
 
 /// Zero-based cell coordinates -> GPUI logical pixels, relative to the origin
-/// of whichever cell pitch the sprite belongs to: the square field cell for
-/// field members, the text grid otherwise.
+/// of whichever cell pitch the sprite belongs to: the field cell for field
+/// members, the text grid otherwise.
 pub fn sprite_origin(sprite: &Sprite, cell_width: f32, cell_height: f32) -> (f32, f32) {
     match sprite.anchor {
         Anchor::BottomCenter => (
@@ -313,17 +313,17 @@ impl Render for Renderer {
         if transform.scale == 0.0 {
             return crate::render_trace::observe(root, &self.output.diagnostics, observation);
         }
-        // The field has its own square cell, carried by the world the retained
-        // viewport presents, holding cell_columns text columns as in the
-        // terminal. UI text keeps the session grid's pitch.
+        // The field has its own cell size, carried by the world the retained
+        // viewport presents: one terminal cell, in the terminal's shape. UI
+        // text keeps the session grid's pitch.
         let field_cell = self
             .retained_viewport
             .as_ref()
             .and_then(|view| view.world_id.as_ref())
             .and_then(|id| self.retained_scene.as_ref()?.get_world(id))
-            .map(|world| (world.source.cell_size(), world.source.cell_columns()));
+            .map(|world| world.source.cell_size());
         let field_font_size =
-            field_cell.map(|(cell, columns)| fit_cell_font(cell / columns, cell, advance, line_em));
+            field_cell.map(|(width, height)| fit_cell_font(width, height, advance, line_em));
         let bounds = transform.surface_bounds();
         let mut surface = positioned(div(), bounds)
             .overflow_hidden()
@@ -398,14 +398,12 @@ impl Render for Renderer {
                     #[cfg(test)]
                     PaintItem::LegacyText => false,
                 });
-                // Field members share the world's square cell: text keeps its
-                // terminal columns per cell, sprites are placed by whole cells.
-                let (pitch_width, pitch_height, item_font, sprite_pitch) =
+                // Field members share the world's cell: text is one terminal
+                // cell per field cell, sprites are placed by whole cells.
+                let (pitch_width, pitch_height, item_font) =
                     match (retained_member.is_some(), field_cell, field_font_size) {
-                        (true, Some((cell, columns)), Some(font)) => {
-                            (cell / columns, cell, font, (cell, cell))
-                        }
-                        _ => (cw, ch, logical_font_size, (cw, ch)),
+                        (true, Some((width, height)), Some(font)) => (width, height, font),
+                        _ => (cw, ch, logical_font_size),
                     };
                 let (item_transform, clip) = if let Some(view) = retained_member {
                     let (content, clip) = content_geometry_retained(transform, view);
@@ -468,8 +466,7 @@ impl Render for Renderer {
 
                     PaintItem::Sprite(index) => {
                         let item = &frame.sprites[index];
-                        let (left, top) =
-                            sprite_origin(&item.sprite, sprite_pitch.0, sprite_pitch.1);
+                        let (left, top) = sprite_origin(&item.sprite, pitch_width, pitch_height);
                         let bounds = item_transform.surface_rect(
                             left,
                             top,
@@ -553,7 +550,7 @@ fn world_layer_element(
         .absolute()
         .size_full()
         .text_size(px(field_font * transform.scale * view.scale))
-        .line_height(px(field * transform.scale * view.scale));
+        .line_height(px(field.1 * transform.scale * view.scale));
     for &projected_cell in projected {
         let Some(row) = world.source.get_row(projected_cell.world_row) else {
             continue;
@@ -564,7 +561,8 @@ fn world_layer_element(
         {
             continue;
         }
-        let mut bounds = crate::retained_paint::cell_bounds(projected_cell, field, transform, view);
+        let mut bounds =
+            crate::retained_paint::cell_bounds(projected_cell, field, field.0, transform, view);
         bounds.left -= clip.left;
         bounds.top -= clip.top;
         let mut painted = positioned(div(), bounds)
@@ -854,9 +852,9 @@ mod tests {
         }
     }
     #[test]
-    fn one_cell_field_sprite_fills_its_square_field_cell() {
-        // A field character is exactly one field cell: at the 48-pixel field
-        // pitch its bounds are that cell, whatever the text grid's shape.
+    fn field_character_frame_is_centred_on_its_cell() {
+        // A 48-pixel character frame stands on its 24 x 48 field cell and
+        // overhangs half a cell on each side, whatever the text grid's shape.
         let sprite = Sprite {
             id: "player".into(),
             asset: "$Hero.png".into(),
@@ -868,7 +866,7 @@ mod tests {
             layer: 100,
             source_rect: None,
         };
-        assert_eq!(sprite_origin(&sprite, 48.0, 48.0), (96.0, 48.0));
+        assert_eq!(sprite_origin(&sprite, 24.0, 48.0), (36.0, 48.0));
     }
 
     #[test]

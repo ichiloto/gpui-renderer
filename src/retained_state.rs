@@ -460,7 +460,7 @@ mod tests {
 
     fn world() -> Value {
         json!({"op":"put","kind":"world","id":"map","value":{
-            "columns":4,"rows":2,"cellSize":10,"cellColumns":2,"layers":[{"id":"map:terrain","layer":-100,
+            "columns":4,"rows":2,"cellWidth":5,"cellHeight":10,"layers":[{"id":"map:terrain","layer":-100,
                 "kind":"gameplay"}]}})
     }
 

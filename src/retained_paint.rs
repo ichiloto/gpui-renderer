@@ -1,6 +1,6 @@
 //! Visible-only world painting. Camera frames project logical cells; each world
-//! cell is one square field cell whatever its text. Tiles layers submit only
-//! their visible composed tiles.
+//! cell is one field cell of the world's cell size whatever its text. Tiles
+//! layers submit only their visible composed tiles, each a square one cell tall.
 use crate::{
     display_cache::DisplayRasterCache,
     retained_prepared::PreparedWorld,
@@ -19,19 +19,20 @@ pub fn project_world(world: &PreparedWorld, viewport: &Viewport) -> Arc<Vec<Proj
     Arc::new(cells)
 }
 
-/// A projected world cell's square bounds at the field's own pitch.
+/// A projected world cell's bounds at the field's own pitch, `width` pixels
+/// across as painted from its top-left corner.
 pub fn cell_bounds(
     cell: ProjectedCell,
-    field_cell: f32,
+    (cell_width, cell_height): (f32, f32),
+    width: f32,
     base: ViewportTransform,
     viewport: &Viewport,
 ) -> PaintRect {
-    let pitch = field_cell * viewport.scale;
     base.surface_rect(
-        viewport.origin.x + cell.screen_column as f32 * pitch,
-        viewport.origin.y + cell.screen_row as f32 * pitch,
-        pitch,
-        pitch,
+        viewport.origin.x + cell.screen_column as f32 * cell_width * viewport.scale,
+        viewport.origin.y + cell.screen_row as f32 * cell_height * viewport.scale,
+        width * viewport.scale,
+        cell_height * viewport.scale,
     )
 }
 
@@ -63,7 +64,7 @@ pub fn merge_paint_order(world: &[i32], plan: &[i32]) -> Vec<FieldPaint> {
 }
 
 /// Paints each visible cell of one tiles layer with its tile's current frame,
-/// filling the cell's square and clipped to the viewport.
+/// a square one cell tall from the cell's corner, clipped to the viewport.
 pub fn tile_element(
     world: Arc<PreparedWorld>,
     layer_index: usize,
@@ -76,6 +77,7 @@ pub fn tile_element(
         move |bounds, (), window, _| {
             let layer = &world.layers[layer_index];
             let field_cell = world.source.cell_size();
+            let tile_width = field_cell.1;
             let clip = base.surface_rect(
                 viewport.clip_rect.x,
                 viewport.clip_rect.y,
@@ -98,7 +100,7 @@ pub fn tile_element(
                     let Some(region) = world.get_tile_image(tile, viewport.tile_frame) else {
                         return;
                     };
-                    let relative = cell_bounds(cell, field_cell, base, &viewport);
+                    let relative = cell_bounds(cell, field_cell, tile_width, base, &viewport);
                     let destination = PaintRect {
                         left: f32::from(bounds.origin.x) + relative.left,
                         top: f32::from(bounds.origin.y) + relative.top,

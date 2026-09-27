@@ -63,9 +63,12 @@ impl PreparedWorld {
         };
         let mut painted = PaintedCells::new(source.definition.columns, source.definition.rows);
         if let Some(tileset) = &tileset {
+            let span = source.get_tile_columns();
             source.visit_tiles(|column, row, tile| {
                 if tileset.is_available(tile) {
-                    painted.mark(column, row);
+                    for covered in column..column.saturating_add(span) {
+                        painted.mark(covered, row);
+                    }
                 }
             });
         }
@@ -77,7 +80,7 @@ impl PreparedWorld {
         }
     }
 
-    /// Whether any tiles layer paints an available tile at this cell. Such a
+    /// Whether any tiles layer paints an available tile over this cell. Such a
     /// cell does not show its glyph, even where the tile is transparent.
     pub fn has_painted_tile(&self, column: u32, row: u32) -> bool {
         self.painted.contains(column, row)
@@ -111,6 +114,9 @@ impl PaintedCells {
     }
 
     fn mark(&mut self, column: u32, row: u32) {
+        if column >= self.columns {
+            return;
+        }
         let index = row as usize * self.columns as usize + column as usize;
         self.bits[index / 64] |= 1 << (index % 64);
     }
@@ -238,14 +244,14 @@ mod tests {
         apply(
             &mut scene,
             json!({"op":"put","kind":"world","id":"map","value":{
-            "columns":3,"rows":2,"cellSize":48,"cellColumns":2,"layers":[
+            "columns":3,"rows":2,"cellWidth":24,"cellHeight":48,"layers":[
                 {"id":"map:above","layer":900,"kind":"tiles"},
                 {"id":"map:ground","layer":-100,"kind":"tiles"},
                 {"id":"map:terrain","layer":-99,"kind":"gameplay"}],
             "tileset":{"tileSize":2,"sheets":["ground.png","missing.png"],"tiles":[
                 {"frames":piece(0)},{"frames":piece(1)}]}}}),
         );
-        apply(&mut scene, tile_row(0, &[(0, 0), (1, 1)]));
+        apply(&mut scene, tile_row(0, &[(0, 0), (2, 1)]));
         apply(
             &mut scene,
             json!({"op":"worldTiles","id":"map","layerId":"map:above","rows":[
@@ -260,8 +266,10 @@ mod tests {
                 .filter(|(column, row)| world.has_painted_tile(*column, *row))
                 .collect::<Vec<_>>()
         };
-        // Tile 1 uses the missing sheet, so its cell keeps the glyph.
-        assert_eq!(painted(world), [(0, 0), (2, 1)]);
+        // A tile covers its cell and the next across (24 x 48 cells, square
+        // tiles), within the world. Tile 1 uses the missing sheet, so its cell
+        // keeps the glyph.
+        assert_eq!(painted(world), [(0, 0), (1, 0), (2, 1)]);
         assert!(!world.has_painted_tile(3, 0));
         assert!(world.get_tile_image(1, 0).is_none());
         let composed = world.get_tile_image(0, 0).unwrap();
@@ -286,13 +294,13 @@ mod tests {
             world.tileset.as_ref().unwrap(),
             updated.tileset.as_ref().unwrap()
         ));
-        assert_eq!(painted(updated), [(1, 0), (2, 1)]);
+        assert_eq!(painted(updated), [(1, 0), (2, 0), (2, 1)]);
 
         // Putting the world again clears its tiles and composes afresh.
         apply(
             &mut scene,
             json!({"op":"put","kind":"world","id":"map","value":{
-            "columns":3,"rows":2,"cellSize":48,"cellColumns":2,"layers":[
+            "columns":3,"rows":2,"cellWidth":24,"cellHeight":48,"layers":[
                 {"id":"map:ground","layer":-100,"kind":"tiles"},
                 {"id":"map:terrain","layer":-99,"kind":"gameplay"}],
             "tileset":{"tileSize":2,"sheets":["ground.png"],"tiles":[{"frames":piece(0)}]}}}),

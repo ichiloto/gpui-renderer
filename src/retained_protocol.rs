@@ -19,11 +19,9 @@ pub const MAX_TILE_FRAMES: usize = 4;
 pub const MAX_TILE_PIECES: usize = 8;
 /// Source-state charge for one tile piece.
 pub const TILE_PIECE_BYTES: usize = 32;
-/// Largest square field cell, in logical pixels. The field unit is its own
+/// Largest field cell side, in logical pixels. The field unit is its own
 /// pitch, independent of the session text grid that UI text uses.
 pub const MAX_WORLD_CELL_SIZE: u32 = 256;
-/// Most terminal text columns one field cell holds.
-pub const MAX_WORLD_CELL_COLUMNS: u32 = 4;
 pub const MAX_RETAINED_BYTES: usize = 64 * 1024 * 1024;
 pub const MAX_STAGING_AND_VISIBLE_BYTES: usize = 128 * 1024 * 1024;
 
@@ -127,18 +125,20 @@ pub enum EntityKind {
 pub struct WorldDefinition {
     pub columns: u32,
     pub rows: u32,
-    /// Side of one square field cell in logical pixels, before viewport scale.
-    pub cell_size: u32,
-    /// Terminal text columns in one field cell. A cell's text and every field
-    /// text member keep this many columns per square, as in the terminal.
-    pub cell_columns: u32,
+    /// One world cell's width in logical pixels, before viewport scale. A
+    /// world cell is one terminal cell, so it is usually taller than wide.
+    pub cell_width: u32,
+    /// One world cell's height in logical pixels, before viewport scale.
+    pub cell_height: u32,
     pub layers: Vec<WorldLayer>,
     /// Graphics for `tiles` layers. Absent for a glyph-only world.
     #[serde(default)]
     pub tileset: Option<Tileset>,
 }
 
-/// A catalog of square tiles, each composed from pieces of sheet images.
+/// A catalog of square tiles, each composed from pieces of sheet images. A
+/// tile is drawn one world cell tall from its cell's top-left corner, so it
+/// may cover several cells across.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Tileset {
@@ -258,11 +258,10 @@ impl WorldDefinition {
         {
             return Err("world dimensions exceed 16384 axes or 1048576 cells".into());
         }
-        if self.cell_size == 0 || self.cell_size > MAX_WORLD_CELL_SIZE {
-            return Err("world cellSize must be 1..256 logical pixels".into());
-        }
-        if self.cell_columns == 0 || self.cell_columns > MAX_WORLD_CELL_COLUMNS {
-            return Err("world cellColumns must be 1..4 terminal columns".into());
+        for size in [self.cell_width, self.cell_height] {
+            if size == 0 || size > MAX_WORLD_CELL_SIZE {
+                return Err("world cellWidth and cellHeight must be 1..256 logical pixels".into());
+            }
         }
         if self.layers.is_empty() || self.layers.len() > MAX_WORLD_LAYERS {
             return Err("world requires 1..64 layers".into());

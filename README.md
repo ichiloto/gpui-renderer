@@ -471,7 +471,7 @@ A frame changes identified presentation entities rather than replacing every
 cell. For example:
 
 ```json
-{"protocol":2,"type":"frame","frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":false,"operations":[{"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"cellSize":48,"cellColumns":2,"layers":[{"id":"map:terrain","layer":-99,"kind":"gameplay"}]}},{"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{"glyph":"..","foreground":null,"background":null,"ownerLayerId":"map:terrain"},{"glyph":"  ","foreground":null,"background":null,"ownerLayerId":"map:terrain"}]}]}]}
+{"protocol":2,"type":"frame","frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":false,"operations":[{"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"cellWidth":24,"cellHeight":48,"layers":[{"id":"map:terrain","layer":-99,"kind":"gameplay"}]}},{"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{"glyph":".","foreground":null,"background":null,"ownerLayerId":"map:terrain"},{"glyph":" ","foreground":null,"background":null,"ownerLayerId":"map:terrain"}]}]}]}
 {"protocol":2,"type":"frame","frame":1,"baseGeneration":1,"generation":2,"present":true,"operations":[],"viewport":{"scale":1,"origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":1350,"height":720},"worldId":"map","worldOrigin":{"column":0,"row":0},"textLayerIds":[],"spriteIds":[]}}
 ```
 
@@ -504,15 +504,14 @@ Operations use one of these shapes:
 | `worldTiles` with `id`, `layerId`, `rows` | Replace indexed tile rows of one `tiles` layer; an empty row clears it. |
 | `textRows` with `id`, `rows` | Replace indexed runs of one screen text layer; an empty row clears it. |
 
-A world definition supplies bounded logical `columns`, `rows`, its square
-`cellSize` in logical pixels (1 to 256; Ichiloto uses 48, RPG Maker's tile
-size), `cellColumns`, the terminal text columns one cell holds (1 to 4;
-Ichiloto uses 2, which is square on a terminal), and ordered layers. The field
-is drawn at that pitch, independent of the session text grid. Every world cell
-is one square cell whatever its text; its text, and the text layers named by
-the viewport, keep `cellColumns` columns per cell with a font fitted to that
-column, so an unpainted map looks like its terminal presentation scaled.
-Sprites named by the viewport are placed by whole cells. Only unlisted screen
+A world definition supplies bounded logical `columns`, `rows`, its
+`cellWidth` and `cellHeight` in logical pixels (1 to 256 each; Ichiloto uses
+24 x 48, one terminal cell in the terminal's own tall shape, half an RPG Maker
+tile wide), and ordered layers. The field is drawn at that pitch, independent
+of the session text grid. Every world cell is one cell of that size whatever
+its text; its text, and the text layers named by the viewport, use a font
+fitted to the cell, so an unpainted map looks like its terminal presentation
+scaled. Sprites named by the viewport are placed by whole cells. Only unlisted screen
 text and sprites keep the text grid's cell pitch. Each layer has an `id`,
 numeric `layer` and `kind` (`gameplay`, `decoration` or `tiles`). Every world row must
 be supplied before presentation; a row may be shorter than `columns`, leaving
@@ -548,14 +547,17 @@ pieces. A piece copies its `x`, `y`, `width`, `height` rectangle of sheet
 compose in order with source-over. `worldTiles` rows list `{"column","tile"}`
 cells with a catalog index and unique columns. Listed rows are replaced, an
 empty row clears one, and omitted rows persist until the world is put again. A
-world holds at most 1,048,576 tile cells. The viewport's optional `tileFrame`
+world holds at most 1,048,576 tile cells. A tile is drawn as a square one cell
+tall from its cell's top-left corner, so with 24 x 48 cells it covers its cell
+and the next one across; tiles placed just left of the camera still paint the
+part that reaches into it. The viewport's optional `tileFrame`
 (default 0) shows frame `tileFrame % frames` of every tile, so animation is a
 camera-only frame.
 
 Each tile frame is composed once per world definition, within 64 MiB. A sheet
 that cannot be loaded, or a piece outside its sheet, is diagnosed once per sheet
 and makes only the tiles using it unavailable; the scene is still accepted. A
-cell with an available tile in any tiles layer shows no owner glyph or
+cell covered by an available tile in any tiles layer shows no owner glyph or
 background, even where the tile is transparent; other cells keep their glyph.
 World layers paint interleaved with screen text and sprites by `layer`, a world
 layer first on a tie, so tiles at layer 900 draw above characters at 100.
@@ -653,10 +655,10 @@ left  = feetX - width / 2
 top   = feetY - height
 ```
 
-`cellWidth` and `cellHeight` are the world's square `cellSize` for sprites
-named by a world viewport (their `x` and `y` are whole field cells), and the
-session grid's cell otherwise. A one-cell
-field character sent at `width = height = cellSize` fills exactly its cell.
+`cellWidth` and `cellHeight` are the world's cell size for sprites named by a
+world viewport (their `x` and `y` are whole field cells), and the session
+grid's cell otherwise. A 48 x 48 field character on a 24 x 48 cell stands on
+the cell's bottom edge and overhangs half a cell on each side.
 
 Geometry uses logical presentation pixels (1× corresponds to macOS points).
 The viewport transform below places the grid inside native content, below the

@@ -1,7 +1,8 @@
 //! Retained, source-coordinate map data and the camera's logical-cell projection.
 //! Only the visible rows are visited during a scroll. Every world cell is one
-//! square field cell, whatever its text. Tile rows are graphics on the same
-//! grid, independent of the owner glyphs.
+//! terminal cell drawn at the world's cell size. Tile rows are graphics on the
+//! same grid, independent of the owner glyphs; a tile is a square one cell
+//! tall, covering the cells beside it too.
 use crate::retained_protocol::{
     MAX_WORLD_TILE_CELLS, Viewport, WorldCell, WorldDefinition, WorldLayerKind, WorldRow,
     WorldTileCell, WorldTileRow,
@@ -42,8 +43,8 @@ impl VisibleRange {
         ProjectedCell {
             world_column,
             world_row,
-            screen_column: self.pad_x + (world_column - self.columns.start) as i32,
-            screen_row: self.pad_y + (world_row - self.rows.start) as i32,
+            screen_column: self.pad_x + world_column as i32 - self.columns.start as i32,
+            screen_row: self.pad_y + world_row as i32 - self.rows.start as i32,
         }
     }
 }
@@ -209,27 +210,33 @@ impl World {
                 .map_or(0, |tileset| tileset.estimated_bytes())
     }
 
-    /// Side of one square field cell in logical pixels, before viewport scale.
-    pub fn cell_size(&self) -> f32 {
-        self.definition.cell_size as f32
+    /// One world cell's width and height in logical pixels, before viewport scale.
+    pub fn cell_size(&self) -> (f32, f32) {
+        (
+            self.definition.cell_width as f32,
+            self.definition.cell_height as f32,
+        )
     }
 
-    /// Terminal text columns in one field cell.
-    pub fn cell_columns(&self) -> f32 {
-        self.definition.cell_columns as f32
+    /// World cells a tile covers across: a tile is a square one cell tall.
+    pub fn get_tile_columns(&self) -> u32 {
+        self.definition
+            .cell_height
+            .div_ceil(self.definition.cell_width)
     }
 
     fn get_visible_range(&self, viewport: &Viewport) -> VisibleRange {
         let first_x = viewport.world_origin.column.max(0) as u32;
         let first_y = viewport.world_origin.row.max(0) as u32;
-        let pitch = self.cell_size() * viewport.scale;
-        let visible_columns =
-            ((viewport.clip_rect.width + (viewport.clip_rect.x - viewport.origin.x).abs()) / pitch)
-                .ceil() as u32
-                + 2;
+        let (width, height) = self.cell_size();
+        let visible_columns = ((viewport.clip_rect.width
+            + (viewport.clip_rect.x - viewport.origin.x).abs())
+            / (width * viewport.scale))
+            .ceil() as u32
+            + 2;
         let visible_rows = ((viewport.clip_rect.height
             + (viewport.clip_rect.y - viewport.origin.y).abs())
-            / pitch)
+            / (height * viewport.scale))
             .ceil() as u32
             + 2;
         let end_x = self
@@ -249,7 +256,7 @@ impl World {
     }
 
     /// Visits only the cells this camera shows; one world column is one
-    /// square screen cell.
+    /// screen cell.
     pub fn project_visible(
         &self,
         viewport: &Viewport,
@@ -270,7 +277,8 @@ impl World {
     }
 
     /// Visits the visible tile cells of one tiles layer with their catalog
-    /// tile. Tiles do not depend on the owner rows' length.
+    /// tile, including tiles placed just left of the camera that reach into
+    /// it. Tiles do not depend on the owner rows' length.
     pub fn project_visible_tiles(
         &self,
         layer_id: &str,
@@ -285,7 +293,11 @@ impl World {
             let Some(cells) = rows[y as usize].as_deref() else {
                 continue;
             };
-            let first = cells.partition_point(|cell| cell.column < range.columns.start);
+            let reach = range
+                .columns
+                .start
+                .saturating_sub(self.get_tile_columns() - 1);
+            let first = cells.partition_point(|cell| cell.column < reach);
             for cell in cells[first..]
                 .iter()
                 .take_while(|cell| cell.column < range.columns.end)
@@ -314,7 +326,7 @@ mod tests {
 
     fn definition(size: u32) -> WorldDefinition {
         from_value(
-            json!({"columns":4,"rows":4,"cellSize":size,"cellColumns":2,"layers":[{
+            json!({"columns":4,"rows":4,"cellWidth":size / 2,"cellHeight":size,"layers":[{
                 "id":"map:terrain","layer":-100,"kind":"gameplay"
             }]}),
         )
@@ -342,15 +354,15 @@ mod tests {
     }
 
     #[test]
-    fn field_cells_are_square_at_their_own_pitch() {
+    fn field_cells_keep_their_own_pitch_on_each_axis() {
         let mut world = World::new(definition(48)).unwrap();
         let row = |index: u32| {
-            let cells: Vec<_> = (0..4).map(|_| cell("##")).collect();
+            let cells: Vec<_> = (0..4).map(|_| cell("#")).collect();
             from_value(json!({"row":index,"cells":cells})).unwrap()
         };
         world.replace_rows((0..4).map(row).collect()).unwrap();
-        // Two 48-pixel cells fit a 96 x 96 clip on both axes, whatever the
-        // session text grid's cell shape is, and each shows its whole text.
+        // 24 x 48 cells: four fit a 96 x 96 clip across and two down, whatever
+        // the session text grid's cell shape is.
         let viewport: Viewport = from_value(json!({"scale":1,
             "origin":{"x":0,"y":0},"worldId":"map",
             "clipRect":{"x":0,"y":0,"width":96,"height":96}
@@ -362,12 +374,14 @@ mod tests {
         });
         let columns: HashSet<i32> = visible.iter().map(|(cell, _)| cell.screen_column).collect();
         assert_eq!(columns, HashSet::from([0, 1, 2, 3]));
-        assert!(visible.iter().all(|(_, glyph)| glyph == "##"));
-        for (size, columns) in [(0, 2), (48, 0), (48, 5)] {
+        assert!(visible.iter().all(|(_, glyph)| glyph == "#"));
+        assert_eq!(world.cell_size(), (24.0, 48.0));
+        assert_eq!(world.get_tile_columns(), 2);
+        for (width, height) in [(0, 48), (24, 0), (257, 48), (24, 257)] {
             assert!(
                 World::new(
-                    from_value(json!({"columns":1,"rows":1,"cellSize":size,
-                        "cellColumns":columns,"layers":[{
+                    from_value(json!({"columns":1,"rows":1,"cellWidth":width,
+                        "cellHeight":height,"layers":[{
                         "id":"map:terrain","layer":0,"kind":"gameplay"}]}))
                     .unwrap()
                 )
@@ -377,7 +391,7 @@ mod tests {
     }
 
     fn tiled(tileset: serde_json::Value) -> serde_json::Value {
-        json!({"columns":4,"rows":3,"cellSize":48,"cellColumns":2,"layers":[
+        json!({"columns":4,"rows":3,"cellWidth":24,"cellHeight":48,"layers":[
             {"id":"map:ground","layer":-100,"kind":"tiles"},
             {"id":"map:terrain","layer":-99,"kind":"gameplay"},
             {"id":"map:above","layer":900,"kind":"tiles"}
@@ -454,7 +468,7 @@ mod tests {
         unknown["scale"] = json!(2);
         assert!(with(&|t| t["tiles"][0]["frames"] = json!([[unknown]])).is_err());
         assert!(
-            validate(json!({"columns":1,"rows":1,"cellSize":48,"cellColumns":2,
+            validate(json!({"columns":1,"rows":1,"cellWidth":24,"cellHeight":48,
             "layers":[{"id":"map:ground","layer":0,"kind":"tiles"}],
             "tileset":tileset(1),"extra":true}))
             .is_err()
@@ -516,7 +530,7 @@ mod tests {
 
         // The cap spans every tiles layer of the world.
         let wide: WorldDefinition = from_value(json!({"columns":1024,"rows":1024,
-            "cellSize":48,"cellColumns":2,"layers":[
+            "cellWidth":24,"cellHeight":48,"layers":[
                 {"id":"a","layer":0,"kind":"tiles"},{"id":"b","layer":1,"kind":"tiles"}],
             "tileset":tileset(1)}))
         .unwrap();
@@ -559,12 +573,14 @@ mod tests {
                 "map:ground",
                 vec![
                     from_value(json!({"row":1,"cells":[
-                        {"column":3,"tile":1},{"column":0,"tile":0},{"column":2,"tile":1}]}))
+                        {"column":3,"tile":1},{"column":0,"tile":0},{"column":1,"tile":0},
+                        {"column":2,"tile":1}]}))
                     .unwrap(),
                 ],
             )
             .unwrap();
-        // One visible cell's width past the origin column 2, plus the margin.
+        // From origin column 2, plus the margin, and the tile at column 1 whose
+        // square reaches into the first visible cell.
         let viewport: Viewport = from_value(json!({"scale":1,
             "origin":{"x":0,"y":0},"worldId":"map","tileFrame":5,
             "worldOrigin":{"column":2,"row":-1},
@@ -576,7 +592,7 @@ mod tests {
         world.project_visible_tiles("map:ground", &viewport, |cell, tile| {
             visible.push((cell.world_column, cell.screen_column, cell.screen_row, tile))
         });
-        assert_eq!(visible, [(2, 0, 2, 1), (3, 1, 2, 1)]);
+        assert_eq!(visible, [(1, -1, 2, 0), (2, 0, 2, 1), (3, 1, 2, 1)]);
         world.project_visible_tiles("map:above", &viewport, |_, _| panic!("no tiles"));
     }
 }

@@ -516,8 +516,8 @@ mod tests {
             "ownerLayerId":"map:terrain"});
         let stage = json!({"protocol":2,"type":"frame","frame":1,"baseGeneration":0,
         "generation":1,"reset":true,"present":false,"operations":[
-            {"op":"put","kind":"world","id":"map","value":{"columns":4,"rows":2,"cellSize":10,
-                "cellColumns":2,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
+            {"op":"put","kind":"world","id":"map","value":{"columns":4,"rows":2,"cellWidth":5,
+                "cellHeight":10,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
             {"op":"worldRows","id":"map","rows":[
                 {"row":0,"cells":vec![cell.clone();4]},
                 {"row":1,"cells":vec![cell;4]}]}
@@ -597,15 +597,15 @@ mod tests {
         };
         let put = json!({"protocol":2,"type":"frame","frame":1,"baseGeneration":0,
         "generation":1,"reset":true,"present":true,"operations":[
-            {"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"cellSize":10,
-                "cellColumns":2,"layers":[
+            {"op":"put","kind":"world","id":"map","value":{"columns":3,"rows":1,"cellWidth":5,
+                "cellHeight":10,"layers":[
                     {"id":"map:ground","layer":-100,"kind":"tiles"},
                     {"id":"map:terrain","layer":-99,"kind":"gameplay"}],
                 "tileset":{"tileSize":16,"sheets":["test-sprite.png","missing-tiles.png"],
                     "tiles":[{"frames":[piece(0,0),piece(0,16)]},{"frames":[piece(1,0)]}]}}},
-            {"op":"worldRows","id":"map","rows":[{"row":0,"cells":[cell.clone(),cell]}]},
+            {"op":"worldRows","id":"map","rows":[{"row":0,"cells":[cell.clone(),cell.clone(),cell]}]},
             {"op":"worldTiles","id":"map","layerId":"map:ground","rows":[
-                {"row":0,"cells":[{"column":0,"tile":0},{"column":1,"tile":1}]}]}
+                {"row":0,"cells":[{"column":0,"tile":0},{"column":2,"tile":1}]}]}
         ],"viewport":viewport(0)});
         let Update::RetainedFrame(first) = session
             .prepare(protocol::parse(&serde_json::to_vec(&put).unwrap()).unwrap())
@@ -614,8 +614,11 @@ mod tests {
             panic!("a missing sheet must not reject the scene")
         };
         let world = &first.scene.worlds["map"];
+        // A tile is a square one cell tall, so it covers the cell beside it too;
+        // the tile whose sheet is missing leaves its cell to the glyph.
         assert!(world.has_painted_tile(0, 0));
-        assert!(!world.has_painted_tile(1, 0));
+        assert!(world.has_painted_tile(1, 0));
+        assert!(!world.has_painted_tile(2, 0));
         let still = world.get_tile_image(0, 0).unwrap().id;
         // Animation is a camera-only frame that reuses the prepared scene.
         let animate = json!({"protocol":2,"type":"frame","frame":2,"baseGeneration":1,
@@ -713,7 +716,7 @@ mod tests {
             "baseGeneration":0,"generation":1,"reset":true,"present":true,
             "operations":[
                 {"op":"put","kind":"world","id":"map","value":{
-                    "columns":1,"rows":1,"cellSize":10,"cellColumns":2,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
+                    "columns":1,"rows":1,"cellWidth":5,"cellHeight":10,"layers":[{"id":"map:terrain","layer":-100,"kind":"gameplay"}]}},
                 {"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{
                     "glyph":"..","foreground":null,"background":null,
                     "ownerLayerId":"map:terrain"}]}]}
