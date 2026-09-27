@@ -20,18 +20,18 @@ pub fn project_world(world: &PreparedWorld, viewport: &Viewport) -> Arc<Vec<Proj
     Arc::new(cells)
 }
 
-/// A projected world cell's row at the field's own pitch, from `left` to
-/// `left + width` logical pixels across its left edge.
+/// A projected world cell's bounds at the field's own pitch, one cell tall and
+/// `width` logical pixels across, offset by (`left`, `top`) from its corner.
 pub fn cell_bounds(
     cell: ProjectedCell,
     (cell_width, cell_height): (f32, f32),
-    (left, width): (f32, f32),
+    (left, top, width): (f32, f32, f32),
     base: ViewportTransform,
     viewport: &Viewport,
 ) -> PaintRect {
     base.surface_rect(
         viewport.origin.x + (cell.screen_column as f32 * cell_width + left) * viewport.scale,
-        viewport.origin.y + cell.screen_row as f32 * cell_height * viewport.scale,
+        viewport.origin.y + (cell.screen_row as f32 * cell_height + top) * viewport.scale,
         width * viewport.scale,
         cell_height * viewport.scale,
     )
@@ -108,6 +108,7 @@ pub fn tile_element(
                     let definition = &tileset.tiles[tile as usize];
                     let span = (
                         definition.left as f32 * ratio,
+                        definition.top as f32 * ratio,
                         definition.get_width(tileset.tile_size) as f32 * ratio,
                     );
                     let relative = cell_bounds(cell, field_cell, span, base, &viewport);

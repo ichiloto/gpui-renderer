@@ -564,7 +564,7 @@ fn world_layer_element(
         let mut bounds = crate::retained_paint::cell_bounds(
             projected_cell,
             field,
-            (0.0, field.0),
+            (0.0, 0.0, field.0),
             transform,
             view,
         );

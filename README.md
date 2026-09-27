@@ -549,8 +549,8 @@ cells with a catalog index and unique columns. Listed rows are replaced, an
 empty row clears one, and omitted rows persist until the world is put again. A
 world holds at most 1,048,576 tile cells. A tile is `tileSize` pixels tall and
 drawn one cell tall. It may set its own `width` (1 to `tileSize`, default
-`tileSize`) and `left`, the offset of its left edge from its cell's in source
-pixels (-`tileSize` to `tileSize`, default 0), so a tile can be a slice as narrow
+`tileSize`), and `left` and `top`, the offsets of its edges from its cell's
+corner in source pixels (-`tileSize` to `tileSize`, default 0), so a tile can be a slice as narrow
 as one cell or a whole tile centred on a narrower cell. Tiles placed just left of
 the camera still paint the part that overhangs into it. The viewport's optional
 `tileFrame`

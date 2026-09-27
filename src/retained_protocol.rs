@@ -160,6 +160,10 @@ pub struct TileDefinition {
     /// `tileSize`.
     #[serde(default)]
     pub left: i32,
+    /// Source pixels from the cell's top edge to the tile's, -`tileSize` to
+    /// `tileSize`.
+    #[serde(default)]
+    pub top: i32,
     /// Animation frames; each is its pieces in paint order.
     pub frames: Vec<Vec<TilePiece>>,
 }
@@ -205,9 +209,14 @@ impl Tileset {
         let size = u64::from(self.tile_size);
         for tile in &self.tiles {
             let width = tile.get_width(self.tile_size);
-            if width == 0 || width > self.tile_size || tile.left.unsigned_abs() > self.tile_size {
+            if width == 0
+                || width > self.tile_size
+                || tile.left.unsigned_abs() > self.tile_size
+                || tile.top.unsigned_abs() > self.tile_size
+            {
                 return Err(
-                    "tileset tile width must be 1..tileSize and left within tileSize".into(),
+                    "tileset tile width must be 1..tileSize and left and top within tileSize"
+                        .into(),
                 );
             }
             if tile.frames.is_empty() || tile.frames.len() > MAX_TILE_FRAMES {

@@ -218,23 +218,24 @@ impl World {
         )
     }
 
-    /// Cells to the right of its own that the widest-reaching tile overhangs,
-    /// so tiles placed just left of the camera still paint what reaches it.
-    pub fn get_tile_reach(&self) -> u32 {
+    /// Cells to the right of and below its own that the farthest-reaching
+    /// tile overhangs, so tiles placed just left of or above the camera still
+    /// paint what reaches it.
+    pub fn get_tile_reach(&self) -> (u32, u32) {
         let Some(tileset) = &self.definition.tileset else {
-            return 0;
+            return (0, 0);
         };
         let (width, height) = self.cell_size();
         let ratio = height / tileset.tile_size as f32;
-        tileset
-            .tiles
-            .iter()
-            .map(|tile| {
-                let right = (tile.left as f32 + tile.get_width(tileset.tile_size) as f32) * ratio;
-                ((right - width).max(0.0) / width).ceil() as u32
-            })
-            .max()
-            .unwrap_or(0)
+        let beyond = |far: f32, cell: f32| ((far - cell).max(0.0) / cell).ceil() as u32;
+        tileset.tiles.iter().fold((0, 0), |(across, down), tile| {
+            let right = (tile.left as f32 + tile.get_width(tileset.tile_size) as f32) * ratio;
+            let bottom = (tile.top as f32 + tileset.tile_size as f32) * ratio;
+            (
+                across.max(beyond(right, width)),
+                down.max(beyond(bottom, height)),
+            )
+        })
     }
 
     fn get_visible_range(&self, viewport: &Viewport) -> VisibleRange {
@@ -301,11 +302,12 @@ impl World {
             return;
         };
         let range = self.get_visible_range(viewport);
-        for y in range.rows.clone() {
+        let (across, down) = self.get_tile_reach();
+        let reach = range.columns.start.saturating_sub(across);
+        for y in range.rows.start.saturating_sub(down)..range.rows.end {
             let Some(cells) = rows[y as usize].as_deref() else {
                 continue;
             };
-            let reach = range.columns.start.saturating_sub(self.get_tile_reach());
             let first = cells.partition_point(|cell| cell.column < reach);
             for cell in cells[first..]
                 .iter()
@@ -385,7 +387,7 @@ mod tests {
         assert_eq!(columns, HashSet::from([0, 1, 2, 3]));
         assert!(visible.iter().all(|(_, glyph)| glyph == "#"));
         assert_eq!(world.cell_size(), (24.0, 48.0));
-        assert_eq!(world.get_tile_reach(), 0);
+        assert_eq!(world.get_tile_reach(), (0, 0));
         for (width, height) in [(0, 48), (24, 0), (257, 48), (24, 257)] {
             assert!(
                 World::new(
@@ -444,10 +446,22 @@ mod tests {
                 .unwrap()
                 .get_tile_reach()
         };
-        assert_eq!(reach(24, 0), 0);
-        assert_eq!(reach(48, -12), 1);
-        assert_eq!(reach(48, 0), 1);
-        assert_eq!(World::new(definition(48)).unwrap().get_tile_reach(), 0);
+        assert_eq!(reach(24, 0), (0, 0));
+        assert_eq!(reach(48, -12), (1, 0));
+        assert_eq!(reach(48, 0), (1, 0));
+        assert_eq!(World::new(definition(48)).unwrap().get_tile_reach(), (0, 0));
+        // A layer shifted half a cell down reaches the row below.
+        let mut lowered = tiled(tileset(1));
+        lowered["tileset"]["tiles"][0] = json!({"width":24,"top":24,"frames":[[half.clone()]]});
+        assert_eq!(
+            World::new(from_value(lowered).unwrap())
+                .unwrap()
+                .get_tile_reach(),
+            (0, 1)
+        );
+        let mut bad = tiled(tileset(1));
+        bad["tileset"]["tiles"][0] = json!({"width":24,"top":-49,"frames":[[half.clone()]]});
+        assert!(validate(bad).is_err());
     }
 
     #[test]
