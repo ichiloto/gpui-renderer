@@ -511,8 +511,7 @@ Operations use one of these shapes:
 
 A world definition supplies bounded logical `columns`, `rows`, its
 `cellWidth` and `cellHeight` in logical pixels (1 to 256 each; Ichiloto uses
-24 x 48, one terminal cell in the terminal's own tall shape, half an RPG Maker
-tile wide), and ordered layers. The field is drawn at that pitch, independent
+48 x 48, one terminal cell drawn as one RPG Maker tile), and ordered layers. The field is drawn at that pitch, independent
 of the session text grid. Every world cell is one cell of that size whatever
 its text; its text, and the text layers named by the viewport, use a font
 fitted to the cell, so an unpainted map looks like its terminal presentation
@@ -699,8 +698,8 @@ top   = feetY - height
 
 `cellWidth` and `cellHeight` are the world's cell size for sprites named by a
 world viewport (their `x` and `y` are whole field cells), and the session
-grid's cell otherwise. A 48 x 48 field character on a 24 x 48 cell stands on
-the cell's bottom edge and overhangs half a cell on each side.
+grid's cell otherwise. A 48 x 48 field character on a 48 x 48 cell stands on
+the cell's bottom edge and fills the cell exactly.
 
 Geometry uses logical presentation pixels (1× corresponds to macOS points).
 The viewport transform below places the grid inside native content, below the

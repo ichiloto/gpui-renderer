@@ -927,9 +927,9 @@ mod tests {
         }
     }
     #[test]
-    fn field_character_frame_is_centred_on_its_cell() {
-        // A 48-pixel character frame stands on its 24 x 48 field cell and
-        // overhangs half a cell on each side, whatever the text grid's shape.
+    fn field_character_frame_fills_its_square_cell() {
+        // A 48-pixel character frame stands on its 48 x 48 field cell and
+        // covers it exactly, whatever the text grid's shape.
         let sprite = Sprite {
             id: "player".into(),
             asset: "$Hero.png".into(),
@@ -941,7 +941,7 @@ mod tests {
             layer: 100,
             source_rect: None,
         };
-        assert_eq!(sprite_origin(&sprite, 24.0, 48.0), (36.0, 48.0));
+        assert_eq!(sprite_origin(&sprite, 48.0, 48.0), (96.0, 48.0));
     }
 
     #[test]
