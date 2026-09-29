@@ -464,8 +464,8 @@ for the session, independently of the native window size. Hello opens one
 resizable window and emits `ready`. A second hello or a mixed-version message is
 an error. `requiredCapabilities` is a mandatory minimum; `ready.capabilities`
 reports the available drawing features. `window_activation` and
-`key_transitions` are explicit event subscriptions; `field_motion` is a drawing
-feature every v2 session is offered. An optional `icon` names the game's application icon, a PNG
+`key_transitions` are explicit event subscriptions; `field_motion` and
+`tile_covers` are drawing features every v2 session is offered. An optional `icon` names the game's application icon, a PNG
 or ICNS path inside `assetRoot`; on macOS it replaces the renderer's own in the
 Dock. An unreadable icon is diagnosed and the renderer keeps its own. Before hello succeeds, an error may use the protocol 1
 envelope; this is not a downgrade.
@@ -517,7 +517,9 @@ its text; its text, and the text layers named by the viewport, use a font
 fitted to the cell, so an unpainted map looks like its terminal presentation
 scaled. Sprites named by the viewport are placed by whole cells. Only unlisted screen
 text and sprites keep the text grid's cell pitch. Each layer has an `id`,
-numeric `layer` and `kind` (`gameplay`, `decoration` or `tiles`). Every world row must
+numeric `layer` and `kind` (`gameplay`, `decoration` or `tiles`). With
+`tile_covers`, a `tiles` layer may name the gameplay layer its tiles belong to
+in `coversLayerId`; no other layer may carry it. Every world row must
 be supplied before presentation; a row may be shorter than `columns`, leaving
 an unpainted trailing background. Owner cells carry the cell's text (at most 8
 characters), nullable structured foreground/background, and the owning
@@ -563,10 +565,13 @@ camera-only frame.
 
 Each tile frame is composed once per world definition, within 64 MiB. A sheet
 that cannot be loaded, or a piece outside its sheet, is diagnosed once per sheet
-and makes only the tiles using it unavailable; the scene is still accepted. A
-cell where an available tile is placed in any tiles layer shows no owner glyph
-or background, even where the tile is transparent; other cells keep their glyph,
-including cells a tile only overhangs.
+and makes only the tiles using it unavailable; the scene is still accepted. An
+owner cell's glyph and background are hidden where an available tile covers
+them, even where the tile is transparent: a tile of a layer whose
+`coversLayerId` names the cell's owning gameplay layer, or of a tiles layer
+without `coversLayerId`. A floor that belongs to the buildings layer therefore
+leaves the glyph of an untiled fixture standing on it visible. Other cells keep
+their glyph, including cells a tile only overhangs.
 World layers paint interleaved with screen text and sprites by `layer`, a world
 layer first on a tie, so tiles at layer 900 draw above characters at 100.
 
