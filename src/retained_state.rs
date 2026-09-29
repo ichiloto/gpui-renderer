@@ -8,6 +8,7 @@ use crate::{
     retained_protocol::{
         CanvasRoot, EntityKind, FrameUpdate, MAX_RETAINED_BYTES, MAX_STAGING_AND_VISIBLE_BYTES,
         Operation, ScreenText, SpriteMotion, Viewport, ViewportChange, validate_id,
+        validate_sprite_lift,
     },
     retained_world::World,
 };
@@ -32,6 +33,8 @@ pub struct SceneSource {
     pub sprites: BTreeMap<String, Arc<Ordered<Sprite>>>,
     /// `field_motion` hints of the sprites that carry one, by sprite id.
     pub sprite_motions: BTreeMap<String, SpriteMotion>,
+    /// `sprite_lift` lifts of the sprites that carry a nonzero one, by sprite id.
+    pub sprite_lifts: BTreeMap<String, u32>,
     pub canvas: Option<CanvasRoot>,
     pub canvas_images: BTreeMap<String, Arc<Ordered<CanvasImage>>>,
     pub canvas_indicators: BTreeMap<String, Arc<Ordered<Indicator>>>,
@@ -57,20 +60,28 @@ impl SceneSource {
                         self.text.insert(id, Arc::new(text));
                     }
                     EntityKind::Sprite => {
-                        // Motion is retained beside the shared sprite geometry,
-                        // which every protocol version also uses.
+                        // Motion and lift are retained beside the shared sprite
+                        // geometry, which every protocol version also uses.
                         let mut value = object_value(value)?;
                         let motion = value
                             .remove("motion")
                             .map(|motion| parse_value::<SpriteMotion>(motion)?.validate())
                             .transpose()?;
-                        self.sprites.insert(
-                            id.clone(),
-                            Arc::new(parse_ordered(id.as_str(), Value::Object(value))?),
-                        );
+                        let lift = value.remove("lift").map(parse_value::<u32>).transpose()?;
+                        let sprite: Ordered<Sprite> =
+                            parse_ordered(id.as_str(), Value::Object(value))?;
+                        let lift = lift
+                            .map(|lift| validate_sprite_lift(lift, sprite.item.height))
+                            .transpose()?
+                            .filter(|lift| *lift > 0);
+                        self.sprites.insert(id.clone(), Arc::new(sprite));
                         match motion {
-                            Some(motion) => self.sprite_motions.insert(id, motion),
+                            Some(motion) => self.sprite_motions.insert(id.clone(), motion),
                             None => self.sprite_motions.remove(&id),
+                        };
+                        match lift {
+                            Some(lift) => self.sprite_lifts.insert(id, lift),
+                            None => self.sprite_lifts.remove(&id),
                         };
                     }
                     EntityKind::Canvas => {
@@ -112,6 +123,7 @@ impl SceneSource {
                     EntityKind::Sprite => {
                         self.sprites.remove(&id);
                         self.sprite_motions.remove(&id);
+                        self.sprite_lifts.remove(&id);
                     }
                     EntityKind::Canvas => {
                         if id != "canvas" {
@@ -246,6 +258,11 @@ impl SceneSource {
             text_layers: ordered_values(&self.canvas_text),
             composites: Some(ordered_values(&self.canvas_composites)),
         }))
+    }
+
+    /// Logical pixels this sprite is drawn above its cell; 0 without a lift.
+    pub fn get_sprite_lift(&self, id: &str) -> u32 {
+        self.sprite_lifts.get(id).copied().unwrap_or_default()
     }
 
     pub fn materialize_screen(&self, frame: u64) -> Result<FrameV2, String> {
@@ -612,5 +629,81 @@ mod tests {
         assert!(scene.apply(bad, grid()).is_err());
         // SceneSource is a candidate and is discarded on error by RetainedSession.
         assert!(old.worlds.get("map").unwrap().get_row(0).is_none());
+    }
+
+    fn lifted_sprite(id: &str, order: u32, lift: Option<Value>) -> Operation {
+        let mut value = json!({"id":id,"asset":"hero.png","x":1,"y":order,"width":48,
+            "height":48,"anchor":"bottom_center","layer":100,"order":order});
+        if let Some(lift) = lift {
+            value["lift"] = lift;
+        }
+        from_value(json!({"op":"put","kind":"sprite","id":id,"value":value})).unwrap()
+    }
+
+    #[test]
+    fn a_sprite_lift_is_validated_and_retained_beside_its_sprite() {
+        let mut scene = SceneSource::default();
+        scene
+            .apply(lifted_sprite("behind", 0, Some(json!(48))), grid())
+            .unwrap();
+        scene
+            .apply(lifted_sprite("front", 1, Some(json!(6))), grid())
+            .unwrap();
+        assert_eq!(
+            (
+                scene.get_sprite_lift("behind"),
+                scene.get_sprite_lift("front")
+            ),
+            (48, 6)
+        );
+        // A lift is not sprite geometry: the sprite keeps its cell and its
+        // place in the draw order, however high it is drawn.
+        let screen = scene.materialize_screen(1).unwrap();
+        assert_eq!(
+            screen
+                .sprites
+                .iter()
+                .map(|sprite| (sprite.id.as_str(), sprite.y))
+                .collect::<Vec<_>>(),
+            [("behind", 0), ("front", 1)]
+        );
+        // A put without a lift, or with none, draws the sprite on its cell again.
+        scene
+            .apply(lifted_sprite("front", 1, Some(json!(0))), grid())
+            .unwrap();
+        scene
+            .apply(lifted_sprite("behind", 0, None), grid())
+            .unwrap();
+        assert!(scene.sprite_lifts.is_empty());
+        scene
+            .apply(lifted_sprite("front", 1, Some(json!(6))), grid())
+            .unwrap();
+        scene
+            .apply(
+                from_value(json!({"op":"remove","kind":"sprite","id":"front"})).unwrap(),
+                grid(),
+            )
+            .unwrap();
+        assert_eq!(scene.get_sprite_lift("front"), 0);
+        for invalid in [
+            json!(-6),
+            json!(6.5),
+            json!("6"),
+            json!(null),
+            json!(u64::MAX),
+        ] {
+            assert!(
+                SceneSource::default()
+                    .apply(lifted_sprite("hero", 0, Some(invalid.clone())), grid())
+                    .is_err(),
+                "{invalid}"
+            );
+        }
+        assert_eq!(
+            SceneSource::default()
+                .apply(lifted_sprite("hero", 0, Some(json!(49))), grid())
+                .unwrap_err(),
+            "sprite lift must be at most the sprite's height"
+        );
     }
 }

@@ -464,8 +464,8 @@ for the session, independently of the native window size. Hello opens one
 resizable window and emits `ready`. A second hello or a mixed-version message is
 an error. `requiredCapabilities` is a mandatory minimum; `ready.capabilities`
 reports the available drawing features. `window_activation` and
-`key_transitions` are explicit event subscriptions; `field_motion` and
-`tile_covers` are drawing features every v2 session is offered. An optional `icon` names the game's application icon, a PNG
+`key_transitions` are explicit event subscriptions; `field_motion`,
+`tile_covers` and `sprite_lift` are drawing features every v2 session is offered. An optional `icon` names the game's application icon, a PNG
 or ICNS path inside `assetRoot`; on macOS it replaces the renderer's own in the
 Dock. An unreadable icon is diagnosed and the renderer keeps its own. Before hello succeeds, an error may use the protocol 1
 envelope; this is not a downgrade.
@@ -579,7 +579,8 @@ Screen `text` values contain `id`, numeric `layer`, stable `order`, and
 `runs`; each run has `row`, `column`, `text`, and required nullable
 `foreground`/`background`. Every covered cell is opaque, including a space.
 Absent cells are transparent. A `sprite` value uses the shared sprite fields
-plus `order`, and with `field_motion` an optional `motion` (see below). Canvas uses a `canvas` root with `id:"canvas"`, width and height,
+plus `order`, with `field_motion` an optional `motion` and with `sprite_lift`
+an optional `lift` (see below). Canvas uses a `canvas` root with `id:"canvas"`, width and height,
 and the existing image, indicator, text, and composite DTOs as individually
 identified operations. Canvas and a world viewport cannot be visible together.
 
@@ -628,6 +629,25 @@ the followed sprite instead. Slides reset when the world changes or the
 viewport is cleared, and a removed sprite forgets its slide. While anything
 slides the view requests animation frames; otherwise it repaints only on
 change. Reduced motion is the producer's choice: it sends no `motion`.
+
+### Sprite lift
+
+`sprite_lift` lets the producer draw a retained field sprite above the cell
+that places it, as RPG Maker draws a character 6 pixels above its tile:
+
+```json
+{"id":"player","asset":"Graphics/Characters/$Hero.png","x":12,"y":6,"width":48,"height":48,"anchor":"bottom_center","layer":100,"order":0,"lift":6}
+```
+
+`lift` is a whole number of logical pixels, the same pixels as `width` and
+`height`, from 0 to the sprite's height; anything else rejects the frame. A
+viewport sprite is drawn that many pixels higher than its bottom-centre
+placement, at rest, while it slides and while the camera follows it. The
+renderer derives nothing from the asset: which sprites are lifted is the
+producer's decision. The lift changes only where the sprite is drawn. Its
+cell, its slides and its draw order stay those of the cell, so a sprite lower
+on the field still draws in front. A put without `lift` draws the sprite on
+its cell; protocol v1 sprites never accept it.
 
 ### Structured colour
 

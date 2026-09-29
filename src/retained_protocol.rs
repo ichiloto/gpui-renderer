@@ -449,6 +449,16 @@ impl SpriteMotion {
     }
 }
 
+/// `sprite_lift`: logical pixels a retained field sprite is drawn above the
+/// cell that places it, in the same pixels as its width and height. Its cell
+/// still orders it among the field's sprites.
+pub fn validate_sprite_lift(lift: u32, height: u32) -> Result<u32, String> {
+    if lift > height {
+        return Err("sprite lift must be at most the sprite's height".into());
+    }
+    Ok(lift)
+}
+
 impl Viewport {
     pub fn validate(&self, grid: Grid) -> Result<(), String> {
         let width = (grid.columns * grid.cell_width) as f32;

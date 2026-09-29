@@ -150,6 +150,23 @@ pub fn sprite_origin(sprite: &Sprite, cell_width: f32, cell_height: f32) -> (f32
     }
 }
 
+/// Where a sprite is drawn through `transform`: bottom-centred on its cell,
+/// then `lift` logical pixels higher. The cell alone still orders it.
+pub fn sprite_bounds(
+    sprite: &Sprite,
+    lift: u32,
+    cell: (f32, f32),
+    transform: ViewportTransform,
+) -> PaintRect {
+    let (left, top) = sprite_origin(sprite, cell.0, cell.1);
+    transform.surface_rect(
+        left,
+        top - lift as f32,
+        sprite.width as f32,
+        sprite.height as f32,
+    )
+}
+
 impl Render for Renderer {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         // Observes callback entry only: GPUI can coalesce frames or repaint the
@@ -536,12 +553,16 @@ impl Render for Renderer {
 
                     PaintItem::Sprite(index) => {
                         let item = &frame.sprites[index];
-                        let (left, top) = sprite_origin(&item.sprite, pitch_width, pitch_height);
-                        let bounds = item_transform.surface_rect(
-                            left,
-                            top,
-                            item.sprite.width as f32,
-                            item.sprite.height as f32,
+                        // A lift belongs to field sprites, which slide and
+                        // follow with the field's own transform.
+                        let lift = retained_member
+                            .and(self.retained_scene.as_ref())
+                            .map_or(0, |scene| scene.source.get_sprite_lift(&item.sprite.id));
+                        let bounds = sprite_bounds(
+                            &item.sprite,
+                            lift,
+                            (pitch_width, pitch_height),
+                            item_transform,
                         );
                         if let Some(rect) = item.sprite.source_rect {
                             let size = item.image.size(0);
@@ -689,7 +710,7 @@ fn content_geometry(
     (content, clip)
 }
 
-fn content_geometry_retained(
+pub(crate) fn content_geometry_retained(
     base: ViewportTransform,
     viewport: &RetainedViewport,
 ) -> (ViewportTransform, PaintRect) {
@@ -947,6 +968,41 @@ mod tests {
             source_rect: None,
         };
         assert_eq!(sprite_origin(&sprite, 48.0, 48.0), (96.0, 48.0));
+    }
+
+    #[test]
+    fn a_lift_draws_the_sprite_higher_at_every_scale_without_moving_across() {
+        let sprite = Sprite {
+            id: "player".into(),
+            asset: "$Hero.png".into(),
+            x: 2,
+            y: 1,
+            width: 48,
+            height: 48,
+            anchor: Anchor::BottomCenter,
+            layer: 100,
+            source_rect: None,
+        };
+        for scale in [1.0, 0.75, 0.5] {
+            let transform =
+                ViewportTransform::fit(480.0, 480.0, 480.0 * scale + 60.0, 480.0 * scale);
+            let placed = sprite_bounds(&sprite, 0, (48.0, 48.0), transform);
+            let lifted = sprite_bounds(&sprite, 6, (48.0, 48.0), transform);
+            assert_eq!(transform.scale, scale);
+            // Unlifted, the frame's bottom edge is the cell's bottom edge.
+            assert_eq!(
+                placed,
+                transform.surface_rect(96.0, 48.0, 48.0, 48.0),
+                "{scale}"
+            );
+            assert_eq!(
+                lifted,
+                PaintRect {
+                    top: placed.top - 6.0 * transform.scale,
+                    ..placed
+                }
+            );
+        }
     }
 
     #[test]

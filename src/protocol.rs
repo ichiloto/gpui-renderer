@@ -91,6 +91,7 @@ impl Hello {
             Capability::FrameViewport,
             Capability::FieldMotion,
             Capability::TileCovers,
+            Capability::SpriteLift,
         ];
         for subscription in [Capability::WindowActivation, Capability::KeyTransitions] {
             if self.required_capabilities.contains(&subscription) {
@@ -124,6 +125,9 @@ pub enum Capability {
     /// Drawing feature: a world's tiles layer may name the gameplay layer
     /// whose glyphs its tiles cover.
     TileCovers,
+    /// Drawing feature: a retained field sprite may be drawn a lift above
+    /// the cell that places and orders it.
+    SpriteLift,
     /// Event subscription: key presses carry a stable control identity and
     /// a repeat flag, releases and input resets are reported.
     KeyTransitions,
@@ -640,6 +644,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::TileCovers) {
             return Err("tile_covers requires protocol v2".into());
         }
+        if version == Version::V1 && unique.contains(&Capability::SpriteLift) {
+            return Err("sprite_lift requires protocol v2".into());
+        }
         if unique.contains(&Capability::CanvasClipOpacity) {
             if version != Version::V2 {
                 return Err("canvas_clip_opacity requires protocol v2".into());
@@ -964,6 +971,26 @@ mod tests {
         assert_eq!(
             walk_hello(1, "\"tile_covers\"").unwrap_err(),
             "tile_covers requires protocol v2"
+        );
+    }
+
+    #[test]
+    fn sprite_lift_is_a_v2_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::SpriteLift)
+        );
+        let Message::Hello(required) = walk_hello(2, "\"sprite_lift\"").unwrap().message else {
+            panic!()
+        };
+        assert_eq!(required.required_capabilities, [Capability::SpriteLift]);
+        assert_eq!(
+            walk_hello(1, "\"sprite_lift\"").unwrap_err(),
+            "sprite_lift requires protocol v2"
         );
     }
 
@@ -1469,6 +1496,8 @@ mod tests {
             FRAME.replace("\"width\":32,", ""),
             FRAME.replace("\"x\":8", "\"x\":\"8\""),
             FRAME.replace("\"sprites\":", "\"sprite\":"),
+            // A lift is a retained field sprite's alone.
+            FRAME.replace("\"layer\":100", "\"layer\":100,\"lift\":6"),
             "{".into(),
         ] {
             assert!(parse(bad.as_bytes()).is_err());

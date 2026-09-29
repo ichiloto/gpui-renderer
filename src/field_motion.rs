@@ -376,6 +376,7 @@ mod tests {
         session: RetainedSession,
         motion: FieldMotion,
         generation: u64,
+        scene: Option<std::sync::Arc<SceneSource>>,
     }
 
     impl Field {
@@ -384,6 +385,7 @@ mod tests {
                 session: RetainedSession::default(),
                 motion: FieldMotion::default(),
                 generation: 0,
+                scene: None,
             };
             let mut operations = operations;
             operations.insert(
@@ -411,6 +413,7 @@ mod tests {
             let accepted = self.session.apply(update, grid()).unwrap();
             self.motion
                 .observe(&accepted.scene, accepted.viewport.as_ref(), now);
+            self.scene = Some(accepted.scene);
         }
 
         fn viewport(&self, column: i32, row: i32) -> Viewport {
@@ -548,6 +551,63 @@ mod tests {
         // A different world starts over.
         field.present(vec![], Some(json!(null)), 5.0);
         assert!(field.motion.get_camera_origin(5.0).is_none());
+    }
+
+    fn lifted(id: &str, x: i32, y: i32, motion: Option<f64>, lift: u32) -> Value {
+        let mut put = sprite(id, x, y, motion);
+        put["value"]["lift"] = json!(lift);
+        put
+    }
+
+    #[test]
+    fn a_lifted_sprite_slides_and_is_followed_as_its_cell_is_drawn_a_lift_higher() {
+        use crate::renderer::{content_geometry_retained, sprite_bounds};
+        use crate::viewport::ViewportTransform;
+        let cell = (24.0, 48.0);
+        let mut field = Field::new(
+            vec![
+                lifted("player", 10, 5, None, 6),
+                lifted("npc:guide", 15, 10, None, 6),
+            ],
+            view(20, 30, true),
+        );
+        // The camera follows the player one step down while the guide walks
+        // one step across.
+        field.present(
+            vec![
+                lifted("player", 10, 5, Some(VERTICAL), 6),
+                lifted("npc:guide", 16, 9, Some(HORIZONTAL), 6),
+            ],
+            Some(view(20, 31, true)),
+            1.0,
+        );
+        let scene = field.scene.clone().unwrap();
+        let viewport = field.viewport(20, 31);
+        for scale in [1.0, 0.5] {
+            let base = ViewportTransform::fit(400.0, 400.0, 400.0 * scale, 400.0 * scale);
+            let (resting, _) = content_geometry_retained(base, &viewport);
+            for step in 0..=16 {
+                let now = 1.0 + VERTICAL * f64::from(step) / 16.0;
+                for id in ["player", "npc:guide"] {
+                    let item = &scene.sprites[id].item;
+                    let shift = field.motion.get_sprite_shift(id, now);
+                    let shifted = shift_viewport(&viewport, shift, cell);
+                    let (content, _) = content_geometry_retained(base, &shifted);
+                    let placed = sprite_bounds(item, 0, cell, content);
+                    let drawn = sprite_bounds(item, scene.get_sprite_lift(id), cell, content);
+                    // The sprite slides exactly as its cell does, and the lift
+                    // only raises where that slide is drawn.
+                    let rest = sprite_bounds(item, 0, cell, resting);
+                    assert!((placed.left - rest.left - shift.0 * cell.0 * scale).abs() < 1e-3);
+                    assert!((placed.top - rest.top - shift.1 * cell.1 * scale).abs() < 1e-3);
+                    assert_eq!(drawn.left, placed.left);
+                    assert!((placed.top - drawn.top - 6.0 * scale).abs() < 1e-3, "{id}");
+                }
+                // The followed player holds still on screen throughout.
+                let player = field.motion.get_sprite_shift("player", now);
+                assert!(player.0.abs() < 1e-5 && player.1.abs() < 1e-5);
+            }
+        }
     }
 
     #[test]
