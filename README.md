@@ -238,7 +238,9 @@ then only when OS activation changes. Unnegotiated sessions receive no such
 events. This event subscription is not implicitly enabled by drawing support.
 Title and Credits do not require it for graphical presentation: without it, native
 focus-based pausing is unavailable while scene/modal pausing remains supported.
-The GPUI observer is owned by the window entity and stops at teardown.
+The GPUI observer is owned by the window entity and stops at teardown. A
+`key_transitions` session installs the same observer to send `input_reset`
+on focus loss, without receiving activation events unless it also subscribed.
 PHP decides whether to pause elapsed time, defer local-time changes or clear input.
 `active` means OS focus, not visibility: visible unfocused windows are inactive.
 Hidden/minimized/occluded status is not reported or inferred from paint cadence.
@@ -247,7 +249,9 @@ No native platform lifecycle acceptance is implied by CPU protocol tests.
 A standalone native presentation and keyboard surface using pinned **GPUI 0.2.2**.
 Its production input accepts retained protocol 2 sessions. PHP owns actions, input bindings, movement,
 collision, scenes, battle state, camera conversion, timing and saves. Rust receives
-bounded presentation changes and forwards key identities. It has no game loop,
+bounded presentation changes and forwards key identities (and, when
+subscribed, key transitions). It draws committed field steps as slides but
+never decides a position. It has no game loop,
 audio, ANSI parser, terminal emulator or gameplay meaning for layer IDs/numbers.
 
 ## Availability and installation
@@ -459,8 +463,9 @@ A session begins with one hello:
 for the session, independently of the native window size. Hello opens one
 resizable window and emits `ready`. A second hello or a mixed-version message is
 an error. `requiredCapabilities` is a mandatory minimum; `ready.capabilities`
-reports the available drawing features. `window_activation` is an explicit
-event subscription. An optional `icon` names the game's application icon, a PNG
+reports the available drawing features. `window_activation` and
+`key_transitions` are explicit event subscriptions; `field_motion` is a drawing
+feature every v2 session is offered. An optional `icon` names the game's application icon, a PNG
 or ICNS path inside `assetRoot`; on macOS it replaces the renderer's own in the
 Dock. An unreadable icon is diagnosed and the renderer keeps its own. Before hello succeeds, an error may use the protocol 1
 envelope; this is not a downgrade.
@@ -570,7 +575,7 @@ Screen `text` values contain `id`, numeric `layer`, stable `order`, and
 `runs`; each run has `row`, `column`, `text`, and required nullable
 `foreground`/`background`. Every covered cell is opaque, including a space.
 Absent cells are transparent. A `sprite` value uses the shared sprite fields
-plus `order`. Canvas uses a `canvas` root with `id:"canvas"`, width and height,
+plus `order`, and with `field_motion` an optional `motion` (see below). Canvas uses a `canvas` root with `id:"canvas"`, width and height,
 and the existing image, indicator, text, and composite DTOs as individually
 identified operations. Canvas and a world viewport cannot be visible together.
 
@@ -586,6 +591,39 @@ already screen-projected; they receive the scale, origin, and clip but no world
 subtraction. Unlisted text and sprites keep their ordinary screen position.
 The complete logical surface is then fitted and centered in the resizable native
 window.
+
+### Field motion
+
+`field_motion` lets the producer present committed field steps as slides.
+The renderer decides no position: every sprite cell is already where the
+producer put it, and the renderer only draws it partway along the step.
+
+```json
+{"id":"player","asset":"Graphics/Characters/$Hero.png","x":12,"y":6,"width":48,"height":48,"anchor":"bottom_center","layer":100,"order":0,"motion":{"duration":0.2667}}
+{"scale":1,"origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":1350,"height":720},"worldId":"map","worldOrigin":{"column":40,"row":22},"textLayerIds":["npc:guide","field-prompt"],"spriteIds":["player"],"follow":{"spriteId":"player","textLayerIds":["field-prompt"]}}
+```
+
+A viewport sprite's world cell is its screen cell plus `worldOrigin`. When that
+cell changes by one step (at most one cell on each axis) and the sprite carries
+`motion`, the renderer slides it from its previous cell over `duration`
+seconds (more than 0, at most 60) on its own monotonic clock, starting when the
+frame is presented. A step that arrives within 50 ms of the end of the one
+before it continues seamlessly from that end, so steady walking has one even
+speed whatever the arrival jitter; any other step starts from where the sprite
+is drawn. A change without `motion`, or larger than one step, snaps. `motion`
+persists with the value, so a sprite standing where its step ended is not
+resent, and only a changed cell starts a slide.
+
+`follow` names a viewport sprite the camera follows. When `worldOrigin`
+changes by one step in the same frame that sprite starts a slide, the camera
+slides with the same start and duration, so the followed sprite stays steady
+while the field scrolls under it; otherwise the camera snaps. World layers
+paint from the drawn origin, and other named text layers and sprites move with
+the drawn camera. The follow's own `textLayerIds` (an action prompt) move with
+the followed sprite instead. Slides reset when the world changes or the
+viewport is cleared, and a removed sprite forgets its slide. While anything
+slides the view requests animation frames; otherwise it repaints only on
+change. Reduced motion is the producer's choice: it sends no `motion`.
 
 ### Structured colour
 
@@ -947,8 +985,36 @@ special key or F-key can pass even when GPUI retains its function modifier. GPUI
 Shift-Tab to `key:"tab"` with Shift. The normalizer follows the actual GPUI API,
 not browser `KeyboardEvent` names. Shift on other named keys adds no chord identity.
 
-OS repeats are forwarded; key-up events are not. The renderer never emits actions
+OS repeats are forwarded as `key` events. Without `key_transitions`, key-up
+events are not reported. The renderer never emits actions
 such as `cancel`, `map`, `move_up`, `confirm` or `quit`. **PHP owns input bindings.**
+
+### Key transitions
+
+Request `key_transitions` in v2 `hello.requiredCapabilities` to subscribe.
+Every key event then also names its physical `control` and whether it repeats
+an already held control, and releases and resets are reported:
+
+```json
+{"protocol":2,"type":"key","key":"S","control":"s","repeat":false}
+{"protocol":2,"type":"key","key":"S","control":"s","repeat":true}
+{"protocol":2,"type":"key_release","control":"s"}
+{"protocol":2,"type":"input_reset"}
+```
+
+`key` keeps its exact legacy identity, so consumers of the event stream see
+the same keys and repeats as before. `control` is the key's identity
+independent of case, Shift and Caps Lock: lowercase letters, the special
+names above, and `tab` for both Tab and Shift-Tab. The renderer tracks held
+controls itself (at most 64); a key-down for a held control has
+`repeat:true`, because GPUI's `is_held` is false for keys macOS routes
+through text input, the arrows among them. A key-up releases its control
+whatever modifiers are down, so a modifier change never strands a key.
+Platform shortcuts remain ignored and press nothing. `input_reset` releases
+everything: it is sent when the window loses OS focus, where later key-ups
+never arrive, and when Command engages while keys are held, because macOS
+withholds key-up events while Command is down. Unsubscribed sessions receive
+none of these fields or events.
 Historical native validation covered C/M/T/Tab/Shift-Tab/F5 and legacy keys.
 F0, Insert and uncommon keys still depend on platform availability; see the explicit
 native-evidence limitations in the validation document.
@@ -993,7 +1059,8 @@ The UI never reads stdin, decodes PNGs or writes pipes. Queues are bounded at tw
 input updates and 256 output events. Every queued event carries its own version, so
 buffered pre-session errors cannot be relabelled after a successful hello. There is
 no equality-based redraw suppression; all accepted state (IDs, layers, runs, styles,
-sprites) is replaced and notified intact. The only renderer timer is shutdown drain.
+sprites) is replaced and notified intact. The only renderer timer is shutdown drain;
+field slides request animation frames only while one is in progress.
 
 Engine uses v2 with negotiated graphical capabilities for GPUI; v1 remains a
 compatibility path. PHP supplies structured colors without ANSI, preserves
