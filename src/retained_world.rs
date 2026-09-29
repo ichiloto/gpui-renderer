@@ -172,12 +172,13 @@ impl World {
         Some(cells[index].tile)
     }
 
-    /// Every tile cell of every tiles layer, in no particular order.
-    pub fn visit_tiles(&self, mut visit: impl FnMut(u32, u32, u32)) {
-        for rows in self.tiles.values() {
+    /// Every tile cell of every tiles layer with its layer id, in no
+    /// particular order.
+    pub fn visit_tiles(&self, mut visit: impl FnMut(&str, u32, u32, u32)) {
+        for (layer_id, rows) in &self.tiles {
             for (row, cells) in rows.iter().enumerate() {
                 for cell in cells.iter().flat_map(|cells| cells.iter()) {
-                    visit(cell.column, row as u32, cell.tile);
+                    visit(layer_id, cell.column, row as u32, cell.tile);
                 }
             }
         }

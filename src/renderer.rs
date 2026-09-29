@@ -588,7 +588,8 @@ impl Render for Renderer {
 }
 
 /// One world layer. A tiles layer paints its composed tiles; a glyph layer
-/// paints the owner cells it owns, except where any tiles layer paints a tile.
+/// paints the owner cells it owns, except where a tile covers that layer's
+/// glyph: one from a tiles layer covering it, or covering no particular layer.
 fn world_layer_element(
     world: &Arc<PreparedWorld>,
     index: usize,
@@ -627,7 +628,11 @@ fn world_layer_element(
         };
         let source = &row.cells[projected_cell.world_column as usize];
         if source.owner_layer_id != layer.id
-            || world.has_painted_tile(projected_cell.world_column, projected_cell.world_row)
+            || world.has_covering_tile(
+                projected_cell.world_column,
+                projected_cell.world_row,
+                &source.owner_layer_id,
+            )
         {
             continue;
         }

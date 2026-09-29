@@ -275,6 +275,11 @@ pub struct WorldLayer {
     pub id: String,
     pub layer: i32,
     pub kind: WorldLayerKind,
+    /// `tile_covers`, tiles layers only: the gameplay layer this layer's
+    /// tiles belong to. Its tiles hide only that layer's glyphs; a tiles
+    /// layer without one hides the glyph of every cell it paints.
+    #[serde(default)]
+    pub covers_layer_id: Option<String>,
 }
 
 impl WorldDefinition {
@@ -303,6 +308,17 @@ impl WorldDefinition {
             }
             if layer.kind == WorldLayerKind::Tiles && self.tileset.is_none() {
                 return Err("a tiles world layer requires the world's tileset".into());
+            }
+            if let Some(covered) = &layer.covers_layer_id
+                && (layer.kind != WorldLayerKind::Tiles
+                    || !self.layers.iter().any(|other| {
+                        &other.id == covered && other.kind == WorldLayerKind::Gameplay
+                    }))
+            {
+                return Err(
+                    "coversLayerId belongs on a tiles layer and names a gameplay layer of the world"
+                        .into(),
+                );
             }
         }
         if let Some(tileset) = &self.tileset {

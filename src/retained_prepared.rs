@@ -8,7 +8,7 @@ use crate::{
 };
 use gpui::RenderImage;
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     sync::Arc,
 };
 
@@ -26,7 +26,7 @@ pub struct PreparedWorld {
     pub layers: Vec<PreparedWorldLayer>,
     /// Composed tiles, shared by every revision of the same world definition.
     pub tileset: Option<Arc<PreparedTileset>>,
-    painted: PaintedCells,
+    painted: PaintedTiles,
 }
 
 impl PreparedWorld {
@@ -61,11 +61,17 @@ impl PreparedWorld {
                 Some(Arc::new(prepared))
             }
         };
-        let mut painted = PaintedCells::new(source.definition.columns, source.definition.rows);
+        let mut painted = PaintedTiles::new(source.definition.columns, source.definition.rows);
         if let Some(tileset) = &tileset {
-            source.visit_tiles(|column, row, tile| {
+            let covers: HashMap<&str, &str> = source
+                .definition
+                .layers
+                .iter()
+                .filter_map(|layer| Some((layer.id.as_str(), layer.covers_layer_id.as_deref()?)))
+                .collect();
+            source.visit_tiles(|layer_id, column, row, tile| {
                 if tileset.is_available(tile) {
-                    painted.mark(column, row);
+                    painted.mark(covers.get(layer_id).copied(), column, row);
                 }
             });
         }
@@ -77,11 +83,13 @@ impl PreparedWorld {
         }
     }
 
-    /// Whether any tiles layer places an available tile at this cell. Such a
+    /// Whether a tiles layer places an available tile at this cell that
+    /// covers the glyph of the gameplay layer owning it: a layer that covers
+    /// that gameplay layer, or one that covers no particular layer. Such a
     /// cell does not show its glyph, even where the tile is transparent; a
     /// tile's overhang into the cells beside it does not hide theirs.
-    pub fn has_painted_tile(&self, column: u32, row: u32) -> bool {
-        self.painted.contains(column, row)
+    pub fn has_covering_tile(&self, column: u32, row: u32, owner_layer_id: &str) -> bool {
+        self.painted.covers(column, row, owner_layer_id)
     }
 
     /// The composed image a catalog tile shows at this animation counter.
@@ -93,6 +101,47 @@ impl PreparedWorld {
         self.tileset
             .as_ref()
             .map_or(&[], |tileset| tileset.images.as_slice())
+    }
+}
+
+/// The cells tiles paint: those of tiles layers that cover no particular
+/// layer, and those of each covered gameplay layer.
+#[derive(Debug)]
+struct PaintedTiles {
+    columns: u32,
+    rows: u32,
+    uncovered: PaintedCells,
+    covered: HashMap<String, PaintedCells>,
+}
+
+impl PaintedTiles {
+    fn new(columns: u32, rows: u32) -> Self {
+        Self {
+            columns,
+            rows,
+            uncovered: PaintedCells::new(columns, rows),
+            covered: HashMap::new(),
+        }
+    }
+
+    fn mark(&mut self, covers: Option<&str>, column: u32, row: u32) {
+        let (columns, rows) = (self.columns, self.rows);
+        match covers {
+            None => &mut self.uncovered,
+            Some(layer_id) => self
+                .covered
+                .entry(layer_id.to_owned())
+                .or_insert_with(|| PaintedCells::new(columns, rows)),
+        }
+        .mark(column, row);
+    }
+
+    fn covers(&self, column: u32, row: u32, owner_layer_id: &str) -> bool {
+        self.uncovered.contains(column, row)
+            || self
+                .covered
+                .get(owner_layer_id)
+                .is_some_and(|cells| cells.contains(column, row))
     }
 }
 
@@ -261,13 +310,14 @@ mod tests {
         let painted = |world: &PreparedWorld| {
             (0..2)
                 .flat_map(|row| (0..3).map(move |column| (column, row)))
-                .filter(|(column, row)| world.has_painted_tile(*column, *row))
+                .filter(|(column, row)| world.has_covering_tile(*column, *row, "map:terrain"))
                 .collect::<Vec<_>>()
         };
-        // A tile hides only its own cell's glyph. Tile 1 uses the missing
-        // sheet, so its cell keeps the glyph.
+        // These tiles layers cover no particular layer, so a tile hides the
+        // glyph of its own cell whatever layer owns it. Tile 1 uses the
+        // missing sheet, so its cell keeps the glyph.
         assert_eq!(painted(world), [(0, 0), (2, 1)]);
-        assert!(!world.has_painted_tile(3, 0));
+        assert!(!world.has_covering_tile(3, 0, "map:terrain"));
         assert!(world.get_tile_image(1, 0).is_none());
         let composed = world.get_tile_image(0, 0).unwrap();
         assert!(first.images.iter().any(|image| image.id == composed.id));
@@ -310,5 +360,83 @@ mod tests {
             updated.tileset.as_ref().unwrap(),
             replaced.tileset.as_ref().unwrap()
         ));
+    }
+
+    fn covered_world(layers: serde_json::Value) -> serde_json::Value {
+        json!({"op":"put","kind":"world","id":"map","value":{
+            "columns":4,"rows":1,"cellWidth":48,"cellHeight":48,"layers":layers,
+            "tileset":{"tileSize":2,"sheets":["ground.png"],"tiles":[
+                {"frames":[[{"sheet":0,"x":0,"y":0,"width":2,"height":2,"left":0,"top":0}]]}]}}})
+    }
+
+    #[test]
+    fn tiles_cover_only_the_glyphs_of_the_gameplay_layer_they_belong_to() {
+        let directory = tempfile::tempdir().unwrap();
+        image::RgbaImage::from_pixel(4, 4, image::Rgba([10, 20, 30, 255]))
+            .save(directory.path().join("ground.png"))
+            .unwrap();
+        let assets = AssetRoot::new(directory.path()).unwrap();
+        let mut scene = SceneSource::default();
+        apply(
+            &mut scene,
+            covered_world(json!([
+                {"id":"map:buildings","layer":-97,"kind":"gameplay"},
+                {"id":"map:fixtures","layer":-94,"kind":"gameplay"},
+                {"id":"tiles:floor","layer":-99,"kind":"tiles","coversLayerId":"map:buildings"},
+                {"id":"tiles:furniture","layer":-96,"kind":"tiles","coversLayerId":"map:fixtures"},
+                {"id":"tiles:furniture:above","layer":904,"kind":"tiles","coversLayerId":"map:fixtures"},
+                {"id":"tiles:plain","layer":-95,"kind":"tiles"}])),
+        );
+        let tiles = |layer: &str, columns: &[u32]| {
+            json!({"op":"worldTiles","id":"map","layerId":layer,"rows":[{"row":0,
+                "cells":columns.iter().map(|column| json!({"column":column,"tile":0}))
+                    .collect::<Vec<_>>()}]})
+        };
+        apply(&mut scene, tiles("tiles:floor", &[0, 1, 2, 3]));
+        apply(&mut scene, tiles("tiles:furniture", &[1]));
+        apply(&mut scene, tiles("tiles:furniture:above", &[2]));
+        apply(&mut scene, tiles("tiles:plain", &[3]));
+        let prepared = PreparedScene::prepare(Arc::new(scene), 1, grid(), &assets, None).unwrap();
+        let world = prepared.get_world("map").unwrap();
+        let covered = |owner: &str| {
+            (0..4)
+                .filter(|column| world.has_covering_tile(*column, 0, owner))
+                .collect::<Vec<_>>()
+        };
+        // The floor belongs to buildings: a fixtures glyph over it keeps
+        // showing. Furniture tiles in either band hide the fixtures glyph
+        // under them, and a tiles layer covering no particular layer still
+        // hides every glyph it paints.
+        assert_eq!(covered("map:fixtures"), [1, 2, 3]);
+        assert_eq!(covered("map:buildings"), [0, 1, 2, 3]);
+        assert!(!world.has_covering_tile(4, 0, "map:fixtures"));
+    }
+
+    #[test]
+    fn a_tiles_layer_covers_only_a_gameplay_layer_of_its_world() {
+        let layers = |covers: serde_json::Value, kind: &str| {
+            json!([{"id":"map:terrain","layer":-99,"kind":"gameplay"},
+                {"id":"map:detail","layer":-98,"kind":"decoration"},
+                {"id":"tiles:floor","layer":-99,"kind":"tiles"},
+                {"id":"tiles:rug","layer":-98,"kind":kind,"coversLayerId":covers}])
+        };
+        let put = |layers: serde_json::Value| {
+            SceneSource::default().apply(
+                from_value::<Operation>(covered_world(layers)).unwrap(),
+                grid(),
+            )
+        };
+        assert!(put(layers(json!("map:terrain"), "tiles")).is_ok());
+        for rejected in [
+            layers(json!("map:detail"), "tiles"),
+            layers(json!("tiles:floor"), "tiles"),
+            layers(json!("map:roof"), "tiles"),
+            layers(json!("map:terrain"), "gameplay"),
+        ] {
+            assert_eq!(
+                put(rejected).unwrap_err(),
+                "coversLayerId belongs on a tiles layer and names a gameplay layer of the world"
+            );
+        }
     }
 }

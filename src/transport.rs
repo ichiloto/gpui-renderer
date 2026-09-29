@@ -616,9 +616,9 @@ mod tests {
         let world = &first.scene.worlds["map"];
         // A tile hides only its own cell's glyph; the tile whose sheet is
         // missing leaves its cell to the glyph.
-        assert!(world.has_painted_tile(0, 0));
-        assert!(!world.has_painted_tile(1, 0));
-        assert!(!world.has_painted_tile(2, 0));
+        assert!(world.has_covering_tile(0, 0, "map:terrain"));
+        assert!(!world.has_covering_tile(1, 0, "map:terrain"));
+        assert!(!world.has_covering_tile(2, 0, "map:terrain"));
         let still = world.get_tile_image(0, 0).unwrap().id;
         // Animation is a camera-only frame that reuses the prepared scene.
         let animate = json!({"protocol":2,"type":"frame","frame":2,"baseGeneration":1,
