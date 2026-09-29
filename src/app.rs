@@ -198,6 +198,8 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         activation: Default::default(),
                                         activation_subscription: None,
                                         held: Default::default(),
+                                        field_motion: Default::default(),
+                                        field_clock: std::time::Instant::now(),
                                     }
                                 })
                             },
@@ -348,6 +350,13 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                 view.state.replace_shared(screen.clone());
                                 view.retained_scene = Some(frame.scene.clone());
                                 view.retained_viewport = frame.viewport.clone();
+                                // Slides start when a step becomes visible.
+                                let now = view.field_clock.elapsed().as_secs_f64();
+                                view.field_motion.observe(
+                                    &frame.scene.source,
+                                    frame.viewport.as_ref(),
+                                    now,
+                                );
                                 view.retained_observation = frame.observation;
                                 view.retained_needs_reset = false;
                                 view.output

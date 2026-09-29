@@ -7,7 +7,7 @@ use crate::{
     protocol::{FrameV2, Grid, Sprite, TextLayer},
     retained_protocol::{
         CanvasRoot, EntityKind, FrameUpdate, MAX_RETAINED_BYTES, MAX_STAGING_AND_VISIBLE_BYTES,
-        Operation, ScreenText, Viewport, ViewportChange, validate_id,
+        Operation, ScreenText, SpriteMotion, Viewport, ViewportChange, validate_id,
     },
     retained_world::World,
 };
@@ -30,6 +30,8 @@ pub struct SceneSource {
     pub worlds: BTreeMap<String, Arc<World>>,
     pub text: BTreeMap<String, Arc<ScreenText>>,
     pub sprites: BTreeMap<String, Arc<Ordered<Sprite>>>,
+    /// `field_motion` hints of the sprites that carry one, by sprite id.
+    pub sprite_motions: BTreeMap<String, SpriteMotion>,
     pub canvas: Option<CanvasRoot>,
     pub canvas_images: BTreeMap<String, Arc<Ordered<CanvasImage>>>,
     pub canvas_indicators: BTreeMap<String, Arc<Ordered<Indicator>>>,
@@ -55,8 +57,21 @@ impl SceneSource {
                         self.text.insert(id, Arc::new(text));
                     }
                     EntityKind::Sprite => {
-                        self.sprites
-                            .insert(id.clone(), Arc::new(parse_ordered(id.as_str(), value)?));
+                        // Motion is retained beside the shared sprite geometry,
+                        // which every protocol version also uses.
+                        let mut value = object_value(value)?;
+                        let motion = value
+                            .remove("motion")
+                            .map(|motion| parse_value::<SpriteMotion>(motion)?.validate())
+                            .transpose()?;
+                        self.sprites.insert(
+                            id.clone(),
+                            Arc::new(parse_ordered(id.as_str(), Value::Object(value))?),
+                        );
+                        match motion {
+                            Some(motion) => self.sprite_motions.insert(id, motion),
+                            None => self.sprite_motions.remove(&id),
+                        };
                     }
                     EntityKind::Canvas => {
                         if id != "canvas" {
@@ -96,6 +111,7 @@ impl SceneSource {
                     }
                     EntityKind::Sprite => {
                         self.sprites.remove(&id);
+                        self.sprite_motions.remove(&id);
                     }
                     EntityKind::Canvas => {
                         if id != "canvas" {

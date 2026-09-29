@@ -393,6 +393,44 @@ pub struct Viewport {
     /// Animation counter; a tile with N frames shows frame tileFrame % N.
     #[serde(default)]
     pub tile_frame: u32,
+    /// `field_motion`: the sprite the camera follows while it slides.
+    #[serde(default)]
+    pub follow: Option<ViewportFollow>,
+}
+
+/// The field sprite the camera follows. When the world origin changes in
+/// the frame that sprite slides a step, the camera slides with it on the
+/// same clock; the named text layers are drawn relative to that sprite.
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ViewportFollow {
+    pub sprite_id: String,
+    #[serde(default)]
+    pub text_layer_ids: Vec<String>,
+}
+
+/// Longest step a sprite may slide over, in seconds.
+pub const MAX_SPRITE_MOTION_SECONDS: f64 = 60.0;
+
+/// `field_motion`: how a retained field sprite reached its current cell, one
+/// step presented as a slide from the cell it last stood on.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SpriteMotion {
+    /// Seconds the slide takes.
+    pub duration: f64,
+}
+
+impl SpriteMotion {
+    pub fn validate(self) -> Result<Self, String> {
+        if !self.duration.is_finite()
+            || self.duration <= 0.0
+            || self.duration > MAX_SPRITE_MOTION_SECONDS
+        {
+            return Err("sprite motion duration must be more than 0 and at most 60 seconds".into());
+        }
+        Ok(self)
+    }
 }
 
 impl Viewport {
@@ -439,6 +477,19 @@ impl Viewport {
                     return Err("viewport member ids must be unique".into());
                 }
             }
+        }
+        if let Some(follow) = &self.follow
+            && (self.world_id.is_none()
+                || !self.sprite_ids.contains(&follow.sprite_id)
+                || follow
+                    .text_layer_ids
+                    .iter()
+                    .any(|id| !self.text_layer_ids.contains(id)))
+        {
+            return Err(
+                "viewport follow requires a world and names only its own sprites and text layers"
+                    .into(),
+            );
         }
         Ok(())
     }

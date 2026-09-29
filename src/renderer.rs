@@ -39,6 +39,10 @@ pub struct Renderer {
     pub activation_subscription: Option<gpui::Subscription>,
     /// Controls held in a `key_transitions` session.
     pub held: input::HeldControls,
+    /// Field sprite and camera slides, presented on the renderer's own clock.
+    pub field_motion: crate::field_motion::FieldMotion,
+    /// The renderer's monotonic presentation clock for field slides.
+    pub field_clock: std::time::Instant,
 }
 
 impl Renderer {
@@ -362,6 +366,17 @@ impl Render for Renderer {
             .map(|world| world.source.cell_size());
         let field_font_size =
             field_cell.map(|(width, height)| fit_cell_font(width, height, advance, line_em));
+        // Slides are drawn on the renderer's own clock; while any runs, the
+        // next frame is requested. The committed cells never change here.
+        let now = self.field_clock.elapsed().as_secs_f64();
+        let world_view = self
+            .retained_viewport
+            .as_ref()
+            .zip(field_cell)
+            .map(|(view, cell)| self.field_motion.get_world_viewport(view, cell, now));
+        if self.field_motion.is_animating(now) {
+            window.request_animation_frame();
+        }
         let bounds = transform.surface_bounds();
         let mut surface = positioned(div(), bounds)
             .overflow_hidden()
@@ -383,8 +398,7 @@ impl Render for Renderer {
             }
             // World layers interleave with the plan by layer, so a tiles
             // layer above characters paints above their sprites.
-            let field_world = self
-                .retained_viewport
+            let field_world = world_view
                 .as_ref()
                 .zip(self.retained_scene.as_ref())
                 .and_then(|(view, scene)| Some((view, scene.get_world(view.world_id.as_ref()?)?)));
@@ -444,7 +458,25 @@ impl Render for Renderer {
                         _ => (cw, ch, logical_font_size),
                     };
                 let (item_transform, clip) = if let Some(view) = retained_member {
-                    let (content, clip) = content_geometry_retained(transform, view);
+                    // Camera-screen members move with the drawn camera; a
+                    // sprite also moves along its own step.
+                    let shift = match *item {
+                        PaintItem::Text(index) => self.field_motion.get_text_shift(
+                            view,
+                            &frame.text_layers[index].id,
+                            now,
+                        ),
+                        PaintItem::Sprite(index) => self
+                            .field_motion
+                            .get_sprite_shift(&frame.sprites[index].sprite.id, now),
+                        _ => (0.0, 0.0),
+                    };
+                    let shifted = crate::field_motion::shift_viewport(
+                        view,
+                        shift,
+                        (pitch_width, pitch_height),
+                    );
+                    let (content, clip) = content_geometry_retained(transform, &shifted);
                     (content, Some(clip))
                 } else {
                     member.map_or((transform, None), |view| {

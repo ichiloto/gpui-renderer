@@ -89,6 +89,7 @@ impl Hello {
             Capability::CanvasGlyphEffects,
             Capability::CanvasCompositing,
             Capability::FrameViewport,
+            Capability::FieldMotion,
         ];
         for subscription in [Capability::WindowActivation, Capability::KeyTransitions] {
             if self.required_capabilities.contains(&subscription) {
@@ -116,6 +117,9 @@ pub enum Capability {
     CanvasCompositing,
     FrameViewport,
     WindowActivation,
+    /// Drawing feature: retained field sprites slide between cells and the
+    /// camera may follow one of them.
+    FieldMotion,
     /// Event subscription: key presses carry a stable control identity and
     /// a repeat flag, releases and input resets are reported.
     KeyTransitions,
@@ -626,6 +630,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::KeyTransitions) {
             return Err("key_transitions requires protocol v2".into());
         }
+        if version == Version::V1 && unique.contains(&Capability::FieldMotion) {
+            return Err("field_motion requires protocol v2".into());
+        }
         if unique.contains(&Capability::CanvasClipOpacity) {
             if version != Version::V2 {
                 return Err("canvas_clip_opacity requires protocol v2".into());
@@ -919,6 +926,22 @@ mod tests {
         .unwrap();
         let ready = String::from_utf8(bytes).unwrap();
         assert!(ready.contains("\"key_transitions\""));
+    }
+
+    #[test]
+    fn field_motion_is_a_v2_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::FieldMotion)
+        );
+        assert_eq!(
+            walk_hello(1, "\"field_motion\"").unwrap_err(),
+            "field_motion requires protocol v2"
+        );
     }
 
     fn tile_frame() -> FrameV2 {

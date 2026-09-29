@@ -18,6 +18,7 @@ mod composite_protocol;
 mod composite_tests;
 mod diagnostics;
 mod display_cache;
+mod field_motion;
 mod glyph_cache;
 mod glyph_effects;
 mod glyph_pixels;
