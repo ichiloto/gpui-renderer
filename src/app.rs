@@ -197,6 +197,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                         retained_needs_reset: false,
                                         activation: Default::default(),
                                         activation_subscription: None,
+                                        held: Default::default(),
                                     }
                                 })
                             },

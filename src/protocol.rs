@@ -90,13 +90,18 @@ impl Hello {
             Capability::CanvasCompositing,
             Capability::FrameViewport,
         ];
-        if self
-            .required_capabilities
-            .contains(&Capability::WindowActivation)
-        {
-            enabled.push(Capability::WindowActivation);
+        for subscription in [Capability::WindowActivation, Capability::KeyTransitions] {
+            if self.required_capabilities.contains(&subscription) {
+                enabled.push(subscription);
+            }
         }
         enabled
+    }
+
+    /// Whether the session subscribed to key press, release and reset events.
+    pub fn reports_key_transitions(&self) -> bool {
+        self.required_capabilities
+            .contains(&Capability::KeyTransitions)
     }
 }
 
@@ -111,6 +116,9 @@ pub enum Capability {
     CanvasCompositing,
     FrameViewport,
     WindowActivation,
+    /// Event subscription: key presses carry a stable control identity and
+    /// a repeat flag, releases and input resets are reported.
+    KeyTransitions,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
@@ -615,6 +623,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::WindowActivation) {
             return Err("window_activation requires protocol v2".into());
         }
+        if version == Version::V1 && unique.contains(&Capability::KeyTransitions) {
+            return Err("key_transitions requires protocol v2".into());
+        }
         if unique.contains(&Capability::CanvasClipOpacity) {
             if version != Version::V2 {
                 return Err("canvas_clip_opacity requires protocol v2".into());
@@ -647,9 +658,23 @@ pub enum Event {
         #[serde(skip_serializing_if = "Vec::is_empty")]
         capabilities: Vec<Capability>,
     },
+    /// A key-down. Legacy sessions receive only `key`, OS repeats included.
+    /// A `key_transitions` session also receives the stable `control`
+    /// identity and whether the key-down repeats an already held control.
     Key {
         key: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        control: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        repeat: Option<bool>,
     },
+    /// `key_transitions` only: a held control came back up.
+    KeyRelease {
+        control: String,
+    },
+    /// `key_transitions` only: the renderer no longer vouches for any held
+    /// control, so every one is released.
+    InputReset,
     CloseRequested,
     Resized,
     Error {
@@ -668,6 +693,18 @@ pub enum Event {
         #[serde(rename = "resyncRequired")]
         resync_required: bool,
     },
+}
+
+impl Event {
+    /// A legacy key-down: the key identity only, as every session receives
+    /// it without `key_transitions`.
+    pub fn key(key: impl Into<String>) -> Self {
+        Self::Key {
+            key: key.into(),
+            control: None,
+            repeat: None,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -833,6 +870,55 @@ mod tests {
                 .get_enabled_capabilities(Version::V2)
                 .contains(&Capability::WindowActivation)
         );
+    }
+
+    fn walk_hello(protocol: u32, required: &str) -> Result<Incoming, String> {
+        parse(
+            format!(
+                "{{\"protocol\":{protocol},\"type\":\"hello\",\"title\":\"Walk\",\"assetRoot\":\"/tmp\",\
+                 \"grid\":{{\"columns\":10,\"rows\":10,\"cellWidth\":10,\"cellHeight\":20}},\
+                 \"requiredCapabilities\":[{required}]}}"
+            )
+            .as_bytes(),
+        )
+    }
+
+    #[test]
+    fn key_transitions_are_an_explicit_v2_subscription() {
+        let hello = walk_hello;
+        let Message::Hello(legacy) = hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        let enabled = legacy.get_enabled_capabilities(Version::V2);
+        assert!(!enabled.contains(&Capability::KeyTransitions));
+        assert!(!legacy.reports_key_transitions());
+        let Message::Hello(subscribed) = hello(2, "\"sprite_source_rect\",\"key_transitions\"")
+            .unwrap()
+            .message
+        else {
+            panic!()
+        };
+        assert!(subscribed.reports_key_transitions());
+        assert!(
+            subscribed
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::KeyTransitions)
+        );
+        assert_eq!(
+            hello(1, "\"key_transitions\"").unwrap_err(),
+            "key_transitions requires protocol v2"
+        );
+        let mut bytes = Vec::new();
+        write_event(
+            &mut bytes,
+            Version::V2,
+            &Event::Ready {
+                capabilities: subscribed.get_enabled_capabilities(Version::V2),
+            },
+        )
+        .unwrap();
+        let ready = String::from_utf8(bytes).unwrap();
+        assert!(ready.contains("\"key_transitions\""));
     }
 
     fn tile_frame() -> FrameV2 {
@@ -1131,9 +1217,7 @@ mod tests {
                 let trace = d.native_key("right", true).unwrap();
                 let queued = QueuedEvent {
                     version,
-                    event: Event::Key {
-                        key: "right".into(),
-                    },
+                    event: Event::key("right"),
                     trace: Some(trace),
                 };
                 let mut writer = ShortWriter {
@@ -1363,14 +1447,14 @@ mod tests {
             Event::Error {
                 message: "bad\ninput".into(),
             },
-            Event::Key { key: "W".into() },
+            Event::key("W"),
         ] {
             let mut bytes = Vec::new();
             write_event(&mut bytes, Version::V1, &event).unwrap();
             assert_eq!(bytes.iter().filter(|&&b| b == b'\n').count(), 1);
             let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
             assert_eq!(value["protocol"], 1);
-            if let Event::Key { key } = event {
+            if let Event::Key { key, .. } = event {
                 assert_eq!(value["key"], key);
             }
         }
@@ -1577,7 +1661,7 @@ mod tests {
                 Event::Ready {
                     capabilities: vec![],
                 },
-                Event::Key { key: "C".into() },
+                Event::key("C"),
                 Event::CloseRequested,
                 Event::Error {
                     message: "bad".into(),

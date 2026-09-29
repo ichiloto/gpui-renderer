@@ -10,8 +10,8 @@ use crate::retained_world::ProjectedCell;
 use crate::state::{PaintItem, RendererState, painted_cells};
 use crate::viewport::{PaintRect, ViewportTransform};
 use gpui::{
-    Context, FocusHandle, IntoElement, KeyDownEvent, ObjectFit, Render, RenderImage, Window, div,
-    font, img, prelude::*, px, rgb,
+    Context, FocusHandle, IntoElement, KeyDownEvent, KeyUpEvent, ModifiersChangedEvent, ObjectFit,
+    Render, RenderImage, Window, div, font, img, prelude::*, px, rgb,
 };
 use std::{cell::RefCell, rc::Rc, sync::Arc};
 
@@ -37,17 +37,22 @@ pub struct Renderer {
     pub retained_needs_reset: bool,
     pub activation: crate::window_activation::ActivationState,
     pub activation_subscription: Option<gpui::Subscription>,
+    /// Controls held in a `key_transitions` session.
+    pub held: input::HeldControls,
 }
 
 impl Renderer {
     /// Called after ready has been enqueued. Retaining the subscription here
     /// makes observer teardown follow the window entity, not a detached timer.
     pub fn observe_window_activation(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // Key transitions need focus loss too: keys released elsewhere never
+        // reach this window, so losing focus releases everything held.
         if !self
             .state
             .hello
             .required_capabilities
             .contains(&crate::protocol::Capability::WindowActivation)
+            && !self.state.hello.reports_key_transitions()
         {
             return;
         }
@@ -58,11 +63,26 @@ impl Renderer {
             }));
     }
     fn report_window_activation(&mut self, window: &Window, cx: &mut Context<Self>) {
-        if !self
+        let active = window.is_window_active();
+        if self
             .output
             .closing
             .load(std::sync::atomic::Ordering::SeqCst)
-            && let Some(event) = self.activation.update(window.is_window_active())
+        {
+            return;
+        }
+        let Some(event) = self.activation.update(active) else {
+            return;
+        };
+        if !active && self.state.hello.reports_key_transitions() {
+            let reset = self.held.reset();
+            self.output.emit(reset, cx);
+        }
+        if self
+            .state
+            .hello
+            .required_capabilities
+            .contains(&crate::protocol::Capability::WindowActivation)
         {
             self.output.emit(event, cx);
         }
@@ -290,15 +310,33 @@ impl Render for Renderer {
                     .output
                     .diagnostics
                     .native_key(&event.keystroke.key, event.is_held);
-                let normalized = input::normalize(&event.keystroke);
+                let normalized = if this.state.hello.reports_key_transitions() {
+                    this.held.press(&event.keystroke)
+                } else {
+                    input::normalize(&event.keystroke)
+                };
                 if let Some(trace) = &mut trace {
                     trace.normalized(match &normalized {
-                        Some(Event::Key { key }) => Some(key),
+                        Some(Event::Key { key, .. }) => Some(key),
                         _ => None,
                     });
                 }
                 if let Some(event) = normalized {
                     this.output.emit_key(event, trace, cx);
+                }
+            }))
+            .on_key_up(cx.listener(|this, event: &KeyUpEvent, _, cx| {
+                if this.state.hello.reports_key_transitions()
+                    && let Some(event) = this.held.release(&event.keystroke)
+                {
+                    this.output.emit(event, cx);
+                }
+            }))
+            .on_modifiers_changed(cx.listener(|this, event: &ModifiersChangedEvent, _, cx| {
+                if this.state.hello.reports_key_transitions()
+                    && let Some(event) = this.held.change_modifiers(event.modifiers)
+                {
+                    this.output.emit(event, cx);
                 }
             }))
             .relative()
