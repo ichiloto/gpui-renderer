@@ -382,7 +382,23 @@ pub struct CanvasRoot {
     pub width: u32,
     pub height: u32,
     #[serde(default)]
+    pub mode: CanvasMode,
+    #[serde(default)]
     pub background: Option<ColorSpec>,
+}
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanvasMode {
+    #[default]
+    Exclusive,
+    Overlay,
+}
+
+impl CanvasRoot {
+    pub fn is_overlay(&self) -> bool {
+        self.mode == CanvasMode::Overlay
+    }
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]

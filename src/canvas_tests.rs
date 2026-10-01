@@ -775,3 +775,168 @@ fn whole_canvas_images_and_crops_have_cached_edge_guards_with_original_alpha() {
         ));
     }
 }
+
+#[test]
+fn canvas_brightness_uses_one_cached_variant_in_complete_and_retained_frames() {
+    let dir = tempfile::tempdir().unwrap();
+    image::RgbaImage::from_fn(2, 2, |x, y| {
+        image::Rgba([200, 100, 50, if x == y { 64 } else { 255 }])
+    })
+    .save(dir.path().join("portrait.png"))
+    .unwrap();
+    let assets = AssetRoot::new(dir.path()).unwrap();
+    let grid = hello().grid;
+    let mut frame: FrameV2 = serde_json::from_value(serde_json::json!({
+        "frame": 1,
+        "textLayers": [],
+        "sprites": [],
+        "canvas": {
+            "width": 320,
+            "height": 320,
+            "images": [{
+                "id": "portrait",
+                "asset": "portrait.png",
+                "destination": {"x": 10, "y": 10, "width": 200, "height": 200},
+                "layer": 0,
+                "opacity": 0.25,
+                "brightness": 0.6
+            }]
+        }
+    }))
+    .unwrap();
+    let complete = PreparedFrame::prepare_v2(frame.clone(), grid, &assets).unwrap();
+    let toned = &complete.canvas.as_ref().unwrap().images[0];
+    let original = assets.load(std::path::Path::new("portrait.png")).unwrap();
+    let region = assets
+        .prepare_region(
+            &original,
+            SourceRect {
+                x: 0,
+                y: 0,
+                width: 2,
+                height: 2,
+            },
+        )
+        .unwrap();
+    assert_ne!(toned.id, region.id);
+    for (source, result) in region
+        .as_bytes(0)
+        .unwrap()
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .zip(toned.as_bytes(0).unwrap().as_chunks::<4>().0.iter())
+    {
+        assert_eq!(result, &[30, 60, 120, source[3]]);
+    }
+    assert_eq!(
+        complete.canvas.as_ref().unwrap().source.images[0].opacity,
+        0.25
+    );
+    assert_eq!(complete.resources.png_decodes, 1);
+    assert_eq!(complete.resources.region_builds, 1);
+    assert_eq!(complete.resources.prepared_regions, 2);
+
+    let repeated = PreparedFrame::prepare_v2(frame.clone(), grid, &assets).unwrap();
+    assert!(Arc::ptr_eq(
+        toned,
+        &repeated.canvas.as_ref().unwrap().images[0]
+    ));
+    assert_eq!(
+        (
+            repeated.resources.png_decodes,
+            repeated.resources.region_builds
+        ),
+        (0, 0)
+    );
+    let retained = PreparedFrame::prepare_retained_v2(frame.clone(), grid, &assets, true).unwrap();
+    assert!(retained.canvas_overlay);
+    assert!(Arc::ptr_eq(
+        toned,
+        &retained.canvas.as_ref().unwrap().images[0]
+    ));
+
+    frame.canvas.as_mut().unwrap().images[0].brightness = None;
+    let default = PreparedFrame::prepare_v2(frame.clone(), grid, &assets).unwrap();
+    assert!(Arc::ptr_eq(
+        &region,
+        &default.canvas.as_ref().unwrap().images[0]
+    ));
+    frame.canvas.as_mut().unwrap().images[0].brightness = Some(1.0);
+    let explicit_one = PreparedFrame::prepare_v2(frame, grid, &assets).unwrap();
+    assert!(Arc::ptr_eq(
+        &region,
+        &explicit_one.canvas.as_ref().unwrap().images[0]
+    ));
+}
+
+#[test]
+fn canvas_brightness_crops_current_replacement_art_without_changing_alpha() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("portrait.png");
+    image::RgbaImage::from_pixel(2, 2, image::Rgba([210, 100, 40, 73]))
+        .save(&path)
+        .unwrap();
+    let assets = AssetRoot::new(dir.path()).unwrap();
+    let frame: FrameV2 = serde_json::from_value(serde_json::json!({
+        "frame":1,"textLayers":[],"sprites":[],"canvas":{
+            "width":320,"height":320,"images":[{
+                "id":"portrait","asset":"portrait.png","layer":0,
+                "destination":{"x":0,"y":0,"width":100,"height":100},
+                "sourceRect":{"x":1,"y":0,"width":1,"height":2},
+                "brightness":0.6
+            }]
+        }
+    }))
+    .unwrap();
+    let first = PreparedFrame::prepare_v2(frame.clone(), hello().grid, &assets).unwrap();
+    let first_image = &first.canvas.as_ref().unwrap().images[0];
+    let first_length = fs::metadata(&path).unwrap().len();
+
+    // A new file can have different dimensions while retaining the authored
+    // crop and presentation identity. The replacement gets its own tone image.
+    image::RgbaImage::from_fn(7, 9, |x, y| {
+        image::Rgba([
+            x as u8 * 17,
+            y as u8 * 19,
+            180,
+            if y == 0 { 31 } else { 201 },
+        ])
+    })
+    .save(&path)
+    .unwrap();
+    assert_ne!(fs::metadata(&path).unwrap().len(), first_length);
+    let replaced = PreparedFrame::prepare_v2(frame, hello().grid, &assets).unwrap();
+    let current = &replaced.canvas.as_ref().unwrap().images[0];
+    assert_ne!(first_image.id, current.id);
+    assert_eq!(replaced.resources.png_decodes, 1);
+    let source = assets.load(std::path::Path::new("portrait.png")).unwrap();
+    let region = assets
+        .prepare_region(
+            &source,
+            SourceRect {
+                x: 1,
+                y: 0,
+                width: 1,
+                height: 2,
+            },
+        )
+        .unwrap();
+    for (original, toned) in region
+        .as_bytes(0)
+        .unwrap()
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .zip(current.as_bytes(0).unwrap().as_chunks::<4>().0.iter())
+    {
+        for channel in 0..3 {
+            assert_eq!(
+                toned[channel],
+                (f64::from(original[channel]) * 0.6).round() as u8
+            );
+        }
+        assert_eq!(toned[3], original[3]);
+    }
+    assert_eq!(first_image.as_bytes(0).unwrap()[3], 73);
+}

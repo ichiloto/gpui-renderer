@@ -37,6 +37,8 @@ pub struct PreparedFrame {
     #[allow(dead_code)] // Resource counters are retained for headless parity reports.
     pub resources: FrameResources,
     pub canvas: Option<Box<crate::canvas::PreparedCanvas>>,
+    /// Retained canvas entities drawn above the field instead of replacing it.
+    pub canvas_overlay: bool,
     pub viewport: Option<PreparedViewport>,
 }
 
@@ -153,7 +155,16 @@ impl<'a> FrameImages<'a> {
             height: size.height.0 as u32,
         });
         rect.validate_image(size.width.0 as u32, size.height.0 as u32)?;
-        self.region(&source, rect)
+        let region = self.region(&source, rect)?;
+        let toned = self.assets.prepare_tone(&region, image.get_brightness())?;
+        if !self.regions.contains_key(&toned.id) {
+            self.resources.region_bytes += toned.as_bytes(0).unwrap().len();
+            if self.resources.region_bytes > crate::tile_regions::MAX_REGION_BYTES {
+                return Err("frame exceeds 64 MiB prepared-region limit".into());
+            }
+            self.regions.insert(toned.id, toned.clone());
+        }
+        Ok(toned)
     }
     fn finish(mut self) -> (Vec<Arc<RenderImage>>, FrameResources) {
         let after = self.assets.preparation_totals();
@@ -178,6 +189,15 @@ impl<'a> FrameImages<'a> {
 }
 
 impl PreparedFrame {
+    pub fn get_logical_size(&self, grid: Grid) -> (f32, f32) {
+        if !self.canvas_overlay
+            && let Some(canvas) = &self.canvas
+        {
+            return (canvas.source.width as f32, canvas.source.height as f32);
+        }
+        get_grid_size(grid)
+    }
+
     /// The layer a plan item paints at; the plan is in ascending layer order.
     pub fn get_item_layer(&self, item: &PaintItem) -> i32 {
         match *item {
@@ -203,6 +223,7 @@ impl PreparedFrame {
         Ok(Self {
             observation: None,
             canvas: None,
+            canvas_overlay: false,
             viewport: None,
             number: frame.frame,
             text: frame.text,
@@ -215,8 +236,31 @@ impl PreparedFrame {
         })
     }
 
+    #[cfg(test)]
     pub fn prepare_v2(frame: FrameV2, grid: Grid, assets: &AssetRoot) -> Result<Self, String> {
-        frame.validate(grid)?;
+        Self::prepare_v2_inner(frame, grid, assets, false)
+    }
+
+    pub fn prepare_retained_v2(
+        frame: FrameV2,
+        grid: Grid,
+        assets: &AssetRoot,
+        canvas_overlay: bool,
+    ) -> Result<Self, String> {
+        Self::prepare_v2_inner(frame, grid, assets, canvas_overlay)
+    }
+
+    fn prepare_v2_inner(
+        frame: FrameV2,
+        grid: Grid,
+        assets: &AssetRoot,
+        canvas_overlay: bool,
+    ) -> Result<Self, String> {
+        if canvas_overlay {
+            frame.validate_retained(grid, true)?;
+        } else {
+            frame.validate(grid)?;
+        }
         let mut images = FrameImages::new(assets);
         let composite_specs = frame
             .canvas
@@ -288,6 +332,7 @@ impl PreparedFrame {
         Ok(Self {
             observation: None,
             canvas,
+            canvas_overlay,
             viewport,
             number: frame.frame,
             text: vec![],
@@ -356,19 +401,10 @@ pub struct RendererState {
 
 impl RendererState {
     pub fn logical_size(&self) -> (f32, f32) {
-        self.frame
-            .as_ref()
-            .and_then(|frame| frame.canvas.as_ref())
-            .map_or_else(
-                || {
-                    let grid = self.hello.grid;
-                    (
-                        (grid.columns * grid.cell_width) as f32,
-                        (grid.rows * grid.cell_height) as f32,
-                    )
-                },
-                |canvas| (canvas.source.width as f32, canvas.source.height as f32),
-            )
+        self.frame.as_ref().map_or_else(
+            || get_grid_size(self.hello.grid),
+            |frame| frame.get_logical_size(self.hello.grid),
+        )
     }
 
     #[cfg(test)]
@@ -379,6 +415,13 @@ impl RendererState {
     pub fn replace_shared(&mut self, frame: Arc<PreparedFrame>) {
         self.frame = Some(frame);
     }
+}
+
+fn get_grid_size(grid: Grid) -> (f32, f32) {
+    (
+        (grid.columns * grid.cell_width) as f32,
+        (grid.rows * grid.cell_height) as f32,
+    )
 }
 
 #[cfg(test)]
@@ -1199,6 +1242,46 @@ mod tests {
             sprites: vec![sprite("player", 100)],
         }
     }
+
+    #[test]
+    fn retained_overlay_keeps_field_geometry_and_prepares_both_presentations() {
+        use crate::canvas_protocol::Canvas;
+
+        let (mut state, assets) = setup();
+        let mut frame = v2();
+        frame.canvas = Some(Canvas {
+            width: 1280,
+            height: 576,
+            images: vec![],
+            composites: None,
+            indicators: vec![],
+            text_layers: vec![],
+        });
+        let prepared =
+            PreparedFrame::prepare_retained_v2(frame, state.hello.grid, &assets, true).unwrap();
+        assert!(prepared.canvas_overlay);
+        assert!(prepared.canvas.is_some());
+        assert_eq!(prepared.sprites.len(), 1);
+        assert_eq!(prepared.text_layers.len(), 2);
+        state.replace(prepared);
+        assert_eq!(state.logical_size(), (1280.0, 576.0));
+
+        // A full-canvas menu retains its independent dimensions.
+        let mut menu = v2();
+        menu.sprites.clear();
+        menu.text_layers.clear();
+        menu.canvas = Some(Canvas {
+            width: 1024,
+            height: 640,
+            images: vec![],
+            composites: None,
+            indicators: vec![],
+            text_layers: vec![],
+        });
+        state.replace(PreparedFrame::prepare_v2(menu, state.hello.grid, &assets).unwrap());
+        assert_eq!(state.logical_size(), (1024.0, 640.0));
+    }
+
     #[test]
     fn viewport_membership_follows_each_complete_frame() {
         use crate::protocol::{SourceRect, TileCell, ViewportPoint, ViewportRect};

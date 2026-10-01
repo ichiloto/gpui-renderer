@@ -85,7 +85,9 @@ impl Hello {
             Capability::SpriteSourceRect,
             Capability::TileBatches,
             Capability::GraphicalCanvas,
+            Capability::CanvasOverlay,
             Capability::CanvasClipOpacity,
+            Capability::CanvasImageTone,
             Capability::CanvasGlyphEffects,
             Capability::CanvasCompositing,
             Capability::FrameViewport,
@@ -115,7 +117,11 @@ pub enum Capability {
     SpriteSourceRect,
     TileBatches,
     GraphicalCanvas,
+    /// Retained canvases can layer over the field and screen content.
+    CanvasOverlay,
     CanvasClipOpacity,
+    /// Canvas images may multiply RGB brightness without reducing alpha.
+    CanvasImageTone,
     CanvasGlyphEffects,
     CanvasCompositing,
     FrameViewport,
@@ -421,11 +427,28 @@ fn required_color<'de, D: serde::Deserializer<'de>>(
 
 impl FrameV2 {
     pub fn validate(&self, grid: Grid) -> Result<(), String> {
+        self.validate_with_canvas_mode(grid, false)
+    }
+
+    /// Retained scenes carry the canvas mode on their root, outside FrameV2.
+    /// Historical full-frame input continues to use exclusive canvas validation.
+    pub fn validate_retained(&self, grid: Grid, canvas_overlay: bool) -> Result<(), String> {
+        self.validate_with_canvas_mode(grid, canvas_overlay)
+    }
+
+    fn validate_with_canvas_mode(&self, grid: Grid, canvas_overlay: bool) -> Result<(), String> {
         if let Some(canvas) = &self.canvas {
-            if !self.text_layers.is_empty()
-                || !self.sprites.is_empty()
-                || self.tile_batches.as_ref().is_some_and(|b| !b.is_empty())
-                || self.viewport.is_some()
+            if canvas_overlay
+                && (canvas.width != grid.columns * grid.cell_width
+                    || canvas.height != grid.rows * grid.cell_height)
+            {
+                return Err("overlay canvas must match the session grid in logical pixels".into());
+            }
+            if !canvas_overlay
+                && (!self.text_layers.is_empty()
+                    || !self.sprites.is_empty()
+                    || self.tile_batches.as_ref().is_some_and(|b| !b.is_empty())
+                    || self.viewport.is_some())
             {
                 return Err("canvas cannot mix with text, sprites, tiles or viewport".into());
             }
@@ -636,6 +659,11 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::GraphicalCanvas) {
             return Err("graphical_canvas requires protocol v2".into());
         }
+        if unique.contains(&Capability::CanvasOverlay)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_overlay requires protocol v2 and graphical_canvas".into());
+        }
         if version == Version::V1 && unique.contains(&Capability::WindowActivation) {
             return Err("window_activation requires protocol v2".into());
         }
@@ -661,6 +689,11 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
             if !unique.contains(&Capability::GraphicalCanvas) {
                 return Err("canvas_clip_opacity requires graphical_canvas".into());
             }
+        }
+        if unique.contains(&Capability::CanvasImageTone)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_image_tone requires protocol v2 and graphical_canvas".into());
         }
         if unique.contains(&Capability::CanvasGlyphEffects)
             && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
@@ -867,6 +900,8 @@ mod tests {
         hello.required_capabilities = vec![Capability::SpriteSourceRect, Capability::TileBatches];
         let enabled = hello.get_enabled_capabilities(Version::V2);
         assert!(enabled.contains(&Capability::GraphicalCanvas));
+        assert!(enabled.contains(&Capability::CanvasOverlay));
+        assert!(enabled.contains(&Capability::CanvasImageTone));
         assert!(enabled.contains(&Capability::CanvasCompositing));
         assert!(enabled.contains(&Capability::FrameViewport));
         assert!(!enabled.contains(&Capability::WindowActivation));
@@ -1035,6 +1070,75 @@ mod tests {
                 "width":16,"height":16,"anchor":"bottom_center","layer":1,
                 "quarterTurns":0}]});
         assert!(parse(&serde_json::to_vec(&legacy).unwrap()).is_err());
+    }
+
+    #[test]
+    fn canvas_overlay_requires_graphical_canvas_and_retained_validation_only() {
+        assert_eq!(
+            walk_hello(2, "\"canvas_overlay\"").unwrap_err(),
+            "canvas_overlay requires protocol v2 and graphical_canvas"
+        );
+        assert_eq!(
+            walk_hello(1, "\"graphical_canvas\",\"canvas_overlay\"").unwrap_err(),
+            "graphical_canvas requires protocol v2"
+        );
+        let Message::Hello(hello) = walk_hello(2, "\"graphical_canvas\",\"canvas_overlay\"")
+            .unwrap()
+            .message
+        else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::CanvasOverlay)
+        );
+
+        let grid = Grid {
+            columns: 4,
+            rows: 2,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut frame: FrameV2 = serde_json::from_value(serde_json::json!({
+            "frame":1,"textLayers":[{"id":"hud","layer":1000,"runs":[]}],
+            "sprites":[],"canvas":{"width":40,"height":40}
+        }))
+        .unwrap();
+        assert_eq!(
+            frame.validate(grid).unwrap_err(),
+            "canvas cannot mix with text, sprites, tiles or viewport"
+        );
+        assert!(frame.validate_retained(grid, true).is_ok());
+        frame.canvas.as_mut().unwrap().width = 39;
+        assert_eq!(
+            frame.validate_retained(grid, true).unwrap_err(),
+            "overlay canvas must match the session grid in logical pixels"
+        );
+    }
+
+    #[test]
+    fn canvas_image_tone_requires_v2_graphical_canvas_and_is_advertised() {
+        assert_eq!(
+            walk_hello(2, "\"canvas_image_tone\"").unwrap_err(),
+            "canvas_image_tone requires protocol v2 and graphical_canvas"
+        );
+        assert_eq!(
+            walk_hello(1, "\"canvas_image_tone\"").unwrap_err(),
+            "canvas_image_tone requires protocol v2 and graphical_canvas"
+        );
+        let Message::Hello(hello) = walk_hello(2, "\"graphical_canvas\",\"canvas_image_tone\"")
+            .unwrap()
+            .message
+        else {
+            panic!()
+        };
+        let enabled = hello.get_enabled_capabilities(Version::V2);
+        assert!(enabled.contains(&Capability::CanvasImageTone));
+        assert_eq!(
+            serde_json::to_value(Capability::CanvasImageTone).unwrap(),
+            serde_json::json!("canvas_image_tone")
+        );
     }
 
     fn tile_frame() -> FrameV2 {

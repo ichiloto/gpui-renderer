@@ -402,7 +402,7 @@ impl Render for Renderer {
             .text_size(px(logical_font_size * transform.scale))
             .line_height(px(ch * transform.scale));
         if let Some(frame) = &self.state.frame {
-            if let Some(canvas) = &frame.canvas {
+            if let Some(canvas) = frame.canvas.as_ref().filter(|_| !frame.canvas_overlay) {
                 surface = surface.child(canvas.element(
                     transform,
                     &mut self.canvas_fonts,
@@ -410,7 +410,7 @@ impl Render for Renderer {
                     self.tile_samples.clone(),
                     cx,
                 ));
-            } else {
+            } else if frame.canvas.is_none() {
                 self.canvas_fonts.clear();
             }
             // World layers interleave with the plan by layer, so a tiles
@@ -621,6 +621,17 @@ impl Render for Renderer {
                         }
                     }
                 }
+            }
+            // Overlay canvas pixels are transparent outside their elements and
+            // paint above the complete retained field, sprites, and screen HUD.
+            if let Some(canvas) = frame.canvas.as_ref().filter(|_| frame.canvas_overlay) {
+                surface = surface.child(canvas.element(
+                    transform,
+                    &mut self.canvas_fonts,
+                    &self.glyph_frame.images,
+                    self.tile_samples.clone(),
+                    cx,
+                ));
             }
         }
 

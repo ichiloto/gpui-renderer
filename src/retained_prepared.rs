@@ -215,10 +215,12 @@ impl PreparedScene {
         assets: &AssetRoot,
         previous: Option<&Self>,
     ) -> Result<Self, String> {
-        let screen = Arc::new(PreparedFrame::prepare_v2(
+        let canvas_overlay = source.canvas.as_ref().is_some_and(|root| root.is_overlay());
+        let screen = Arc::new(PreparedFrame::prepare_retained_v2(
             source.materialize_screen(frame)?,
             grid,
             assets,
+            canvas_overlay,
         )?);
         let mut live_image_ids = HashSet::new();
         let mut live_image_bytes = 0usize;

@@ -228,19 +228,7 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                             let number = frame.number;
                             if let Err(error) = window.update(cx, |view, window, cx| {
                                 let observation = frame.observation;
-                                let (width, height) = frame.canvas.as_ref().map_or(
-                                    (
-                                        (view.state.hello.grid.columns
-                                            * view.state.hello.grid.cell_width)
-                                            as f32,
-                                        (view.state.hello.grid.rows
-                                            * view.state.hello.grid.cell_height)
-                                            as f32,
-                                    ),
-                                    |canvas| {
-                                        (canvas.source.width as f32, canvas.source.height as f32)
-                                    },
-                                );
+                                let (width, height) = frame.get_logical_size(view.state.hello.grid);
                                 let viewport = window.viewport_size();
                                 let fit = crate::viewport::ViewportTransform::fit(
                                     width,
@@ -303,16 +291,8 @@ pub fn run(output: Output, writer_failure: async_channel::Receiver<String>) {
                                     return;
                                 }
                                 let screen = &frame.scene.screen;
-                                let grid = view.state.hello.grid;
-                                let (width, height) = screen.canvas.as_ref().map_or(
-                                    (
-                                        (grid.columns * grid.cell_width) as f32,
-                                        (grid.rows * grid.cell_height) as f32,
-                                    ),
-                                    |canvas| {
-                                        (canvas.source.width as f32, canvas.source.height as f32)
-                                    },
-                                );
+                                let (width, height) =
+                                    screen.get_logical_size(view.state.hello.grid);
                                 let viewport = window.viewport_size();
                                 let fit = crate::viewport::ViewportTransform::fit(
                                     width,

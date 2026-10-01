@@ -1,5 +1,5 @@
 //! Resolve and decode PNGs before any presentation reaches the UI thread.
-use gpui::RenderImage;
+use gpui::{ImageId, RenderImage};
 use std::collections::VecDeque;
 use std::fs;
 use std::io::{Cursor, Read};
@@ -9,6 +9,8 @@ use std::sync::{Arc, Mutex};
 
 pub const MAX_DECODED_BYTES: usize = 64 * 1024 * 1024;
 const MAX_CACHED_IMAGES: usize = 1024;
+const MAX_TONED_BYTES: usize = 64 * 1024 * 1024;
+const MAX_TONED_IMAGES: usize = 1024;
 
 #[derive(Debug, PartialEq, Eq)]
 struct FileStamp {
@@ -56,11 +58,88 @@ impl ImageCache {
     }
 }
 
+#[derive(Debug)]
+struct TonedImage {
+    source: ImageId,
+    brightness: u64,
+    image: Arc<RenderImage>,
+}
+
+/// Reuse immutable color variants across frames without retaining every
+/// requested brightness value indefinitely. The original guarded crop remains
+/// in the region cache and never needs to be decoded or sampled again.
+#[derive(Debug, Default)]
+struct ToneCache {
+    entries: VecDeque<TonedImage>,
+    bytes: usize,
+}
+
+impl ToneCache {
+    fn prepare(
+        &mut self,
+        source: &Arc<RenderImage>,
+        brightness: f64,
+    ) -> Result<Arc<RenderImage>, String> {
+        if !brightness.is_finite() || !(0.0..=1.0).contains(&brightness) {
+            return Err("canvas brightness must be finite and between 0 and 1".into());
+        }
+        if brightness == 1.0 {
+            return Ok(source.clone());
+        }
+        let key = if brightness == 0.0 {
+            0.0f64.to_bits()
+        } else {
+            brightness.to_bits()
+        };
+        if let Some(index) = self
+            .entries
+            .iter()
+            .position(|entry| entry.source == source.id && entry.brightness == key)
+        {
+            let entry = self.entries.remove(index).unwrap();
+            let image = entry.image.clone();
+            self.entries.push_back(entry);
+            return Ok(image);
+        }
+
+        // Source pixels are already in GPUI's BGRA order. Multiplying the
+        // three color bytes equally leaves transparency and edge guards intact.
+        let size = source.size(0);
+        let mut bytes = source
+            .as_bytes(0)
+            .ok_or("prepared canvas image has no pixels")?
+            .to_vec();
+        for pixel in bytes.as_chunks_mut::<4>().0 {
+            for channel in &mut pixel[..3] {
+                *channel = (f64::from(*channel) * brightness).round() as u8;
+            }
+        }
+        let pixels = image::RgbaImage::from_raw(size.width.0 as u32, size.height.0 as u32, bytes)
+            .ok_or("prepared canvas image has invalid pixel dimensions")?;
+        let image = Arc::new(RenderImage::new(vec![image::Frame::new(pixels)]));
+        let length = image.as_bytes(0).unwrap().len();
+        if length <= MAX_TONED_BYTES {
+            while self.bytes + length > MAX_TONED_BYTES || self.entries.len() >= MAX_TONED_IMAGES {
+                let oldest = self.entries.pop_front().unwrap();
+                self.bytes -= oldest.image.as_bytes(0).unwrap().len();
+            }
+            self.bytes += length;
+            self.entries.push_back(TonedImage {
+                source: source.id,
+                brightness: key,
+                image: image.clone(),
+            });
+        }
+        Ok(image)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct AssetRoot {
     path: PathBuf,
     cache: Arc<Mutex<ImageCache>>,
     regions: Arc<Mutex<crate::tile_regions::RegionCache>>,
+    tones: Arc<Mutex<ToneCache>>,
     decodes: Arc<AtomicU64>,
     composites: Arc<Mutex<crate::composite_cache::CompositeCache>>,
 }
@@ -80,6 +159,7 @@ impl AssetRoot {
             path: root,
             cache: Arc::default(),
             regions: Arc::default(),
+            tones: Arc::default(),
             decodes: Arc::default(),
             composites: Arc::default(),
         })
@@ -177,6 +257,14 @@ impl AssetRoot {
         self.regions.lock().unwrap().images()
     }
 
+    pub fn prepare_tone(
+        &self,
+        source: &Arc<RenderImage>,
+        brightness: f64,
+    ) -> Result<Arc<RenderImage>, String> {
+        self.tones.lock().unwrap().prepare(source, brightness)
+    }
+
     pub fn preparation_totals(&self) -> (u64, u64) {
         (
             self.decodes.load(Ordering::Relaxed),
@@ -196,6 +284,57 @@ impl AssetRoot {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tone_cache_reuses_color_variants_and_keeps_alpha_and_sources_unchanged() {
+        let source = Arc::new(RenderImage::new(vec![image::Frame::new(
+            image::RgbaImage::from_fn(2, 1, |x, _| {
+                image::Rgba(if x == 0 {
+                    [200, 101, 50, 37]
+                } else {
+                    [12, 34, 56, 255]
+                })
+            }),
+        )]));
+        let original = source.as_bytes(0).unwrap().to_vec();
+        let mut cache = ToneCache::default();
+        assert!(Arc::ptr_eq(&source, &cache.prepare(&source, 1.0).unwrap()));
+        let toned = cache.prepare(&source, 0.6).unwrap();
+        assert_eq!(
+            toned.as_bytes(0).unwrap(),
+            &[120, 61, 30, 37, 7, 20, 34, 255]
+        );
+        assert_eq!(source.as_bytes(0).unwrap(), original);
+        assert!(Arc::ptr_eq(&toned, &cache.prepare(&source, 0.6).unwrap()));
+        assert_eq!(cache.entries.len(), 1);
+        assert_eq!(cache.bytes, toned.as_bytes(0).unwrap().len());
+        assert_eq!(
+            cache.prepare(&source, 0.0).unwrap().as_bytes(0).unwrap(),
+            &[0, 0, 0, 37, 0, 0, 0, 255]
+        );
+        for invalid in [f64::NAN, f64::INFINITY, -0.01, 1.01] {
+            assert!(cache.prepare(&source, invalid).is_err());
+        }
+    }
+
+    #[test]
+    fn tone_cache_evicts_old_variants_at_its_count_limit() {
+        let source = Arc::new(RenderImage::new(vec![image::Frame::new(
+            image::RgbaImage::from_pixel(1, 1, image::Rgba([100, 150, 200, 90])),
+        )]));
+        let mut cache = ToneCache::default();
+        let first = cache.prepare(&source, 0.001).unwrap();
+        for i in 2..=MAX_TONED_IMAGES + 1 {
+            cache
+                .prepare(&source, i as f64 / (MAX_TONED_IMAGES + 2) as f64)
+                .unwrap();
+        }
+        assert_eq!(cache.entries.len(), MAX_TONED_IMAGES);
+        assert!(cache.bytes <= MAX_TONED_BYTES);
+        assert!(!cache.entries.iter().any(|entry| entry.image.id == first.id));
+        // Prepared snapshots still own evicted variants until they retire.
+        assert_eq!(first.as_bytes(0).unwrap(), &[0, 0, 0, 90]);
+    }
     #[test]
     fn cache_reuses_canonical_assets_and_reloads_changed_metadata() {
         let dir = tempfile::tempdir().unwrap();

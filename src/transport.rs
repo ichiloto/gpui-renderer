@@ -1,4 +1,6 @@
 use crate::assets::AssetRoot;
+#[cfg(test)]
+use crate::canvas_protocol::Canvas;
 use crate::diagnostics::Diagnostics;
 #[cfg(test)]
 use crate::protocol::Sprite;
@@ -123,50 +125,7 @@ impl Session {
                     return Err("viewport requires negotiated frame_viewport capability".into());
                 }
                 if let Some(canvas) = &frame.canvas {
-                    if canvas.composites.is_some()
-                        && !enabled.contains(&Capability::CanvasCompositing)
-                    {
-                        return Err(
-                            "composites requires negotiated canvas_compositing capability".into(),
-                        );
-                    }
-                    if !enabled.contains(&Capability::GraphicalCanvas) {
-                        return Err("canvas requires negotiated graphical_canvas capability".into());
-                    }
-                    if canvas
-                        .text_layers
-                        .iter()
-                        .any(|text| text.glyph_effects.is_some())
-                        && !enabled.contains(&Capability::CanvasGlyphEffects)
-                    {
-                        return Err(
-                            "glyphEffects requires negotiated canvas_glyph_effects capability"
-                                .into(),
-                        );
-                    }
-                    if (canvas.images.iter().any(|image| image.clip_rect.is_some())
-                        || canvas
-                            .text_layers
-                            .iter()
-                            .any(|text| text.clip_rect.is_some() || text.opacity.is_some()))
-                        && !enabled.contains(&Capability::CanvasClipOpacity)
-                    {
-                        return Err(
-                            "canvas clipRect/text opacity requires negotiated canvas_clip_opacity capability"
-                                .into(),
-                        );
-                    }
-                    if canvas
-                        .images
-                        .iter()
-                        .any(|image| image.source_rect.is_some())
-                        && !enabled.contains(&Capability::SpriteSourceRect)
-                    {
-                        return Err(
-                            "canvas sourceRect requires negotiated sprite_source_rect capability"
-                                .into(),
-                        );
-                    }
+                    CanvasFeatures::get_from_canvas(canvas).validate(&enabled)?;
                 }
                 if frame.tile_batches.is_some() && !enabled.contains(&Capability::TileBatches) {
                     return Err("tileBatches requires negotiated tile_batches capability".into());
@@ -195,7 +154,8 @@ impl Session {
                     }
                 };
                 let enabled = hello.get_enabled_capabilities(*version);
-                if let Err(message) = validate_retained_sprite_capability(&accepted.scene, &enabled)
+                if let Err(message) = validate_retained_canvas_capability(&accepted.scene, &enabled)
+                    .and_then(|()| validate_retained_sprite_capability(&accepted.scene, &enabled))
                 {
                     self.retained.require_reset();
                     return Ok(Update::RetainedRejected {
@@ -250,6 +210,25 @@ impl Session {
     }
 }
 
+fn validate_retained_canvas_capability(
+    scene: &SceneSource,
+    enabled: &[Capability],
+) -> Result<(), String> {
+    if scene.canvas.as_ref().is_some_and(|root| root.is_overlay())
+        && (!enabled.contains(&Capability::CanvasOverlay)
+            || !enabled.contains(&Capability::GraphicalCanvas))
+    {
+        return Err(
+            "overlay canvas requires negotiated canvas_overlay and graphical_canvas capabilities"
+                .into(),
+        );
+    }
+    if scene.canvas.is_some() {
+        CanvasFeatures::get_from_scene(scene).validate(enabled)?;
+    }
+    Ok(())
+}
+
 fn validate_retained_sprite_capability(
     scene: &SceneSource,
     enabled: &[Capability],
@@ -261,6 +240,94 @@ fn validate_retained_sprite_capability(
         );
     }
     Ok(())
+}
+
+#[derive(Default)]
+struct CanvasFeatures {
+    composites: bool,
+    glyph_effects: bool,
+    clip_opacity: bool,
+    image_tone: bool,
+    source_rect: bool,
+}
+
+impl CanvasFeatures {
+    #[cfg(test)]
+    fn get_from_canvas(canvas: &Canvas) -> Self {
+        Self {
+            composites: canvas.composites.is_some(),
+            glyph_effects: canvas
+                .text_layers
+                .iter()
+                .any(|text| text.glyph_effects.is_some()),
+            clip_opacity: canvas.images.iter().any(|image| image.clip_rect.is_some())
+                || canvas
+                    .text_layers
+                    .iter()
+                    .any(|text| text.clip_rect.is_some() || text.opacity.is_some()),
+            image_tone: canvas.images.iter().any(|image| image.brightness.is_some()),
+            source_rect: canvas
+                .images
+                .iter()
+                .any(|image| image.source_rect.is_some()),
+        }
+    }
+
+    fn get_from_scene(scene: &SceneSource) -> Self {
+        Self {
+            composites: !scene.canvas_composites.is_empty(),
+            glyph_effects: scene
+                .canvas_text
+                .values()
+                .any(|text| text.item.glyph_effects.is_some()),
+            clip_opacity: scene
+                .canvas_images
+                .values()
+                .any(|image| image.item.clip_rect.is_some())
+                || scene
+                    .canvas_text
+                    .values()
+                    .any(|text| text.item.clip_rect.is_some() || text.item.opacity.is_some()),
+            image_tone: scene
+                .canvas_images
+                .values()
+                .any(|image| image.item.brightness.is_some()),
+            source_rect: scene
+                .canvas_images
+                .values()
+                .any(|image| image.item.source_rect.is_some()),
+        }
+    }
+
+    fn validate(&self, enabled: &[Capability]) -> Result<(), String> {
+        if self.composites && !enabled.contains(&Capability::CanvasCompositing) {
+            return Err("composites requires negotiated canvas_compositing capability".into());
+        }
+        if !enabled.contains(&Capability::GraphicalCanvas) {
+            return Err("canvas requires negotiated graphical_canvas capability".into());
+        }
+        if self.glyph_effects && !enabled.contains(&Capability::CanvasGlyphEffects) {
+            return Err("glyphEffects requires negotiated canvas_glyph_effects capability".into());
+        }
+        if self.clip_opacity && !enabled.contains(&Capability::CanvasClipOpacity) {
+            return Err(
+                "canvas clipRect/text opacity requires negotiated canvas_clip_opacity capability"
+                    .into(),
+            );
+        }
+        if self.image_tone && !enabled.contains(&Capability::CanvasImageTone) {
+            return Err(
+                "canvas brightness requires negotiated canvas_image_tone and graphical_canvas capabilities"
+                    .into(),
+            );
+        }
+        if self.source_rect && !enabled.contains(&Capability::SpriteSourceRect) {
+            return Err(
+                "canvas sourceRect requires negotiated sprite_source_rect capability".into(),
+            );
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -389,6 +456,161 @@ fn read_protocol_observed(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn retained_overlay_requires_both_negotiated_capabilities() {
+        let mut scene = SceneSource::default();
+        scene
+            .apply(
+                serde_json::from_value(json!({"op":"put","kind":"canvas","id":"canvas",
+                "value":{"width":40,"height":40,"mode":"overlay"}}))
+                .unwrap(),
+                protocol::Grid {
+                    columns: 4,
+                    rows: 2,
+                    cell_width: 10,
+                    cell_height: 20,
+                },
+            )
+            .unwrap();
+        for enabled in [
+            vec![],
+            vec![Capability::GraphicalCanvas],
+            vec![Capability::CanvasOverlay],
+        ] {
+            assert!(validate_retained_canvas_capability(&scene, &enabled).is_err());
+        }
+        assert!(
+            validate_retained_canvas_capability(
+                &scene,
+                &[Capability::CanvasOverlay, Capability::GraphicalCanvas]
+            )
+            .is_ok()
+        );
+    }
+
+    #[test]
+    fn retained_image_tone_is_gated_by_field_presence_and_updates() {
+        let grid = protocol::Grid {
+            columns: 4,
+            rows: 2,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut scene = SceneSource::default();
+        scene
+            .apply(
+                serde_json::from_value(json!({"op":"put","kind":"canvas","id":"canvas",
+                "value":{"width":40,"height":40}}))
+                .unwrap(),
+                grid,
+            )
+            .unwrap();
+        let image = |brightness: Option<f64>| {
+            let mut value = json!({
+                "id":"portrait","order":0,"layer":1,"asset":"portrait.png",
+                "destination":{"x":0,"y":0,"width":10,"height":10}
+            });
+            if let Some(brightness) = brightness {
+                value["brightness"] = json!(brightness);
+            }
+            serde_json::from_value(json!({
+                "op":"put","kind":"canvas_image","id":"portrait","value":value
+            }))
+            .unwrap()
+        };
+        scene.apply(image(None), grid).unwrap();
+        assert!(
+            validate_retained_canvas_capability(&scene, &[Capability::GraphicalCanvas]).is_ok()
+        );
+
+        // Explicit 1.0 still requires the negotiated feature; omission does not.
+        scene.apply(image(Some(1.0)), grid).unwrap();
+        assert_eq!(
+            validate_retained_canvas_capability(&scene, &[]).unwrap_err(),
+            "canvas requires negotiated graphical_canvas capability"
+        );
+        assert_eq!(
+            validate_retained_canvas_capability(&scene, &[Capability::GraphicalCanvas])
+                .unwrap_err(),
+            "canvas brightness requires negotiated canvas_image_tone and graphical_canvas capabilities"
+        );
+        assert_eq!(
+            validate_retained_canvas_capability(&scene, &[Capability::CanvasImageTone])
+                .unwrap_err(),
+            "canvas requires negotiated graphical_canvas capability"
+        );
+        let enabled = [Capability::GraphicalCanvas, Capability::CanvasImageTone];
+        assert!(validate_retained_canvas_capability(&scene, &enabled).is_ok());
+        scene.apply(image(Some(0.6)), grid).unwrap();
+        assert_eq!(scene.canvas_images["portrait"].item.get_brightness(), 0.6);
+        assert!(validate_retained_canvas_capability(&scene, &enabled).is_ok());
+        scene.apply(image(None), grid).unwrap();
+        assert!(
+            validate_retained_canvas_capability(&scene, &[Capability::GraphicalCanvas]).is_ok()
+        );
+    }
+
+    #[test]
+    fn retained_canvas_crops_and_clips_require_the_same_capabilities_as_complete_frames() {
+        let grid = protocol::Grid {
+            columns: 4,
+            rows: 2,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut scene = SceneSource::default();
+        scene
+            .apply(
+                serde_json::from_value(json!({"op":"put","kind":"canvas","id":"canvas",
+                    "value":{"width":40,"height":40}}))
+                .unwrap(),
+                grid,
+            )
+            .unwrap();
+        assert_eq!(
+            validate_retained_canvas_capability(&scene, &[]).unwrap_err(),
+            "canvas requires negotiated graphical_canvas capability"
+        );
+        let image = |clip: bool| {
+            let mut value = json!({
+                "id":"portrait","order":0,"layer":1,"asset":"portrait.png",
+                "destination":{"x":0,"y":0,"width":10,"height":10},
+                "sourceRect":{"x":0,"y":0,"width":2,"height":2}
+            });
+            if clip {
+                value["clipRect"] = json!({"x":0,"y":0,"width":10,"height":10});
+            }
+            serde_json::from_value(json!({
+                "op":"put","kind":"canvas_image","id":"portrait","value":value
+            }))
+            .unwrap()
+        };
+        scene.apply(image(false), grid).unwrap();
+        let graphical = [Capability::GraphicalCanvas];
+        assert_eq!(
+            validate_retained_canvas_capability(&scene, &graphical).unwrap_err(),
+            "canvas sourceRect requires negotiated sprite_source_rect capability"
+        );
+        let cropped = [Capability::GraphicalCanvas, Capability::SpriteSourceRect];
+        assert!(validate_retained_canvas_capability(&scene, &cropped).is_ok());
+        scene.apply(image(true), grid).unwrap();
+        assert_eq!(
+            validate_retained_canvas_capability(&scene, &cropped).unwrap_err(),
+            "canvas clipRect/text opacity requires negotiated canvas_clip_opacity capability"
+        );
+        assert!(
+            validate_retained_canvas_capability(
+                &scene,
+                &[
+                    Capability::GraphicalCanvas,
+                    Capability::SpriteSourceRect,
+                    Capability::CanvasClipOpacity,
+                ]
+            )
+            .is_ok()
+        );
+    }
 
     #[test]
     fn retained_sprite_quarter_turns_requires_capability_even_for_explicit_zero() {

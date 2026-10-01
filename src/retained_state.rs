@@ -200,6 +200,13 @@ impl SceneSource {
     }
 
     pub fn validate_visible(&self, grid: Grid, viewport: Option<&Viewport>) -> Result<(), String> {
+        let canvas_overlay = self.canvas.as_ref().is_some_and(CanvasRoot::is_overlay);
+        if let Some(root) = &self.canvas
+            && root.is_overlay()
+            && root.background.is_some()
+        {
+            return Err("overlay canvas root cannot have a background".into());
+        }
         if let Some(viewport) = viewport {
             viewport.validate(grid)?;
             if let Some(world_id) = &viewport.world_id {
@@ -219,35 +226,12 @@ impl SceneSource {
                     return Err("viewport references unknown sprite".into());
                 }
             }
-            if self.canvas.is_some() {
+            if self.canvas.is_some() && !canvas_overlay {
                 return Err("world viewport and canvas cannot both be visible".into());
             }
         }
-        let screen = FrameV2 {
-            frame: 0,
-            text_layers: self
-                .text
-                .values()
-                .map(|text| TextLayer {
-                    id: text.id.clone(),
-                    layer: text.layer,
-                    runs: text.runs.clone(),
-                })
-                .collect(),
-            sprites: self
-                .sprites
-                .values()
-                .map(|sprite| sprite.item.clone())
-                .collect(),
-            tile_batches: None,
-            canvas: None,
-            viewport: None,
-        };
-        screen.validate(grid)?;
-        if let Some(canvas) = self.materialize_canvas()? {
-            canvas.validate()?;
-        }
-        Ok(())
+        self.materialize_screen(0)?
+            .validate_retained(grid, canvas_overlay)
     }
 
     pub fn materialize_canvas(&self) -> Result<Option<Canvas>, String> {
@@ -521,6 +505,197 @@ mod tests {
             "worldOrigin":{"column":0,"row":0},
             "clipRect":{"x":0,"y":0,"width":40,"height":40},
             "worldId":"map","textLayerIds":[],"spriteIds":[]})
+    }
+
+    fn overlay_root() -> Value {
+        json!({"op":"put","kind":"canvas","id":"canvas","value":{
+            "width":40,"height":40,"mode":"overlay"}})
+    }
+
+    fn overlay_image(x: u32) -> Value {
+        json!({"op":"put","kind":"canvas_image","id":"effect","value":{
+            "id":"effect","order":0,"asset":"effect.png","layer":500,
+            "destination":{"x":x,"y":0,"width":10,"height":10}}})
+    }
+
+    #[test]
+    fn overlay_only_updates_and_close_preserve_field_and_screen_identity() {
+        let mut session = RetainedSession::default();
+        let first = session
+            .apply(
+                update(
+                    0,
+                    1,
+                    true,
+                    true,
+                    vec![
+                        world(),
+                        json!({"op":"worldRows","id":"map","rows":[
+                            row(0,&[1,1,1,1]),row(1,&[1,1,1,1])]}),
+                        json!({"op":"put","kind":"text","id":"hud","value":{
+                            "id":"hud","layer":1000,"order":0,"runs":[{
+                                "row":0,"column":0,"text":"HP","foreground":null,"background":null}]}}),
+                        json!({"op":"put","kind":"sprite","id":"hero","value":{
+                            "id":"hero","order":0,"asset":"hero.png","x":10,"y":20,
+                            "width":10,"height":20,"anchor":"bottom_center","layer":100}}),
+                        overlay_root(),
+                        overlay_image(0),
+                    ],
+                    Some(viewport()),
+                ),
+                grid(),
+            )
+            .unwrap();
+        assert!(first.scene.canvas.as_ref().unwrap().is_overlay());
+        assert!(first.viewport.is_some());
+        let screen = first.scene.materialize_screen(1).unwrap();
+        assert_eq!(screen.text_layers[0].id, "hud");
+        assert_eq!(screen.sprites[0].id, "hero");
+        assert_eq!(screen.canvas.as_ref().unwrap().images[0].id, "effect");
+
+        let second = session
+            .apply(
+                update(1, 2, false, true, vec![overlay_image(10)], None),
+                grid(),
+            )
+            .unwrap();
+        assert!(Arc::ptr_eq(
+            &first.scene.worlds["map"],
+            &second.scene.worlds["map"]
+        ));
+        assert!(Arc::ptr_eq(
+            &first.scene.text["hud"],
+            &second.scene.text["hud"]
+        ));
+        assert!(Arc::ptr_eq(
+            &first.scene.sprites["hero"],
+            &second.scene.sprites["hero"]
+        ));
+        assert_eq!(
+            second
+                .scene
+                .materialize_screen(2)
+                .unwrap()
+                .canvas
+                .unwrap()
+                .images[0]
+                .destination
+                .x,
+            10.0
+        );
+        assert!(second.viewport.is_some());
+
+        let invalid = session.apply(
+            update(2, 3, false, true, vec![overlay_image(31)], None),
+            grid(),
+        );
+        assert_eq!(
+            invalid.unwrap_err(),
+            "canvas rectangle must be finite, positive and within the canvas"
+        );
+        assert_eq!(session.expected_generation(), 2);
+        assert!(Arc::ptr_eq(&session.visible, &second.scene));
+
+        let closed = session
+            .apply(
+                update(
+                    2,
+                    3,
+                    false,
+                    true,
+                    vec![
+                        json!({"op":"remove","kind":"canvas_image","id":"effect"}),
+                        json!({"op":"remove","kind":"canvas","id":"canvas"}),
+                    ],
+                    None,
+                ),
+                grid(),
+            )
+            .unwrap();
+        assert!(closed.scene.canvas.is_none());
+        assert!(closed.scene.materialize_screen(3).unwrap().canvas.is_none());
+        assert!(Arc::ptr_eq(
+            &first.scene.worlds["map"],
+            &closed.scene.worlds["map"]
+        ));
+        assert!(Arc::ptr_eq(
+            &first.scene.text["hud"],
+            &closed.scene.text["hud"]
+        ));
+        assert!(Arc::ptr_eq(
+            &first.scene.sprites["hero"],
+            &closed.scene.sprites["hero"]
+        ));
+        assert!(closed.viewport.is_some());
+    }
+
+    #[test]
+    fn overlay_mode_rejects_invalid_root_and_element_geometry() {
+        let absent_mode: CanvasRoot = serde_json::from_value(json!({
+            "width":40,"height":40
+        }))
+        .unwrap();
+        assert!(!absent_mode.is_overlay());
+        let mut exclusive = SceneSource::default();
+        exclusive
+            .apply(
+                from_value(json!({"op":"put","kind":"canvas","id":"canvas",
+            "value":{"width":40,"height":40}}))
+                .unwrap(),
+                grid(),
+            )
+            .unwrap();
+        exclusive
+            .apply(
+                from_value(json!({"op":"put","kind":"text","id":"hud",
+            "value":{"id":"hud","layer":1000,"order":0,"runs":[]}}))
+                .unwrap(),
+                grid(),
+            )
+            .unwrap();
+        assert_eq!(
+            exclusive.validate_visible(grid(), None).unwrap_err(),
+            "canvas cannot mix with text, sprites, tiles or viewport"
+        );
+        for mode in [json!("unknown"), json!(null), json!(1)] {
+            assert!(
+                serde_json::from_value::<CanvasRoot>(json!({
+                    "width":40,"height":40,"mode":mode
+                }))
+                .is_err()
+            );
+        }
+
+        let mut scene = SceneSource::default();
+        scene
+            .apply(from_value(overlay_root()).unwrap(), grid())
+            .unwrap();
+        assert!(scene.validate_visible(grid(), None).is_ok());
+        for root in [
+            json!({"width":39,"height":40,"mode":"overlay"}),
+            json!({"width":40,"height":41,"mode":"overlay"}),
+            json!({"width":40,"height":40,"mode":"overlay",
+                "background":{"kind":"rgb","r":0,"g":0,"b":0}}),
+        ] {
+            let mut invalid = scene.clone();
+            invalid
+                .apply(
+                    from_value(json!({"op":"put","kind":"canvas",
+                "id":"canvas","value":root}))
+                    .unwrap(),
+                    grid(),
+                )
+                .unwrap();
+            assert!(invalid.validate_visible(grid(), None).is_err(), "{root}");
+        }
+        let mut invalid = scene;
+        invalid
+            .apply(from_value(overlay_image(31)).unwrap(), grid())
+            .unwrap();
+        assert_eq!(
+            invalid.validate_visible(grid(), None).unwrap_err(),
+            "canvas rectangle must be finite, positive and within the canvas"
+        );
     }
 
     #[test]

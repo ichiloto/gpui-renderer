@@ -88,8 +88,18 @@ pub struct CanvasImage {
     pub source_rect: Option<SourceRect>,
     #[serde(default = "opaque")]
     pub opacity: f64,
+    /// RGB multiplier for image tone; alpha remains unchanged. Presence is
+    /// retained so use of this feature can be capability-gated even at 1.0.
+    #[serde(default, deserialize_with = "present")]
+    pub brightness: Option<f64>,
     #[serde(default, deserialize_with = "present")]
     pub clip_rect: Option<Rect>,
+}
+
+impl CanvasImage {
+    pub fn get_brightness(&self) -> f64 {
+        self.brightness.unwrap_or(1.0)
+    }
 }
 
 // Preserve explicit field presence for negotiation, without accepting null.
@@ -251,6 +261,11 @@ impl Canvas {
             if !image.opacity.is_finite() || !(0.0..=1.0).contains(&image.opacity) {
                 return Err("canvas opacity must be finite and between 0 and 1".into());
             }
+            if let Some(brightness) = image.brightness
+                && (!brightness.is_finite() || !(0.0..=1.0).contains(&brightness))
+            {
+                return Err("canvas brightness must be finite and between 0 and 1".into());
+            }
             if let Some(rect) = image.source_rect {
                 rect.validate()?;
             }
@@ -315,5 +330,55 @@ impl Canvas {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod brightness_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn make_canvas_image_value() -> serde_json::Value {
+        json!({
+            "id":"actor", "asset":"actor.png", "layer":1,
+            "destination":{"x":0,"y":0,"width":8,"height":8}
+        })
+    }
+
+    #[test]
+    fn image_brightness_is_optional_but_explicit_null_is_invalid() {
+        let image: CanvasImage = serde_json::from_value(make_canvas_image_value()).unwrap();
+        assert_eq!(image.brightness, None);
+        assert_eq!(image.get_brightness(), 1.0);
+
+        let mut value = make_canvas_image_value();
+        value["brightness"] = json!(1.0);
+        let image: CanvasImage = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(image.brightness, Some(1.0));
+        value["brightness"] = serde_json::Value::Null;
+        assert!(serde_json::from_value::<CanvasImage>(value).is_err());
+    }
+
+    #[test]
+    fn image_brightness_is_finite_and_bounded() {
+        let mut canvas = Canvas {
+            width: 8,
+            height: 8,
+            images: vec![serde_json::from_value(make_canvas_image_value()).unwrap()],
+            composites: None,
+            indicators: vec![],
+            text_layers: vec![],
+        };
+        for valid in [0.0, 0.6, 1.0] {
+            canvas.images[0].brightness = Some(valid);
+            assert!(canvas.validate().is_ok());
+        }
+        for invalid in [-0.1, 1.1, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            canvas.images[0].brightness = Some(invalid);
+            assert_eq!(
+                canvas.validate().unwrap_err(),
+                "canvas brightness must be finite and between 0 and 1"
+            );
+        }
     }
 }

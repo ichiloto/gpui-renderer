@@ -11,6 +11,24 @@ coordinates retain their meaning.
 Project-owned image cursors use the existing canvas image path; see
 [cursor presentation](#cursor-presentation) for ownership and limits.
 
+### Retained canvas overlays
+
+The v2 `canvas_overlay` capability extends `graphical_canvas`. A retained
+`canvas` root with `mode:"overlay"` may coexist with the current world viewport,
+sprites and screen text. Its width and height must equal the hello grid's logical
+pixel surface, and it must have no background. Canvas elements keep their
+existing bounds and resource limits. They paint in canvas layer order above the
+complete field and screen HUD; areas without canvas elements remain transparent.
+The field uses the same camera and native-window fit when the overlay opens.
+
+Retained canvas element IDs can be replaced or removed without replacing the
+world, camera or unrelated screen text. Field notifications remain in their
+existing layers and show through transparent portions of the overlay. A
+notification that must appear in front of an overlapping panel needs an explicit
+higher canvas layer from PHP; the renderer does not move notifications between
+presentations. Omitting `mode` keeps the existing exclusive full-canvas behavior
+for menus and skits, including its independent canvas dimensions.
+
 The [G1 wire corpus](fixtures/graphical-canvas/manifest.json) and its
 [hash manifest](fixtures/graphical-canvas/SHA256SUMS) remain historical
 stateless validation references. In the current contract, identified canvas
@@ -45,6 +63,24 @@ This extension has headless macOS validation. Text clipping/fading also passed
 the focused native glyph scenario below, followed by an isolated ordinary Game
 battle playtest on macOS. Linux/WSLg/Windows validation remains pending. See
 [availability and installation](#availability-and-installation) for current delivery status.
+
+### Canvas image brightness
+
+The protocol 2 `canvas_image_tone` capability requires `graphical_canvas`. A
+canvas image may include `brightness` from 0 through 1 to multiply its RGB
+channels while leaving its alpha unchanged. Omitting the field means 1 (the
+original image). A present value, including 1, requires negotiation; explicit
+null, non-finite values and values outside the range are rejected. Brightness
+applies to the selected image region before normal image opacity, clipping and
+placement. It can dim an inactive portrait without making the background show
+through its opaque pixels. PHP owns which image is active and when that changes.
+
+An older renderer that does not advertise `canvas_image_tone` cannot accept a
+session requiring it. Producers must use the negotiated contract rather than
+substituting opacity for brightness. Prepared tone variants share the renderer's
+bounded image resources: at most 64 MiB or 1024 tone variants remain in the
+asset-root cache, and active variants count toward the existing 64 MiB
+per-frame prepared-region limit. Changes do not reread artwork for each frame.
 
 The separately negotiated v2 `canvas_glyph_effects` capability also requires
 `graphical_canvas`. A canvas text layer may then include:
