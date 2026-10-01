@@ -92,6 +92,7 @@ impl Hello {
             Capability::FieldMotion,
             Capability::TileCovers,
             Capability::SpriteLift,
+            Capability::SpriteQuarterTurns,
         ];
         for subscription in [Capability::WindowActivation, Capability::KeyTransitions] {
             if self.required_capabilities.contains(&subscription) {
@@ -128,6 +129,9 @@ pub enum Capability {
     /// Drawing feature: a retained field sprite may be drawn a lift above
     /// the cell that places and orders it.
     SpriteLift,
+    /// Drawing feature: a retained sprite's cropped image may be rotated in
+    /// clockwise quarter turns without changing its placement or ordering.
+    SpriteQuarterTurns,
     /// Event subscription: key presses carry a stable control identity and
     /// a repeat flag, releases and input resets are reported.
     KeyTransitions,
@@ -647,6 +651,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::SpriteLift) {
             return Err("sprite_lift requires protocol v2".into());
         }
+        if version == Version::V1 && unique.contains(&Capability::SpriteQuarterTurns) {
+            return Err("sprite_quarter_turns requires protocol v2".into());
+        }
         if unique.contains(&Capability::CanvasClipOpacity) {
             if version != Version::V2 {
                 return Err("canvas_clip_opacity requires protocol v2".into());
@@ -992,6 +999,42 @@ mod tests {
             walk_hello(1, "\"sprite_lift\"").unwrap_err(),
             "sprite_lift requires protocol v2"
         );
+    }
+
+    #[test]
+    fn sprite_quarter_turns_is_a_v2_retained_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::SpriteQuarterTurns)
+        );
+        assert_eq!(
+            serde_json::to_value(Capability::SpriteQuarterTurns).unwrap(),
+            serde_json::json!("sprite_quarter_turns")
+        );
+        let Message::Hello(required) = walk_hello(2, "\"sprite_quarter_turns\"").unwrap().message
+        else {
+            panic!()
+        };
+        assert_eq!(
+            required.required_capabilities,
+            [Capability::SpriteQuarterTurns]
+        );
+        assert_eq!(
+            walk_hello(1, "\"sprite_quarter_turns\"").unwrap_err(),
+            "sprite_quarter_turns requires protocol v2"
+        );
+
+        // Older full-frame sprite shapes cannot opt into the retained-only
+        // rotation field, even when its value is zero.
+        let legacy = serde_json::json!({"protocol":1,"type":"frame","frame":1,
+            "text":[],"sprites":[{"id":"hero","asset":"hero.png","x":1,"y":2,
+                "width":16,"height":16,"anchor":"bottom_center","layer":1,
+                "quarterTurns":0}]});
+        assert!(parse(&serde_json::to_vec(&legacy).unwrap()).is_err());
     }
 
     fn tile_frame() -> FrameV2 {

@@ -7,8 +7,8 @@ use crate::{
     protocol::{FrameV2, Grid, Sprite, TextLayer},
     retained_protocol::{
         CanvasRoot, EntityKind, FrameUpdate, MAX_RETAINED_BYTES, MAX_STAGING_AND_VISIBLE_BYTES,
-        Operation, ScreenText, SpriteMotion, Viewport, ViewportChange, validate_id,
-        validate_sprite_lift,
+        Operation, ScreenText, SpriteMotion, Viewport, ViewportChange, parse_sprite_quarter_turns,
+        validate_id, validate_sprite_lift,
     },
     retained_world::World,
 };
@@ -35,6 +35,8 @@ pub struct SceneSource {
     pub sprite_motions: BTreeMap<String, SpriteMotion>,
     /// `sprite_lift` lifts of the sprites that carry a nonzero one, by sprite id.
     pub sprite_lifts: BTreeMap<String, u32>,
+    /// Explicit retained sprite rotations, including zero for capability gating.
+    pub sprite_quarter_turns: BTreeMap<String, u8>,
     pub canvas: Option<CanvasRoot>,
     pub canvas_images: BTreeMap<String, Arc<Ordered<CanvasImage>>>,
     pub canvas_indicators: BTreeMap<String, Arc<Ordered<Indicator>>>,
@@ -60,14 +62,18 @@ impl SceneSource {
                         self.text.insert(id, Arc::new(text));
                     }
                     EntityKind::Sprite => {
-                        // Motion and lift are retained beside the shared sprite
-                        // geometry, which every protocol version also uses.
+                        // Retained drawing options live beside the shared
+                        // sprite geometry used by every protocol version.
                         let mut value = object_value(value)?;
                         let motion = value
                             .remove("motion")
                             .map(|motion| parse_value::<SpriteMotion>(motion)?.validate())
                             .transpose()?;
                         let lift = value.remove("lift").map(parse_value::<u32>).transpose()?;
+                        let quarter_turns = value
+                            .remove("quarterTurns")
+                            .map(|turns| parse_sprite_quarter_turns(&turns))
+                            .transpose()?;
                         let sprite: Ordered<Sprite> =
                             parse_ordered(id.as_str(), Value::Object(value))?;
                         let lift = lift
@@ -80,8 +86,12 @@ impl SceneSource {
                             None => self.sprite_motions.remove(&id),
                         };
                         match lift {
-                            Some(lift) => self.sprite_lifts.insert(id, lift),
+                            Some(lift) => self.sprite_lifts.insert(id.clone(), lift),
                             None => self.sprite_lifts.remove(&id),
+                        };
+                        match quarter_turns {
+                            Some(turns) => self.sprite_quarter_turns.insert(id, turns),
+                            None => self.sprite_quarter_turns.remove(&id),
                         };
                     }
                     EntityKind::Canvas => {
@@ -124,6 +134,7 @@ impl SceneSource {
                         self.sprites.remove(&id);
                         self.sprite_motions.remove(&id);
                         self.sprite_lifts.remove(&id);
+                        self.sprite_quarter_turns.remove(&id);
                     }
                     EntityKind::Canvas => {
                         if id != "canvas" {
@@ -263,6 +274,14 @@ impl SceneSource {
     /// Logical pixels this sprite is drawn above its cell; 0 without a lift.
     pub fn get_sprite_lift(&self, id: &str) -> u32 {
         self.sprite_lifts.get(id).copied().unwrap_or_default()
+    }
+
+    /// Clockwise screen-space quarter turns; omission leaves the image unrotated.
+    pub fn get_sprite_quarter_turns(&self, id: &str) -> u8 {
+        self.sprite_quarter_turns
+            .get(id)
+            .copied()
+            .unwrap_or_default()
     }
 
     pub fn materialize_screen(&self, frame: u64) -> Result<FrameV2, String> {
@@ -705,5 +724,71 @@ mod tests {
                 .unwrap_err(),
             "sprite lift must be at most the sprite's height"
         );
+    }
+    fn quarter_turned_sprite(id: &str, turns: Option<Value>) -> Operation {
+        let mut value = json!({"id":id,"asset":"hero.png","x":7,"y":9,"width":48,
+            "height":48,"anchor":"bottom_center","layer":100,"order":2,
+            "sourceRect":{"x":3,"y":5,"width":12,"height":12}});
+        if let Some(turns) = turns {
+            value["quarterTurns"] = turns;
+        }
+        from_value(json!({"op":"put","kind":"sprite","id":id,"value":value})).unwrap()
+    }
+
+    #[test]
+    fn sprite_quarter_turns_preserves_geometry_and_replacement_semantics() {
+        let mut scene = SceneSource::default();
+        assert_eq!(scene.get_sprite_quarter_turns("hero"), 0);
+        for turns in 0..=3 {
+            scene
+                .apply(quarter_turned_sprite("hero", Some(json!(turns))), grid())
+                .unwrap();
+            assert_eq!(scene.get_sprite_quarter_turns("hero"), turns);
+            assert_eq!(scene.sprite_quarter_turns.len(), 1);
+            let sprite = &scene.sprites["hero"].item;
+            assert_eq!(
+                (sprite.x, sprite.y, sprite.width, sprite.height),
+                (7, 9, 48, 48)
+            );
+            assert_eq!(sprite.source_rect.unwrap().x, 3);
+        }
+        scene
+            .apply(quarter_turned_sprite("hero", None), grid())
+            .unwrap();
+        assert_eq!(scene.get_sprite_quarter_turns("hero"), 0);
+        assert!(scene.sprite_quarter_turns.is_empty());
+        scene
+            .apply(quarter_turned_sprite("hero", Some(json!(2))), grid())
+            .unwrap();
+        scene
+            .apply(
+                from_value(json!({"op":"remove","kind":"sprite","id":"hero"})).unwrap(),
+                grid(),
+            )
+            .unwrap();
+        assert_eq!(scene.get_sprite_quarter_turns("hero"), 0);
+        assert!(scene.sprite_quarter_turns.is_empty());
+    }
+
+    #[test]
+    fn sprite_quarter_turns_accepts_only_integer_range_zero_to_three() {
+        for invalid in [
+            json!(-1),
+            json!(4),
+            json!(1.0),
+            json!("1"),
+            json!(null),
+            json!(true),
+            json!([]),
+            json!(u64::MAX),
+        ] {
+            assert_eq!(
+                SceneSource::default()
+                    .apply(quarter_turned_sprite("hero", Some(invalid.clone())), grid())
+                    .unwrap_err(),
+                "sprite quarterTurns must be an integer from 0 to 3",
+                "{invalid}"
+            );
+        }
     }
 }

@@ -459,6 +459,15 @@ pub fn validate_sprite_lift(lift: u32, height: u32) -> Result<u32, String> {
     Ok(lift)
 }
 
+/// The optional retained-sprite orientation is an integer count of clockwise
+/// screen-space quarter turns. Explicit zero still requires the capability.
+pub fn parse_sprite_quarter_turns(value: &Value) -> Result<u8, String> {
+    match value.as_u64() {
+        Some(turns @ 0..=3) => Ok(turns as u8),
+        _ => Err("sprite quarterTurns must be an integer from 0 to 3".into()),
+    }
+}
+
 impl Viewport {
     pub fn validate(&self, grid: Grid) -> Result<(), String> {
         let width = (grid.columns * grid.cell_width) as f32;

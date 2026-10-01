@@ -2,15 +2,21 @@
 //! entire scene; screen art is decoded and world tiles composed only on
 //! source changes.
 use crate::{
-    assets::AssetRoot, protocol::Grid, retained_protocol::WorldLayerKind,
-    retained_state::SceneSource, retained_tileset::PreparedTileset, retained_world::World,
+    assets::AssetRoot,
+    protocol::{Grid, SourceRect},
+    retained_protocol::WorldLayerKind,
+    retained_state::SceneSource,
+    retained_tileset::PreparedTileset,
+    retained_world::World,
     state::PreparedFrame,
 };
-use gpui::RenderImage;
+use gpui::{ImageId, RenderImage};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     sync::Arc,
 };
+
+const MAX_PREPARED_SCENE_BYTES: usize = 256 * 1024 * 1024;
 
 #[derive(Debug)]
 pub struct PreparedWorldLayer {
@@ -185,6 +191,20 @@ pub struct PreparedScene {
     pub screen: Arc<PreparedFrame>,
     pub worlds: BTreeMap<String, Arc<PreparedWorld>>,
     pub images: Vec<Arc<RenderImage>>,
+    turned_sprites: BTreeMap<String, PreparedTurnedSprite>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+struct SpriteTurnSource {
+    image: ImageId,
+    source_rect: Option<SourceRect>,
+    quarter_turns: u8,
+}
+
+#[derive(Debug)]
+struct PreparedTurnedSprite {
+    source: SpriteTurnSource,
+    image: Arc<RenderImage>,
 }
 
 impl PreparedScene {
@@ -200,12 +220,80 @@ impl PreparedScene {
             grid,
             assets,
         )?);
+        let mut live_image_ids = HashSet::new();
+        let mut live_image_bytes = 0usize;
+        for image in &screen.cached_images {
+            if live_image_ids.insert(image.id) {
+                live_image_bytes += image.as_bytes(0).map_or(0, |pixels| pixels.len());
+            }
+        }
+        // GPUI 0.2.2 does not transform polychrome images. Prepare only the
+        // retained sprites that request rotation, reusing identical pixels
+        // across scene revisions. Crop precedes rotation; display bounds stay
+        // with the authored sprite, so its bottom-center anchor is unchanged.
+        let mut prepared_turns: HashMap<SpriteTurnSource, Arc<RenderImage>> = previous
+            .into_iter()
+            .flat_map(|old| old.turned_sprites.values())
+            .map(|old| (old.source, old.image.clone()))
+            .collect();
+        let mut turned_sprites = BTreeMap::new();
+        for sprite in &screen.sprites {
+            let quarter_turns = source.get_sprite_quarter_turns(&sprite.sprite.id);
+            if quarter_turns == 0 {
+                continue;
+            }
+            let key = SpriteTurnSource {
+                image: sprite.image.id,
+                source_rect: sprite.sprite.source_rect,
+                quarter_turns,
+            };
+            // Check the exact output allocation before constructing it. A
+            // malformed update with many distinct turns must not transiently
+            // allocate hundreds of MiB before the final scene-budget check.
+            let source_size = sprite.image.size(0);
+            let rect = key.source_rect.unwrap_or(SourceRect {
+                x: 0,
+                y: 0,
+                width: source_size.width.0 as u32,
+                height: source_size.height.0 as u32,
+            });
+            let expected_bytes = rect.width as usize * rect.height as usize * 4;
+            if !prepared_turns.contains_key(&key)
+                && live_image_bytes.saturating_add(expected_bytes) > MAX_PREPARED_SCENE_BYTES
+            {
+                return Err("retained prepared images exceed 256 MiB".into());
+            }
+            let image = match prepared_turns.get(&key) {
+                Some(image) => image.clone(),
+                None => {
+                    let image =
+                        turn_sprite_image(&sprite.image, sprite.sprite.source_rect, quarter_turns)?;
+                    prepared_turns.insert(key, image.clone());
+                    image
+                }
+            };
+            if live_image_ids.insert(image.id) {
+                live_image_bytes += image.as_bytes(0).map_or(0, |pixels| pixels.len());
+                if live_image_bytes > MAX_PREPARED_SCENE_BYTES {
+                    return Err("retained prepared images exceed 256 MiB".into());
+                }
+            }
+            turned_sprites.insert(
+                sprite.sprite.id.clone(),
+                PreparedTurnedSprite { source: key, image },
+            );
+        }
         let mut worlds = BTreeMap::new();
         let mut images = Vec::new();
         let mut ids = HashSet::new();
         for image in &screen.cached_images {
             if ids.insert(image.id) {
                 images.push(image.clone());
+            }
+        }
+        for turned in turned_sprites.values() {
+            if ids.insert(turned.image.id) {
+                images.push(turned.image.clone());
             }
         }
         for (id, world) in &source.worlds {
@@ -233,7 +321,7 @@ impl PreparedScene {
         // Source state has its own 64 MiB bound. Existing preparation separately
         // bounds decoded PNGs, guarded regions, and composite output at 64 MiB
         // each; their live images cannot share that single source-state budget.
-        if bytes > 256 * 1024 * 1024 {
+        if bytes > MAX_PREPARED_SCENE_BYTES {
             return Err(format!(
                 "retained prepared images exceed 256 MiB ({} bytes)",
                 bytes
@@ -244,7 +332,12 @@ impl PreparedScene {
             screen,
             worlds,
             images,
+            turned_sprites,
         })
+    }
+
+    pub fn get_turned_sprite_image(&self, id: &str) -> Option<&Arc<RenderImage>> {
+        self.turned_sprites.get(id).map(|sprite| &sprite.image)
     }
 
     pub fn get_world(&self, id: &str) -> Option<&Arc<PreparedWorld>> {
@@ -252,11 +345,195 @@ impl PreparedScene {
     }
 }
 
+/// Select source pixels before the clockwise turn. RenderImage stores BGRA,
+/// so copying whole pixels keeps straight alpha and color channels untouched.
+/// A non-square crop swaps pixel dimensions for odd turns, then fills the
+/// sprite's unchanged authored destination box just as a sourceRect crop does.
+fn turn_sprite_image(
+    source: &Arc<RenderImage>,
+    source_rect: Option<SourceRect>,
+    quarter_turns: u8,
+) -> Result<Arc<RenderImage>, String> {
+    if !(1..=3).contains(&quarter_turns) {
+        return Err("sprite quarterTurns must be 1, 2, or 3 when preparing a turn".into());
+    }
+    let size = source.size(0);
+    let source_width = size.width.0 as u32;
+    let source_height = size.height.0 as u32;
+    let rect = source_rect.unwrap_or(SourceRect {
+        x: 0,
+        y: 0,
+        width: source_width,
+        height: source_height,
+    });
+    rect.validate_image(source_width, source_height)?;
+    let (width, height) = if quarter_turns.is_multiple_of(2) {
+        (rect.width, rect.height)
+    } else {
+        (rect.height, rect.width)
+    };
+    let source_bytes = source.as_bytes(0).ok_or("decoded sprite has no pixels")?;
+    let mut pixels = vec![0; width as usize * height as usize * 4];
+    for sy in 0..rect.height {
+        for sx in 0..rect.width {
+            let (dx, dy) = match quarter_turns {
+                1 => (rect.height - 1 - sy, sx),
+                2 => (rect.width - 1 - sx, rect.height - 1 - sy),
+                3 => (sy, rect.width - 1 - sx),
+                _ => unreachable!(),
+            };
+            let from =
+                ((rect.y + sy) as usize * source_width as usize + (rect.x + sx) as usize) * 4;
+            let to = (dy as usize * width as usize + dx as usize) * 4;
+            pixels[to..to + 4].copy_from_slice(&source_bytes[from..from + 4]);
+        }
+    }
+    let pixels = image::RgbaImage::from_raw(width, height, pixels)
+        .ok_or("prepared sprite turn has invalid pixel dimensions")?;
+    Ok(Arc::new(RenderImage::new(vec![image::Frame::new(pixels)])))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::retained_protocol::Operation;
     use serde_json::{from_value, json};
+
+    fn pixel(image: &RenderImage, x: u32, y: u32) -> [u8; 4] {
+        let width = image.size(0).width.0 as u32;
+        let offset = (y as usize * width as usize + x as usize) * 4;
+        image.as_bytes(0).unwrap()[offset..offset + 4]
+            .try_into()
+            .unwrap()
+    }
+
+    #[test]
+    fn sprite_quarter_turns_crop_first_rotate_clockwise_and_copy_alpha() {
+        // The selected 2x3 block is 1 2 / 3 4 / 5 6. Bright neighbors
+        // must never leak into the derived image, including its alpha edge.
+        let source = Arc::new(RenderImage::new(vec![image::Frame::new(
+            image::RgbaImage::from_fn(4, 3, |x, y| {
+                let value = if (1..=2).contains(&x) {
+                    (y * 2 + x) as u8
+                } else {
+                    200
+                };
+                image::Rgba([value, value + 10, value + 20, value + 30])
+            }),
+        )]));
+        let original = source.as_bytes(0).unwrap().to_vec();
+        let selected = Some(SourceRect {
+            x: 1,
+            y: 0,
+            width: 2,
+            height: 3,
+        });
+        for (turns, width, height, expected) in [
+            (1, 3, 2, vec![5, 3, 1, 6, 4, 2]),
+            (2, 2, 3, vec![6, 5, 4, 3, 2, 1]),
+            (3, 3, 2, vec![2, 4, 6, 1, 3, 5]),
+        ] {
+            let turned = turn_sprite_image(&source, selected, turns).unwrap();
+            assert_eq!(
+                (turned.size(0).width.0, turned.size(0).height.0),
+                (width as i32, height as i32)
+            );
+            let mut actual = Vec::new();
+            for y in 0..height {
+                for x in 0..width {
+                    actual.push(pixel(&turned, x, y));
+                }
+            }
+            assert_eq!(
+                actual,
+                expected
+                    .into_iter()
+                    .map(|value| [value, value + 10, value + 20, value + 30])
+                    .collect::<Vec<_>>()
+            );
+        }
+        assert_eq!(source.as_bytes(0).unwrap(), original);
+        assert!(turn_sprite_image(&source, selected, 0).is_err());
+        assert!(turn_sprite_image(&source, selected, 4).is_err());
+    }
+
+    #[test]
+    fn retained_sprite_turns_reuse_images_and_retire_on_replacement() {
+        let directory = tempfile::tempdir().unwrap();
+        image::RgbaImage::from_fn(4, 3, |x, y| image::Rgba([x as u8, y as u8, 90, 200]))
+            .save(directory.path().join("arrow.png"))
+            .unwrap();
+        let assets = AssetRoot::new(directory.path()).unwrap();
+        let mut scene = SceneSource::default();
+        let sprite = |turns: Option<u8>| {
+            let mut value = json!({"id":"arrow","order":0,"asset":"arrow.png",
+                "x":1,"y":1,"width":24,"height":24,"anchor":"bottom_center",
+                "layer":100,"sourceRect":{"x":1,"y":0,"width":2,"height":3}});
+            if let Some(turns) = turns {
+                value["quarterTurns"] = json!(turns);
+            }
+            json!({"op":"put","kind":"sprite","id":"arrow","value":value})
+        };
+        apply(&mut scene, sprite(Some(1)));
+        let first =
+            PreparedScene::prepare(Arc::new(scene.clone()), 1, grid(), &assets, None).unwrap();
+        let first_image = first.get_turned_sprite_image("arrow").unwrap();
+        assert!(first.images.iter().any(|image| image.id == first_image.id));
+        assert_eq!(first.screen.sprites[0].sprite.source_rect.unwrap().width, 2);
+        // Pixel dimensions can swap on odd turns, but authored destination
+        // bounds remain the source of the bottom-center ground contact.
+        for scale in [1.0, 0.75, 0.5] {
+            let transform = crate::viewport::ViewportTransform::fit(
+                80.0,
+                80.0,
+                80.0 * scale + 20.0,
+                80.0 * scale,
+            );
+            let bounds = crate::renderer::sprite_bounds(
+                &first.screen.sprites[0].sprite,
+                0,
+                (10.0, 20.0),
+                transform,
+            );
+            assert_eq!(
+                (
+                    bounds.left + bounds.width / 2.0 + transform.offset_x,
+                    bounds.top + bounds.height + transform.offset_y
+                ),
+                (15.0 * scale + 10.0, 40.0 * scale)
+            );
+        }
+
+        // Unrelated screen source changes retain the same prepared orientation.
+        apply(
+            &mut scene,
+            json!({"op":"put","kind":"text","id":"hud","value":{
+            "id":"hud","order":0,"layer":200,"runs":[]}}),
+        );
+        let second =
+            PreparedScene::prepare(Arc::new(scene.clone()), 2, grid(), &assets, Some(&first))
+                .unwrap();
+        assert!(Arc::ptr_eq(
+            first_image,
+            second.get_turned_sprite_image("arrow").unwrap()
+        ));
+
+        apply(&mut scene, sprite(Some(2)));
+        let third =
+            PreparedScene::prepare(Arc::new(scene.clone()), 3, grid(), &assets, Some(&second))
+                .unwrap();
+        let third_image = third.get_turned_sprite_image("arrow").unwrap();
+        assert_ne!(first_image.id, third_image.id);
+        assert!(!third.images.iter().any(|image| image.id == first_image.id));
+
+        // Omission retains the legacy sourceRect paint path. No turned atlas
+        // image survives in the next scene, so the renderer can retire it.
+        apply(&mut scene, sprite(None));
+        let fourth =
+            PreparedScene::prepare(Arc::new(scene), 4, grid(), &assets, Some(&third)).unwrap();
+        assert!(fourth.get_turned_sprite_image("arrow").is_none());
+        assert!(!fourth.images.iter().any(|image| image.id == third_image.id));
+    }
 
     fn grid() -> Grid {
         Grid {

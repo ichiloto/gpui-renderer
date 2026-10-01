@@ -465,7 +465,8 @@ resizable window and emits `ready`. A second hello or a mixed-version message is
 an error. `requiredCapabilities` is a mandatory minimum; `ready.capabilities`
 reports the available drawing features. `window_activation` and
 `key_transitions` are explicit event subscriptions; `field_motion`,
-`tile_covers` and `sprite_lift` are drawing features every v2 session is offered. An optional `icon` names the game's application icon, a PNG
+`tile_covers`, `sprite_lift` and `sprite_quarter_turns` are drawing features every
+v2 session is offered. An optional `icon` names the game's application icon, a PNG
 or ICNS path inside `assetRoot`; on macOS it replaces the renderer's own in the
 Dock. An unreadable icon is diagnosed and the renderer keeps its own. Before hello succeeds, an error may use the protocol 1
 envelope; this is not a downgrade.
@@ -580,7 +581,8 @@ Screen `text` values contain `id`, numeric `layer`, stable `order`, and
 `foreground`/`background`. Every covered cell is opaque, including a space.
 Absent cells are transparent. A `sprite` value uses the shared sprite fields
 plus `order`, with `field_motion` an optional `motion` and with `sprite_lift`
-an optional `lift` (see below). Canvas uses a `canvas` root with `id:"canvas"`, width and height,
+an optional `lift`, and with `sprite_quarter_turns` an optional `quarterTurns`
+(see below). Canvas uses a `canvas` root with `id:"canvas"`, width and height,
 and the existing image, indicator, text, and composite DTOs as individually
 identified operations. Canvas and a world viewport cannot be visible together.
 
@@ -649,6 +651,27 @@ cell, its slides and its draw order stay those of the cell, so a sprite lower
 on the field still draws in front. A put without `lift` draws the sprite on
 its cell; protocol v1 sprites never accept it.
 
+### Sprite quarter turns
+
+With `sprite_quarter_turns` enabled in protocol 2, a retained sprite may carry
+`quarterTurns`: an integer from 0 through 3. Omission means 0. Each step turns
+the selected image 90 degrees clockwise in screen coordinates, so 0, 1, 2 and 3
+mean 0, 90, 180 and 270 degrees. Even an explicit 0 requires the capability;
+negative, fractional, out-of-range, null and string values reject the frame.
+
+```json
+{"id":"road-arrow","asset":"UI/Arrows/east.png","x":12,"y":6,"width":48,"height":48,"anchor":"bottom_center","layer":100,"order":0,"quarterTurns":1}
+```
+
+If a `sourceRect` is present, the renderer selects those source pixels before
+turning them. The turn rotates about the selected image's center. Destination
+`width` and `height`, bottom-center anchor, layer, PNG alpha and viewport behavior
+remain unchanged. An odd turn of an uncropped non-square image swaps its source
+aspect ratio before contain-fit; a cropped image still fills its destination.
+The producer chooses the turn and owns any timing or direction changes. No
+directional files or caches are part of the wire contract. A replacement put
+without `quarterTurns` resets the sprite to 0.
+
 ### Structured colour
 
 ```json
@@ -710,7 +733,10 @@ Omitting `sourceRect` retains the existing full-image drawing behavior, includin
 GPUI's contain fit. A supplied rectangle fills the destination `width/height`;
 these dimensions, cell coordinates, bottom-center anchor and layer are independent
 of sheet dimensions. The full sheet is scaled/translated behind a destination-sized
-GPU clip mask. Actor sheets use no CPU cropping or generated frame images.
+GPU clip mask when `quarterTurns` is omitted or 0. Quarter-turned sprites prepare
+an in-memory image from the selected pixels for the retained scene; this does not
+create artwork files or an independent directional cache. Actor sheets otherwise
+use no CPU cropping or generated frame images.
 PHP chooses each rectangle and owns animation timing; Rust has no animation clock.
 See [S8-A renderer validation](docs/s8-a-validation.md).
 

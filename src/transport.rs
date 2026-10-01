@@ -1,11 +1,11 @@
 use crate::assets::AssetRoot;
 use crate::diagnostics::Diagnostics;
-use crate::protocol::{self, Hello, Incoming, Message, Version};
 #[cfg(test)]
-use crate::protocol::{Capability, Sprite};
+use crate::protocol::Sprite;
+use crate::protocol::{self, Capability, Hello, Incoming, Message, Version};
 use crate::retained_prepared::PreparedScene;
 use crate::retained_protocol::Viewport;
-use crate::retained_state::RetainedSession;
+use crate::retained_state::{RetainedSession, SceneSource};
 #[cfg(test)]
 use crate::state::PreparedFrame;
 use std::io::{BufRead, Read};
@@ -176,7 +176,7 @@ impl Session {
                 )?)))
             }
             Message::RetainedFrame(frame) => {
-                let (_, hello, assets) = self
+                let (version, hello, assets) = self
                     .initialized
                     .as_ref()
                     .ok_or("frame requires a successful hello")?;
@@ -194,6 +194,16 @@ impl Session {
                         });
                     }
                 };
+                let enabled = hello.get_enabled_capabilities(*version);
+                if let Err(message) = validate_retained_sprite_capability(&accepted.scene, &enabled)
+                {
+                    self.retained.require_reset();
+                    return Ok(Update::RetainedRejected {
+                        generation,
+                        expected_generation: self.retained.expected_generation(),
+                        message,
+                    });
+                }
                 if !accepted.visible {
                     self.retained = candidate;
                     return Ok(Update::RetainedAck {
@@ -238,6 +248,19 @@ impl Session {
             Message::Shutdown => Ok(Update::Shutdown),
         }
     }
+}
+
+fn validate_retained_sprite_capability(
+    scene: &SceneSource,
+    enabled: &[Capability],
+) -> Result<(), String> {
+    if !scene.sprite_quarter_turns.is_empty() && !enabled.contains(&Capability::SpriteQuarterTurns)
+    {
+        return Err(
+            "sprite quarterTurns requires negotiated sprite_quarter_turns capability".into(),
+        );
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -366,6 +389,41 @@ fn read_protocol_observed(
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn retained_sprite_quarter_turns_requires_capability_even_for_explicit_zero() {
+        let grid = protocol::Grid {
+            columns: 4,
+            rows: 2,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut scene = SceneSource::default();
+        let sprite = |turns: Option<u8>| {
+            let mut value = json!({"id":"arrow","order":0,"layer":1,
+                "asset":"arrow.png","x":0,"y":0,"width":10,"height":10,
+                "anchor":"bottom_center"});
+            if let Some(turns) = turns {
+                value["quarterTurns"] = json!(turns);
+            }
+            serde_json::from_value(json!({"op":"put","kind":"sprite","id":"arrow",
+                "value":value}))
+            .unwrap()
+        };
+        scene.apply(sprite(None), grid).unwrap();
+        assert!(validate_retained_sprite_capability(&scene, &[]).is_ok());
+        scene.apply(sprite(Some(0)), grid).unwrap();
+        assert_eq!(
+            validate_retained_sprite_capability(&scene, &[]).unwrap_err(),
+            "sprite quarterTurns requires negotiated sprite_quarter_turns capability"
+        );
+        let enabled = [Capability::SpriteQuarterTurns];
+        assert!(validate_retained_sprite_capability(&scene, &enabled).is_ok());
+        scene.apply(sprite(Some(3)), grid).unwrap();
+        assert!(validate_retained_sprite_capability(&scene, &enabled).is_ok());
+        scene.apply(sprite(None), grid).unwrap();
+        assert!(validate_retained_sprite_capability(&scene, &[]).is_ok());
+    }
 
     #[test]
     #[ignore = "requires ICHILOTO_RETAINED_REPLAY NDJSON"]

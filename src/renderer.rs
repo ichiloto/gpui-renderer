@@ -564,7 +564,28 @@ impl Render for Renderer {
                             (pitch_width, pitch_height),
                             item_transform,
                         );
-                        if let Some(rect) = item.sprite.source_rect {
+                        if let Some(turned) = self
+                            .retained_scene
+                            .as_ref()
+                            .and_then(|scene| scene.get_turned_sprite_image(&item.sprite.id))
+                        {
+                            // The selected crop was turned during retained-scene
+                            // preparation. Keep the original destination and
+                            // bottom-center anchor; sourceRect retains its
+                            // established fill behavior, and whole images
+                            // retain their established contain behavior.
+                            let image = img(turned.clone())
+                                .absolute()
+                                .left(px(bounds.left))
+                                .top(px(bounds.top))
+                                .w(px(bounds.width))
+                                .h(px(bounds.height));
+                            surface = if item.sprite.source_rect.is_some() {
+                                add_item(surface, image.object_fit(ObjectFit::Fill), clip)
+                            } else {
+                                add_item(surface, image, clip)
+                            };
+                        } else if let Some(rect) = item.sprite.source_rect {
                             let size = item.image.size(0);
                             let sheet = sheet_bounds(
                                 rect,
