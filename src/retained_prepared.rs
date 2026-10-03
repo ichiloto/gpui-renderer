@@ -36,7 +36,7 @@ pub struct PreparedWorld {
 }
 
 impl PreparedWorld {
-    fn prepare(
+    pub(crate) fn prepare(
         id: &str,
         source: Arc<World>,
         assets: &AssetRoot,
