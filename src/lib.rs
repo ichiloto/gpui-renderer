@@ -30,6 +30,7 @@ mod glyph_raster;
 mod glyph_tests;
 mod input;
 pub mod map_world;
+pub use app_icon::set_application_icon;
 mod protocol;
 mod render_trace;
 mod renderer;

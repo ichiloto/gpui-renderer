@@ -1,5 +1,9 @@
 //! The game's application icon, shown in place of the renderer's own. The
 //! renderer is shared by every game, so the icon arrives with the session.
+//! Authoring tools set their own icon through the same call
+//! ([`set_application_icon`]). Only macOS takes an icon at run time: Windows
+//! reads it from the executable's icon resource and Linux from the desktop
+//! entry its window's app id names.
 use crate::assets::AssetRoot;
 use std::path::Path;
 
@@ -25,38 +29,44 @@ pub fn validate(icon: &Path) -> Result<(), String> {
 /// caller reports it and the renderer keeps its own icon.
 pub fn apply(asset_root: &Path, icon: &Path) -> Result<(), String> {
     let path = AssetRoot::new(asset_root)?.resolve(icon)?;
-    set_application_icon(&path)
+    let image = std::fs::read(&path).map_err(|error| format!("{}: {error}", path.display()))?;
+    set_application_icon(&image).map_err(|error| format!("{}: {error}", path.display()))
 }
 
+/// Shows a PNG or ICNS image as the running application's icon, from the
+/// main thread after launch.
 #[cfg(target_os = "macos")]
 // The objc 0.2 message macros test a legacy `cargo-clippy` feature.
 #[allow(unexpected_cfgs)]
-fn set_application_icon(path: &Path) -> Result<(), String> {
+pub fn set_application_icon(image: &[u8]) -> Result<(), String> {
     use cocoa::base::{id, nil};
-    use cocoa::foundation::NSString;
+    use cocoa::foundation::NSData;
     use objc::{class, msg_send, sel, sel_impl};
 
-    let text = path.to_str().ok_or("icon path is not valid UTF-8")?;
-    // SAFETY: called on the application's main thread after launch; every
-    // object created here is released once NSApplication has retained it.
+    // SAFETY: called on the application's main thread after launch; the
+    // data is copied, and every object created here is released once
+    // NSApplication has retained the image.
     unsafe {
-        let file: id = NSString::alloc(nil).init_str(text);
-        let image: id = msg_send![class!(NSImage), alloc];
-        let image: id = msg_send![image, initWithContentsOfFile: file];
-        let _: () = msg_send![file, release];
-        if image == nil {
-            return Err(format!("{} is not a readable image", path.display()));
+        let data: id = NSData::dataWithBytes_length_(nil, image.as_ptr().cast(), image.len() as _);
+        let picture: id = msg_send![class!(NSImage), alloc];
+        let picture: id = msg_send![picture, initWithData: data];
+        if picture == nil {
+            return Err("not a readable image".into());
         }
         let app: id = msg_send![class!(NSApplication), sharedApplication];
-        let _: () = msg_send![app, setApplicationIconImage: image];
-        let _: () = msg_send![image, release];
+        let _: () = msg_send![app, setApplicationIconImage: picture];
+        let _: () = msg_send![picture, release];
     }
     Ok(())
 }
 
+/// Windows and Linux show the icon packaged with the application instead.
 #[cfg(not(target_os = "macos"))]
-fn set_application_icon(_: &Path) -> Result<(), String> {
-    Err("application icons are not supported on this platform yet".into())
+pub fn set_application_icon(_: &[u8]) -> Result<(), String> {
+    Err(
+        "this platform shows the icon packaged with the application, not one set at run time"
+            .into(),
+    )
 }
 
 #[cfg(test)]
