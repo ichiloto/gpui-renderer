@@ -998,3 +998,9 @@ Engine uses v2 with negotiated graphical capabilities for GPUI; v1 remains a
 compatibility path. PHP supplies structured colors without ANSI, preserves
 explicit blank UI cells and chooses layering and transient timing.
 The renderer does not infer missing UI backgrounds, masks, overlays or game bindings.
+
+## Contributing and Git workflow
+
+Read [GIT_WORKFLOW.md](GIT_WORKFLOW.md) and install the Git guards with
+`sh scripts/install-git-guards.sh` before contributing. All changes integrate
+into `develop`; `main` is updated only by a PR from this repository's `develop`.
