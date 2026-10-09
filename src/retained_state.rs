@@ -7,8 +7,8 @@ use crate::{
     protocol::{FrameV2, Grid, Sprite, TextLayer},
     retained_protocol::{
         CanvasRoot, EntityKind, FrameUpdate, MAX_RETAINED_BYTES, MAX_STAGING_AND_VISIBLE_BYTES,
-        Operation, ScreenText, SpriteMotion, Viewport, ViewportChange, parse_sprite_quarter_turns,
-        validate_id, validate_sprite_lift,
+        Operation, ScreenText, SpriteMotion, SpritePivot, Viewport, ViewportChange,
+        parse_sprite_quarter_turns, validate_id, validate_sprite_lift,
     },
     retained_world::World,
 };
@@ -37,6 +37,8 @@ pub struct SceneSource {
     pub sprite_lifts: BTreeMap<String, u32>,
     /// Explicit retained sprite rotations, including zero for capability gating.
     pub sprite_quarter_turns: BTreeMap<String, u8>,
+    /// Explicit normalized pivots; omission preserves legacy bottom-center placement.
+    pub sprite_pivots: BTreeMap<String, SpritePivot>,
     pub canvas: Option<CanvasRoot>,
     pub canvas_images: BTreeMap<String, Arc<Ordered<CanvasImage>>>,
     pub canvas_indicators: BTreeMap<String, Arc<Ordered<Indicator>>>,
@@ -70,6 +72,10 @@ impl SceneSource {
                             .map(|motion| parse_value::<SpriteMotion>(motion)?.validate())
                             .transpose()?;
                         let lift = value.remove("lift").map(parse_value::<u32>).transpose()?;
+                        let pivot = value
+                            .remove("pivot")
+                            .map(|pivot| parse_value::<SpritePivot>(pivot)?.validate())
+                            .transpose()?;
                         let quarter_turns = value
                             .remove("quarterTurns")
                             .map(|turns| parse_sprite_quarter_turns(&turns))
@@ -90,8 +96,12 @@ impl SceneSource {
                             None => self.sprite_lifts.remove(&id),
                         };
                         match quarter_turns {
-                            Some(turns) => self.sprite_quarter_turns.insert(id, turns),
+                            Some(turns) => self.sprite_quarter_turns.insert(id.clone(), turns),
                             None => self.sprite_quarter_turns.remove(&id),
+                        };
+                        match pivot {
+                            Some(pivot) => self.sprite_pivots.insert(id, pivot),
+                            None => self.sprite_pivots.remove(&id),
                         };
                     }
                     EntityKind::Canvas => {
@@ -135,6 +145,7 @@ impl SceneSource {
                         self.sprite_motions.remove(&id);
                         self.sprite_lifts.remove(&id);
                         self.sprite_quarter_turns.remove(&id);
+                        self.sprite_pivots.remove(&id);
                     }
                     EntityKind::Canvas => {
                         if id != "canvas" {
@@ -258,6 +269,10 @@ impl SceneSource {
     /// Logical pixels this sprite is drawn above its cell; 0 without a lift.
     pub fn get_sprite_lift(&self, id: &str) -> u32 {
         self.sprite_lifts.get(id).copied().unwrap_or_default()
+    }
+
+    pub fn get_sprite_pivot(&self, id: &str) -> Option<SpritePivot> {
+        self.sprite_pivots.get(id).copied()
     }
 
     /// Clockwise screen-space quarter turns; omission leaves the image unrotated.
@@ -900,6 +915,7 @@ mod tests {
             "sprite lift must be at most the sprite's height"
         );
     }
+
     fn quarter_turned_sprite(id: &str, turns: Option<Value>) -> Operation {
         let mut value = json!({"id":id,"asset":"hero.png","x":7,"y":9,"width":48,
             "height":48,"anchor":"bottom_center","layer":100,"order":2,
@@ -908,6 +924,79 @@ mod tests {
             value["quarterTurns"] = turns;
         }
         from_value(json!({"op":"put","kind":"sprite","id":id,"value":value})).unwrap()
+    }
+
+    fn pivoted_sprite(pivot: Option<Value>) -> Operation {
+        let mut value = json!({"id":"effect","asset":"effect.png","x":7,"y":9,
+            "width":144,"height":48,"anchor":"bottom_center","layer":100,"order":2,
+            "sourceRect":{"x":12,"y":0,"width":12,"height":4}});
+        if let Some(pivot) = pivot {
+            value["pivot"] = pivot;
+        }
+        from_value(json!({"op":"put","kind":"sprite","id":"effect","value":value})).unwrap()
+    }
+
+    #[test]
+    fn sprite_pivot_preserves_geometry_and_clears_on_replacement_removal_and_reset() {
+        let mut scene = SceneSource::default();
+        for (x, y) in [(0.0, 1.0), (1.0, 0.0), (0.25, 0.625)] {
+            scene
+                .apply(pivoted_sprite(Some(json!({"x":x,"y":y}))), grid())
+                .unwrap();
+            assert_eq!(scene.get_sprite_pivot("effect"), Some(SpritePivot { x, y }));
+            let sprite = &scene.sprites["effect"].item;
+            assert_eq!(
+                (sprite.x, sprite.y, sprite.width, sprite.height),
+                (7, 9, 144, 48)
+            );
+            assert_eq!(sprite.source_rect.unwrap().x, 12);
+            assert_eq!(scene.materialize_screen(1).unwrap().sprites[0].y, 9);
+        }
+        scene.apply(pivoted_sprite(None), grid()).unwrap();
+        assert_eq!(scene.get_sprite_pivot("effect"), None);
+        scene
+            .apply(pivoted_sprite(Some(json!({"x":0.25,"y":0.625}))), grid())
+            .unwrap();
+        scene
+            .apply(
+                from_value(json!({"op":"remove","kind":"sprite","id":"effect"})).unwrap(),
+                grid(),
+            )
+            .unwrap();
+        assert!(scene.sprite_pivots.is_empty());
+        let mut session = RetainedSession::default();
+        let mut first = update(0, 1, true, true, vec![], None);
+        first.operations = vec![pivoted_sprite(Some(json!({"x":0.25,"y":0.625})))];
+        session.apply(first, grid()).unwrap();
+        let reset = session
+            .apply(update(1, 2, true, true, vec![], None), grid())
+            .unwrap();
+        assert!(reset.scene.sprite_pivots.is_empty());
+    }
+
+    #[test]
+    fn sprite_pivot_rejects_malformed_nonfinite_and_out_of_range_coordinates() {
+        for value in [
+            json!(null),
+            json!(true),
+            json!([]),
+            json!({"x":0.5}),
+            json!({"x":"0.5","y":1}),
+            json!({"x":0.5,"y":1,"z":0}),
+            json!({"x":-0.1,"y":1}),
+            json!({"x":0.5,"y":1.1}),
+        ] {
+            assert!(
+                SceneSource::default()
+                    .apply(pivoted_sprite(Some(value.clone())), grid())
+                    .is_err(),
+                "{value}"
+            );
+        }
+        for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(SpritePivot { x: bad, y: 0.5 }.validate().is_err());
+            assert!(SpritePivot { x: 0.5, y: bad }.validate().is_err());
+        }
     }
 
     #[test]

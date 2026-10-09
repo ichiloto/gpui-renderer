@@ -69,15 +69,18 @@ impl PreparedWorld {
         };
         let mut painted = PaintedTiles::new(source.definition.columns, source.definition.rows);
         if let Some(tileset) = &tileset {
-            let covers: HashMap<&str, &str> = source
+            let covers: HashMap<&str, Option<&str>> = source
                 .definition
                 .layers
                 .iter()
-                .filter_map(|layer| Some((layer.id.as_str(), layer.covers_layer_id.as_deref()?)))
+                .filter(|layer| layer.kind == WorldLayerKind::Tiles)
+                .map(|layer| (layer.id.as_str(), layer.covers_layer_id.as_deref()))
                 .collect();
             source.visit_tiles(|layer_id, column, row, tile| {
-                if tileset.is_available(tile) {
-                    painted.mark(covers.get(layer_id).copied(), column, row);
+                if let Some(covered) = covers.get(layer_id)
+                    && tileset.is_available(tile)
+                {
+                    painted.mark(*covered, column, row);
                 }
             });
         }
@@ -496,6 +499,7 @@ mod tests {
                 0,
                 (10.0, 20.0),
                 transform,
+                None,
             );
             assert_eq!(
                 (

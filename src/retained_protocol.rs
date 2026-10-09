@@ -174,17 +174,48 @@ impl TileDefinition {
     }
 }
 
-/// A source rectangle of one sheet copied unscaled to (left, top) of the tile.
+/// A sheet rectangle or RGBA fill placed unscaled inside a tile. The source
+/// shapes are exclusive; a fill cannot also name sheet coordinates.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
-#[serde(deny_unknown_fields)]
-pub struct TilePiece {
-    pub sheet: u32,
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
-    pub left: u32,
-    pub top: u32,
+#[serde(untagged, deny_unknown_fields)]
+pub enum TilePiece {
+    Sheet {
+        sheet: u32,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        left: u32,
+        top: u32,
+    },
+    Fill {
+        fill: [u8; 4],
+        width: u32,
+        height: u32,
+        left: u32,
+        top: u32,
+    },
+}
+
+impl TilePiece {
+    pub fn get_bounds(self) -> (u32, u32, u32, u32) {
+        match self {
+            Self::Sheet {
+                width,
+                height,
+                left,
+                top,
+                ..
+            }
+            | Self::Fill {
+                width,
+                height,
+                left,
+                top,
+                ..
+            } => (width, height, left, top),
+        }
+    }
 }
 
 impl Tileset {
@@ -227,14 +258,15 @@ impl Tileset {
                     return Err("tileset tile frames require 1..8 pieces".into());
                 }
                 for piece in frame {
-                    if piece.sheet as usize >= self.sheets.len()
-                        || piece.width == 0
-                        || piece.height == 0
-                        || u64::from(piece.left) + u64::from(piece.width) > u64::from(width)
-                        || u64::from(piece.top) + u64::from(piece.height) > size
+                    let (piece_width, height, left, top) = piece.get_bounds();
+                    if matches!(piece, TilePiece::Sheet { sheet, .. } if *sheet as usize >= self.sheets.len())
+                        || piece_width == 0
+                        || height == 0
+                        || u64::from(left) + u64::from(piece_width) > u64::from(width)
+                        || u64::from(top) + u64::from(height) > size
                     {
                         return Err(
-                            "tileset piece must name a sheet and fit inside its tile".into()
+                            "tileset piece must name a valid sheet or RGBA fill and fit inside its tile".into()
                         );
                     }
                 }
@@ -267,6 +299,14 @@ pub enum WorldLayerKind {
     Decoration,
     /// Graphics from the world's tileset; owns no glyphs.
     Tiles,
+    /// Tile graphics that shade without covering gameplay glyphs.
+    Shadows,
+}
+
+impl WorldLayerKind {
+    pub fn has_tile_cells(self) -> bool {
+        matches!(self, Self::Tiles | Self::Shadows)
+    }
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -306,8 +346,8 @@ impl WorldDefinition {
             if !ids.insert(layer.id.as_str()) {
                 return Err("world layer ids must be unique".into());
             }
-            if layer.kind == WorldLayerKind::Tiles && self.tileset.is_none() {
-                return Err("a tiles world layer requires the world's tileset".into());
+            if layer.kind.has_tile_cells() && self.tileset.is_none() {
+                return Err("a tiles or shadows world layer requires the world's tileset".into());
             }
             if let Some(covered) = &layer.covers_layer_id
                 && (layer.kind != WorldLayerKind::Tiles
@@ -338,8 +378,10 @@ pub struct WorldRow {
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct WorldCell {
+    /// A blank glyph with no background paints nothing, regardless of ownership.
     pub glyph: String,
     pub foreground: Option<ColorSpec>,
+    /// An explicit background paints even a blank cell, unless its tile covers it.
     pub background: Option<ColorSpec>,
     pub owner_layer_id: String,
 }
@@ -460,6 +502,26 @@ impl SpriteMotion {
             || self.duration > MAX_SPRITE_MOTION_SECONDS
         {
             return Err("sprite motion duration must be more than 0 and at most 60 seconds".into());
+        }
+        Ok(self)
+    }
+}
+
+/// Normalized point of the final drawn image, independent of its source dimensions.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct SpritePivot {
+    pub x: f64,
+    pub y: f64,
+}
+
+impl SpritePivot {
+    pub fn validate(self) -> Result<Self, String> {
+        if ![self.x, self.y]
+            .into_iter()
+            .all(|axis| axis.is_finite() && (0.0..=1.0).contains(&axis))
+        {
+            return Err("sprite pivot coordinates must be finite numbers in 0..1".into());
         }
         Ok(self)
     }

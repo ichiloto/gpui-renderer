@@ -3,13 +3,15 @@
 //! layers submit only their visible composed tiles, each one cell tall at its
 //! own width and offset.
 use crate::{
+    color::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
     display_cache::DisplayRasterCache,
+    renderer::positioned,
     retained_prepared::PreparedWorld,
-    retained_protocol::Viewport,
+    retained_protocol::{Viewport, WorldCell},
     retained_world::ProjectedCell,
     viewport::{PaintRect, ViewportTransform},
 };
-use gpui::{Bounds, ContentMask, IntoElement, canvas, point, prelude::*, px, size};
+use gpui::{Bounds, ContentMask, IntoElement, canvas, div, point, prelude::*, px, rgb, size};
 use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 pub fn project_world(world: &PreparedWorld, viewport: &Viewport) -> Arc<Vec<ProjectedCell>> {
@@ -18,6 +20,87 @@ pub fn project_world(world: &PreparedWorld, viewport: &Viewport) -> Arc<Vec<Proj
         .source
         .project_visible(viewport, |projected, _| cells.push(projected));
     Arc::new(cells)
+}
+
+/// Runtime and authoring share glyph coverage, colors, pitch and clipping.
+pub(crate) fn world_layer_element(
+    world: &Arc<PreparedWorld>,
+    index: usize,
+    view: &Viewport,
+    projected: &[ProjectedCell],
+    transform: ViewportTransform,
+    field_font: f32,
+    samples: &Rc<RefCell<DisplayRasterCache>>,
+) -> gpui::AnyElement {
+    let layer = &world.layers[index];
+    if layer.kind.has_tile_cells() {
+        return tile_element(
+            world.clone(),
+            index,
+            transform,
+            view.clone(),
+            samples.clone(),
+        )
+        .into_any_element();
+    }
+    let field = world.source.cell_size();
+    let clip = transform.surface_rect(
+        view.clip_rect.x,
+        view.clip_rect.y,
+        view.clip_rect.width,
+        view.clip_rect.height,
+    );
+    let mut text = div()
+        .absolute()
+        .size_full()
+        .text_size(px(field_font * transform.scale * view.scale))
+        .line_height(px(field.1 * transform.scale * view.scale));
+    for &projected_cell in projected {
+        let Some(row) = world.source.get_row(projected_cell.world_row) else {
+            continue;
+        };
+        let source = &row.cells[projected_cell.world_column as usize];
+        if !should_paint_world_cell(world, &layer.id, projected_cell, source) {
+            continue;
+        }
+        let mut bounds = cell_bounds(projected_cell, field, (0.0, 0.0, field.0), transform, view);
+        bounds.left -= clip.left;
+        bounds.top -= clip.top;
+        let mut painted = positioned(div(), bounds)
+            .overflow_hidden()
+            .text_center()
+            .bg(rgb(source
+                .background
+                .as_ref()
+                .map_or(DEFAULT_BACKGROUND, crate::color::ColorSpec::rgb)))
+            .text_color(rgb(source
+                .foreground
+                .as_ref()
+                .map_or(DEFAULT_FOREGROUND, crate::color::ColorSpec::rgb)));
+        if !source.glyph.trim().is_empty() {
+            painted = painted.child(source.glyph.clone());
+        }
+        text = text.child(painted);
+    }
+    positioned(div(), clip)
+        .overflow_hidden()
+        .child(text)
+        .into_any_element()
+}
+
+pub(crate) fn should_paint_world_cell(
+    world: &PreparedWorld,
+    layer_id: &str,
+    projected: ProjectedCell,
+    source: &WorldCell,
+) -> bool {
+    source.owner_layer_id == layer_id
+        && (source.background.is_some() || !source.glyph.trim().is_empty())
+        && !world.has_covering_tile(
+            projected.world_column,
+            projected.world_row,
+            &source.owner_layer_id,
+        )
 }
 
 /// A projected world cell's bounds at the field's own pitch, one cell tall and

@@ -1,9 +1,8 @@
 //! Map worlds for authoring tools. An editor sends the same world operations
-//! the game's `PresentationWorld` produces and paints its tiles layers with
+//! the game's `PresentationWorld` produces and paints all its layers with
 //! the renderer's own composition, sampling and draw bands, so a map looks in
-//! the editor as it does in the game. Glyphs and editing overlays stay the
-//! tool's own; [`MapWorld::has_covering_tile`] tells it which glyphs the
-//! graphical field hides.
+//! the editor as it does in the game. Editing overlays remain the tool's own;
+//! [`MapWorld::paint_world_layer`] paints tiles, shadows and composed glyphs.
 use crate::{
     assets::AssetRoot,
     display_cache::DisplayRasterCache,
@@ -12,7 +11,7 @@ use crate::{
     retained_protocol::{
         EntityKind, Operation, Viewport, WorldDefinition, WorldLayerKind, WorldOrigin, validate_id,
     },
-    retained_world::World,
+    retained_world::{ProjectedCell, World},
     viewport::ViewportTransform,
 };
 use gpui::{IntoElement, Window};
@@ -39,6 +38,8 @@ pub enum MapLayerKind {
     Decoration,
     /// Tiles from the world's tileset.
     Tiles,
+    /// Non-covering shadow tiles, painted through the same tile path.
+    Shadows,
 }
 
 /// One world layer, in paint order.
@@ -150,6 +151,7 @@ impl MapWorld {
                 WorldLayerKind::Gameplay => MapLayerKind::Gameplay,
                 WorldLayerKind::Decoration => MapLayerKind::Decoration,
                 WorldLayerKind::Tiles => MapLayerKind::Tiles,
+                WorldLayerKind::Shadows => MapLayerKind::Shadows,
             },
         })
     }
@@ -168,11 +170,30 @@ impl MapWorld {
         camera: MapCamera,
         samples: &MapTileSamples,
     ) -> Option<impl IntoElement + use<>> {
+        if !self
+            .prepared
+            .layers
+            .iter()
+            .any(|layer| layer.id == layer_id && layer.kind == WorldLayerKind::Tiles)
+        {
+            return None;
+        }
+        self.paint_layer(layer_id, camera, samples)
+    }
+
+    /// Paints a tiles or shadows layer through the runtime tile painter.
+    /// Call in get_layers() order; glyph layers remain owned by the host.
+    pub fn paint_layer(
+        &self,
+        layer_id: &str,
+        camera: MapCamera,
+        samples: &MapTileSamples,
+    ) -> Option<impl IntoElement + use<>> {
         let index = self
             .prepared
             .layers
             .iter()
-            .position(|layer| layer.id == layer_id && layer.kind == WorldLayerKind::Tiles)?;
+            .position(|layer| layer.id == layer_id && layer.kind.has_tile_cells())?;
         Some(crate::retained_paint::tile_element(
             self.prepared.clone(),
             index,
@@ -180,6 +201,72 @@ impl MapWorld {
             camera.get_viewport(self.get_cell_size()),
             samples.0.clone(),
         ))
+    }
+
+    /// Paints any world layer through the same painter as the game. Call in
+    /// get_layers() order. `field_font` is the font size fitted to one unscaled
+    /// world cell; font family is inherited from the host element.
+    pub fn paint_world_layer(
+        &self,
+        layer_id: &str,
+        camera: MapCamera,
+        field_font: f32,
+        samples: &MapTileSamples,
+    ) -> Option<gpui::AnyElement> {
+        self.paint_world_layer_excluding_cells(
+            layer_id,
+            camera,
+            field_font,
+            samples,
+            &HashSet::new(),
+        )
+    }
+
+    /// Paints a world layer while leaving authored preview cells to the host.
+    /// Exclusions are (column, row) in world coordinates and apply only to
+    /// composed glyph/background cells, never tiles, shadows or tile covering.
+    /// The prepared world remains unchanged.
+    pub fn paint_world_layer_excluding_cells(
+        &self,
+        layer_id: &str,
+        camera: MapCamera,
+        field_font: f32,
+        samples: &MapTileSamples,
+        excluded_cells: &HashSet<(u32, u32)>,
+    ) -> Option<gpui::AnyElement> {
+        let index = self
+            .prepared
+            .layers
+            .iter()
+            .position(|layer| layer.id == layer_id)?;
+        let view = camera.get_viewport(self.get_cell_size());
+        let projected = self.get_projected_cells(index, &view, excluded_cells);
+        Some(crate::retained_paint::world_layer_element(
+            &self.prepared,
+            index,
+            &view,
+            &projected,
+            ViewportTransform::fit(camera.width, camera.height, camera.width, camera.height),
+            field_font,
+            &samples.0,
+        ))
+    }
+
+    fn get_projected_cells(
+        &self,
+        layer_index: usize,
+        view: &Viewport,
+        excluded_cells: &HashSet<(u32, u32)>,
+    ) -> Arc<Vec<ProjectedCell>> {
+        if self.prepared.layers[layer_index].kind.has_tile_cells() {
+            return Arc::new(Vec::new());
+        }
+        let mut projected = crate::retained_paint::project_world(&self.prepared, view);
+        if !excluded_cells.is_empty() {
+            Arc::make_mut(&mut projected)
+                .retain(|cell| !excluded_cells.contains(&(cell.world_column, cell.world_row)));
+        }
+        projected
     }
 }
 
@@ -262,6 +349,12 @@ impl MapTileSamples {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        protocol::Grid,
+        retained_paint::{cell_bounds, project_world, should_paint_world_cell},
+        retained_prepared::PreparedScene,
+        retained_state::RetainedSession,
+    };
     use serde_json::json;
 
     fn world_put(tileset: bool) -> Value {
@@ -300,11 +393,205 @@ mod tests {
         (directory, assets)
     }
 
+    #[test]
+    fn engine_composed_world_shares_runtime_and_editor_glyphs_projection_and_tile_pixels() {
+        // Generated by tests/fixtures/compose-engine-world.php through
+        // PresentationWorld::getFromLayers and MapGraphics::getShownGlyphCells.
+        let fixture: Value =
+            serde_json::from_str(include_str!("../tests/fixtures/engine-world.json")).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        image::RgbaImage::from_pixel(32, 32, image::Rgba([10, 20, 30, 255]))
+            .save(directory.path().join("floor.png"))
+            .unwrap();
+        let assets = MapAssets::new(directory.path()).unwrap();
+        let operations = fixture["operations"].as_array().unwrap().clone();
+        let editor = MapWorld::from_operations(operations.clone(), &assets).unwrap();
+        let grid = Grid {
+            columns: 20,
+            rows: 10,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut session = RetainedSession::default();
+        let accepted = session
+            .apply(
+                serde_json::from_value(json!({
+                    "frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":true,
+                    "operations":operations,
+                }))
+                .unwrap(),
+                grid,
+            )
+            .unwrap();
+        let production = PreparedScene::prepare(accepted.scene, 1, grid, &assets.0, None).unwrap();
+        let runtime = production.get_world("map").unwrap();
+        assert_eq!(
+            fixture["shownGlyphs"],
+            json!([{"x":1,"y":0,"glyph":".","layer":"terrain"}])
+        );
+        for (left, top, scale) in [(0.0, 0.0, 1.0), (11.0, 3.0, 0.5), (-27.0, -5.0, 1.5)] {
+            let camera = MapCamera {
+                left,
+                top,
+                scale,
+                width: 240.0,
+                height: 96.0,
+                tile_frame: 0,
+            };
+            let view = camera.get_viewport(editor.get_cell_size());
+            let transform =
+                ViewportTransform::fit(camera.width, camera.height, camera.width, camera.height);
+            let paint_cells = |world: &PreparedWorld| {
+                let mut painted = Vec::new();
+                for layer in world
+                    .layers
+                    .iter()
+                    .filter(|layer| !layer.kind.has_tile_cells())
+                {
+                    for &cell in project_world(world, &view).iter() {
+                        let source = &world.source.get_row(cell.world_row).unwrap().cells
+                            [cell.world_column as usize];
+                        if should_paint_world_cell(world, &layer.id, cell, source) {
+                            painted.push((
+                                layer.id.clone(),
+                                cell.world_column,
+                                cell.world_row,
+                                source.glyph.clone(),
+                                cell_bounds(
+                                    cell,
+                                    world.source.cell_size(),
+                                    (0.0, 0.0, 48.0),
+                                    transform,
+                                    &view,
+                                ),
+                            ));
+                        }
+                    }
+                }
+                painted
+            };
+            let shown = paint_cells(runtime);
+            assert_eq!(shown, paint_cells(&editor.prepared));
+            assert_eq!(shown.len(), 1);
+            assert_eq!(
+                (&shown[0].0, shown[0].1, &shown[0].3),
+                (&"map:terrain".to_string(), 1, &".".to_string())
+            );
+            assert_eq!(
+                runtime.get_tile_image(0, 0).unwrap().as_bytes(0),
+                editor.prepared.get_tile_image(0, 0).unwrap().as_bytes(0)
+            );
+            for layer in editor.get_layers() {
+                assert!(
+                    editor
+                        .paint_world_layer(layer.id, camera, 20.0, &MapTileSamples::default())
+                        .is_some()
+                );
+            }
+            assert!(
+                editor
+                    .paint_world_layer("unknown", camera, 20.0, &MapTileSamples::default())
+                    .is_none()
+            );
+        }
+    }
+
     fn covered(world: &MapWorld) -> Vec<(u32, u32)> {
         (0..2)
             .flat_map(|row| (0..3).map(move |column| (column, row)))
             .filter(|&(column, row)| world.has_covering_tile(column, row, "map:terrain"))
             .collect()
+    }
+
+    #[test]
+    fn canonical_shadow_tiles_share_projection_without_covering_glyphs() {
+        let (_directory, assets) = assets();
+        let mut put = world_put(true);
+        put["value"]["layers"].as_array_mut().unwrap().push(json!({
+            "id":"tiles:floor:shadows","layer":-100,"kind":"shadows"
+        }));
+        put["value"]["tileset"]["tiles"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!({
+                "width":1,"left":1,"top":-1,"frames":[[
+                    {"fill":[0,0,0,64],"width":1,"height":2,"left":0,"top":0}
+                ]]
+            }));
+        let shadow = json!({"op":"worldTiles","id":"map","layerId":"tiles:floor:shadows",
+            "rows":[{"row":0,"cells":[{"column":1,"tile":1}]}]});
+        let world =
+            MapWorld::from_operations(vec![put, rows(), tiles(0, &[0]), shadow], &assets).unwrap();
+        assert_eq!(covered(&world), [(0, 0)]);
+        assert!(world.prepared.get_tile_image(1, 0).is_some());
+        assert_eq!(
+            world.get_layers().map(|layer| layer.id).collect::<Vec<_>>(),
+            [
+                "tiles:floor",
+                "tiles:floor:shadows",
+                "map:terrain",
+                "map:detail"
+            ]
+        );
+        let view = camera(-12.0, 0.0).get_viewport(world.get_cell_size());
+        let mut projected = Vec::new();
+        world
+            .prepared
+            .source
+            .project_visible_tiles("tiles:floor:shadows", &view, |cell, tile| {
+                projected.push((cell.world_column, cell.screen_column, tile))
+            });
+        assert_eq!(projected, [(1, 0, 1)]);
+        assert_eq!(
+            world.get_layers().nth(1).unwrap().kind,
+            MapLayerKind::Shadows
+        );
+        let samples = MapTileSamples::default();
+        assert!(
+            world
+                .paint_layer("tiles:floor:shadows", camera(0.0, 0.0), &samples)
+                .is_some()
+        );
+        assert!(
+            world
+                .paint_layer("tiles:floor", camera(0.0, 0.0), &samples)
+                .is_some()
+        );
+        assert!(
+            world
+                .paint_layer("map:terrain", camera(0.0, 0.0), &samples)
+                .is_none()
+        );
+        assert!(
+            world
+                .paint_layer("unknown", camera(0.0, 0.0), &samples)
+                .is_none()
+        );
+        assert!(
+            world
+                .paint_tiles("tiles:floor:shadows", camera(0.0, 0.0), &samples)
+                .is_none()
+        );
+        let cleared = world
+            .update(
+                vec![json!({"op":"worldTiles","id":"map",
+                    "layerId":"tiles:floor:shadows","rows":[{"row":0,"cells":[]}]
+                })],
+                &assets,
+            )
+            .unwrap();
+        assert_eq!(
+            cleared
+                .prepared
+                .source
+                .get_tile("tiles:floor:shadows", 1, 0),
+            None
+        );
+        assert_eq!(covered(&cleared), [(0, 0)]);
+        assert!(Arc::ptr_eq(
+            world.prepared.tileset.as_ref().unwrap(),
+            cleared.prepared.tileset.as_ref().unwrap()
+        ));
     }
 
     #[test]
@@ -433,6 +720,254 @@ mod tests {
                     seen += 1;
                 });
             assert!(seen > 0, "{left},{top}");
+        }
+    }
+
+    fn get_painted_cells(
+        world: &MapWorld,
+        layer_id: &str,
+        camera: MapCamera,
+        excluded: &HashSet<(u32, u32)>,
+    ) -> Vec<ProjectedCell> {
+        let index = world
+            .prepared
+            .layers
+            .iter()
+            .position(|layer| layer.id == layer_id)
+            .unwrap();
+        let view = camera.get_viewport(world.get_cell_size());
+        world
+            .get_projected_cells(index, &view, excluded)
+            .iter()
+            .copied()
+            .filter(|cell| {
+                let source = &world.prepared.source.get_row(cell.world_row).unwrap().cells
+                    [cell.world_column as usize];
+                should_paint_world_cell(&world.prepared, layer_id, *cell, source)
+            })
+            .collect()
+    }
+
+    #[test]
+    fn authored_preview_excludes_foreground_and_blank_colored_background_without_mutating_source() {
+        let (_directory, assets) = assets();
+        let mut colored = rows();
+        colored["rows"][0]["cells"][0] = json!({
+            "glyph":"#","foreground":{"kind":"rgb","r":120,"g":80,"b":40},"ownerLayerId":"map:terrain"
+        });
+        colored["rows"][0]["cells"][1] = json!({
+            "glyph":" ","background":{"kind":"rgb","r":10,"g":20,"b":30},"ownerLayerId":"map:terrain"
+        });
+        let world = MapWorld::from_operations(vec![world_put(false), colored], &assets).unwrap();
+        let camera = camera(0.0, 0.0);
+        let empty = HashSet::new();
+        let original = get_painted_cells(&world, "map:terrain", camera, &empty);
+        assert_eq!(original.len(), 6);
+        let excluded = HashSet::from([(0, 0), (1, 0)]);
+        let masked = get_painted_cells(&world, "map:terrain", camera, &excluded);
+        assert_eq!(masked.len(), 4);
+        assert!(
+            masked
+                .iter()
+                .all(|cell| !excluded.contains(&(cell.world_column, cell.world_row)))
+        );
+        assert_eq!(
+            get_painted_cells(&world, "map:terrain", camera, &empty),
+            original
+        );
+        let row = world.prepared.source.get_row(0).unwrap();
+        assert_eq!(row.cells[0].glyph, "#");
+        assert_eq!(row.cells[0].foreground.as_ref().unwrap().rgb(), 0x785028);
+        assert_eq!(row.cells[1].glyph, " ");
+        assert_eq!(row.cells[1].background.as_ref().unwrap().rgb(), 0x0a141e);
+        let samples = MapTileSamples::default();
+        assert!(
+            world
+                .paint_world_layer_excluding_cells("map:terrain", camera, 20.0, &samples, &excluded)
+                .is_some()
+        );
+        assert!(
+            world
+                .paint_world_layer_excluding_cells("map:detail", camera, 20.0, &samples, &excluded)
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn preview_exclusion_uses_world_coordinates_after_pan_and_ignores_offscreen_cells() {
+        let (_directory, assets) = assets();
+        let world = MapWorld::from_operations(vec![world_put(false), rows()], &assets).unwrap();
+        let camera = MapCamera {
+            left: -12.0,
+            top: -24.0,
+            scale: 0.5,
+            width: 12.0,
+            height: 24.0,
+            tile_frame: 0,
+        };
+        let original = get_painted_cells(&world, "map:terrain", camera, &HashSet::new());
+        assert!(original.contains(&ProjectedCell {
+            world_column: 1,
+            world_row: 1,
+            screen_column: 0,
+            screen_row: 0
+        }));
+        assert_eq!(
+            get_painted_cells(
+                &world,
+                "map:terrain",
+                camera,
+                &HashSet::from([(0, 0), (999, 999)])
+            ),
+            original
+        );
+        assert_eq!(
+            get_painted_cells(&world, "map:terrain", camera, &HashSet::from([(1, 1)])),
+            original
+                .iter()
+                .copied()
+                .filter(|cell| (cell.world_column, cell.world_row) != (1, 1))
+                .collect::<Vec<_>>()
+        );
+        let panned = MapCamera {
+            left: 9.0,
+            top: 3.0,
+            width: 80.0,
+            height: 80.0,
+            ..camera
+        };
+        let unmasked = get_painted_cells(&world, "map:terrain", panned, &HashSet::new());
+        let masked = get_painted_cells(&world, "map:terrain", panned, &HashSet::from([(1, 1)]));
+        assert_eq!(
+            masked,
+            unmasked
+                .into_iter()
+                .filter(|cell| (cell.world_column, cell.world_row) != (1, 1))
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn cell_exclusion_keeps_tiles_shadows_overhang_and_covering_unchanged() {
+        let (_directory, assets) = assets();
+        let mut put = world_put(true);
+        put["value"]["layers"].as_array_mut().unwrap().extend([
+            json!({"id":"tiles:floor:shadows","layer":-100,"kind":"shadows"}),
+            json!({"id":"tiles:floor:above","layer":900,"kind":"tiles"}),
+        ]);
+        put["value"]["tileset"]["tiles"].as_array_mut().unwrap().extend([
+            json!({"width":1,"left":1,"top":-1,"frames":[[{"fill":[0,0,0,64],"width":1,"height":2,"left":0,"top":0}]]}),
+            json!({"width":2,"left":-1,"top":-1,"frames":[[{"fill":[30,60,90,255],"width":2,"height":2,"left":0,"top":0}]]}),
+        ]);
+        let world = MapWorld::from_operations(vec![
+            put, rows(), tiles(0, &[0]),
+            json!({"op":"worldTiles","id":"map","layerId":"tiles:floor:shadows","rows":[{"row":0,"cells":[{"column":1,"tile":1}]}]}),
+            json!({"op":"worldTiles","id":"map","layerId":"tiles:floor:above","rows":[{"row":1,"cells":[{"column":2,"tile":2}]}]}),
+        ], &assets).unwrap();
+        let prepared = world.prepared.clone();
+        let images = (0..3)
+            .map(|tile| world.prepared.get_tile_image(tile, 0).unwrap().clone())
+            .collect::<Vec<_>>();
+        let camera = camera(-9.0, 0.0);
+        let view = camera.get_viewport(world.get_cell_size());
+        let get_tiles = || {
+            let mut cells = Vec::new();
+            for layer in world
+                .get_layers()
+                .filter(|layer| matches!(layer.kind, MapLayerKind::Tiles | MapLayerKind::Shadows))
+            {
+                world
+                    .prepared
+                    .source
+                    .project_visible_tiles(layer.id, &view, |cell, tile| {
+                        cells.push((layer.id.to_string(), cell, tile));
+                    });
+            }
+            cells
+        };
+        let original = get_tiles();
+        assert!(
+            original
+                .iter()
+                .any(|(id, _, tile)| id == "tiles:floor:above" && *tile == 2)
+        );
+        assert!(
+            original
+                .iter()
+                .any(|(id, _, tile)| id == "tiles:floor:shadows" && *tile == 1)
+        );
+        let covering = covered(&world);
+        let excluded = (0..2)
+            .flat_map(|row| (0..3).map(move |column| (column, row)))
+            .collect::<HashSet<_>>();
+        let samples = MapTileSamples::default();
+        for (index, layer) in world
+            .prepared
+            .layers
+            .iter()
+            .enumerate()
+            .filter(|(_, layer)| layer.kind.has_tile_cells())
+        {
+            assert_eq!(
+                world.get_projected_cells(index, &view, &excluded),
+                world.get_projected_cells(index, &view, &HashSet::new())
+            );
+            assert!(
+                world
+                    .paint_world_layer_excluding_cells(&layer.id, camera, 20.0, &samples, &excluded)
+                    .is_some()
+            );
+        }
+        assert_eq!(get_tiles(), original);
+        assert_eq!(covered(&world), covering);
+        assert!(Arc::ptr_eq(&world.prepared, &prepared));
+        for (tile, image) in images.iter().enumerate() {
+            assert!(Arc::ptr_eq(
+                world.prepared.get_tile_image(tile as u32, 0).unwrap(),
+                image
+            ));
+        }
+        assert!(get_painted_cells(&world, "map:terrain", camera, &excluded).is_empty());
+    }
+
+    #[test]
+    fn empty_preview_exclusion_matches_original_projection_and_public_layer_support() {
+        let (_directory, assets) = assets();
+        let world =
+            MapWorld::from_operations(vec![world_put(true), rows(), tiles(0, &[0])], &assets)
+                .unwrap();
+        let samples = MapTileSamples::default();
+        for camera in [camera(0.0, 0.0), camera(11.0, 3.0), camera(-27.0, -5.0)] {
+            let view = camera.get_viewport(world.get_cell_size());
+            let empty = HashSet::new();
+            for (index, layer) in world.prepared.layers.iter().enumerate() {
+                if !layer.kind.has_tile_cells() {
+                    assert_eq!(
+                        world.get_projected_cells(index, &view, &empty),
+                        project_world(&world.prepared, &view)
+                    );
+                }
+                let mut original = world
+                    .paint_world_layer(&layer.id, camera, 20.0, &samples)
+                    .unwrap();
+                let mut explicit = world
+                    .paint_world_layer_excluding_cells(&layer.id, camera, 20.0, &samples, &empty)
+                    .unwrap();
+                assert_eq!(
+                    original.downcast_mut::<gpui::Div>().is_some(),
+                    explicit.downcast_mut::<gpui::Div>().is_some()
+                );
+            }
+            assert!(
+                world
+                    .paint_world_layer("unknown", camera, 20.0, &samples)
+                    .is_none()
+            );
+            assert!(
+                world
+                    .paint_world_layer_excluding_cells("unknown", camera, 20.0, &samples, &empty)
+                    .is_none()
+            );
         }
     }
 }

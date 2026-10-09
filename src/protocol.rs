@@ -88,13 +88,16 @@ impl Hello {
             Capability::CanvasOverlay,
             Capability::CanvasClipOpacity,
             Capability::CanvasImageTone,
+            Capability::CanvasImageFlip,
             Capability::CanvasGlyphEffects,
             Capability::CanvasCompositing,
             Capability::FrameViewport,
             Capability::FieldMotion,
             Capability::TileCovers,
+            Capability::TileShadows,
             Capability::SpriteLift,
             Capability::SpriteQuarterTurns,
+            Capability::SpritePivot,
         ];
         for subscription in [Capability::WindowActivation, Capability::KeyTransitions] {
             if self.required_capabilities.contains(&subscription) {
@@ -122,6 +125,8 @@ pub enum Capability {
     CanvasClipOpacity,
     /// Canvas images may multiply RGB brightness without reducing alpha.
     CanvasImageTone,
+    /// Mirror the selected canvas image region without changing its placement.
+    CanvasImageFlip,
     CanvasGlyphEffects,
     CanvasCompositing,
     FrameViewport,
@@ -132,12 +137,16 @@ pub enum Capability {
     /// Drawing feature: a world's tiles layer may name the gameplay layer
     /// whose glyphs its tiles cover.
     TileCovers,
+    /// Drawing feature: fill tiles and non-covering shadow world layers.
+    TileShadows,
     /// Drawing feature: a retained field sprite may be drawn a lift above
     /// the cell that places and orders it.
     SpriteLift,
     /// Drawing feature: a retained sprite's cropped image may be rotated in
     /// clockwise quarter turns without changing its placement or ordering.
     SpriteQuarterTurns,
+    /// Drawing feature: a normalized image point at the unchanged cell anchor.
+    SpritePivot,
     /// Event subscription: key presses carry a stable control identity and
     /// a repeat flag, releases and input resets are reported.
     KeyTransitions,
@@ -676,11 +685,17 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::TileCovers) {
             return Err("tile_covers requires protocol v2".into());
         }
+        if version == Version::V1 && unique.contains(&Capability::TileShadows) {
+            return Err("tile_shadows requires protocol v2".into());
+        }
         if version == Version::V1 && unique.contains(&Capability::SpriteLift) {
             return Err("sprite_lift requires protocol v2".into());
         }
         if version == Version::V1 && unique.contains(&Capability::SpriteQuarterTurns) {
             return Err("sprite_quarter_turns requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::SpritePivot) {
+            return Err("sprite_pivot requires protocol v2".into());
         }
         if unique.contains(&Capability::CanvasClipOpacity) {
             if version != Version::V2 {
@@ -694,6 +709,11 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
             && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
         {
             return Err("canvas_image_tone requires protocol v2 and graphical_canvas".into());
+        }
+        if unique.contains(&Capability::CanvasImageFlip)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_image_flip requires protocol v2 and graphical_canvas".into());
         }
         if unique.contains(&Capability::CanvasGlyphEffects)
             && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
@@ -1017,6 +1037,27 @@ mod tests {
     }
 
     #[test]
+    fn tile_shadows_is_a_v2_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::TileShadows)
+        );
+        let Message::Hello(required) = walk_hello(2, "\"tile_shadows\"").unwrap().message else {
+            panic!()
+        };
+        assert_eq!(required.required_capabilities, [Capability::TileShadows]);
+        assert_eq!(
+            walk_hello(1, "\"tile_shadows\"").unwrap_err(),
+            "tile_shadows requires protocol v2"
+        );
+        assert!(walk_hello(2, "\"tile_shadows\",\"tile_shadows\"").is_err());
+    }
+
+    #[test]
     fn sprite_lift_is_a_v2_drawing_feature() {
         let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
             panic!()
@@ -1070,6 +1111,30 @@ mod tests {
                 "width":16,"height":16,"anchor":"bottom_center","layer":1,
                 "quarterTurns":0}]});
         assert!(parse(&serde_json::to_vec(&legacy).unwrap()).is_err());
+    }
+
+    #[test]
+    fn sprite_pivot_is_an_optional_v2_retained_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::SpritePivot)
+        );
+        assert_eq!(
+            serde_json::to_value(Capability::SpritePivot).unwrap(),
+            serde_json::json!("sprite_pivot")
+        );
+        let Message::Hello(required) = walk_hello(2, "\"sprite_pivot\"").unwrap().message else {
+            panic!()
+        };
+        assert_eq!(required.required_capabilities, [Capability::SpritePivot]);
+        assert_eq!(
+            walk_hello(1, "\"sprite_pivot\"").unwrap_err(),
+            "sprite_pivot requires protocol v2"
+        );
     }
 
     #[test]
@@ -1138,6 +1203,29 @@ mod tests {
         assert_eq!(
             serde_json::to_value(Capability::CanvasImageTone).unwrap(),
             serde_json::json!("canvas_image_tone")
+        );
+    }
+
+    #[test]
+    fn canvas_image_flip_requires_v2_graphical_canvas_and_is_advertised() {
+        assert_eq!(
+            walk_hello(2, "\"canvas_image_flip\"").unwrap_err(),
+            "canvas_image_flip requires protocol v2 and graphical_canvas"
+        );
+        assert_eq!(
+            walk_hello(1, "\"canvas_image_flip\"").unwrap_err(),
+            "canvas_image_flip requires protocol v2 and graphical_canvas"
+        );
+        let Message::Hello(hello) = walk_hello(2, "\"graphical_canvas\",\"canvas_image_flip\"")
+            .unwrap()
+            .message
+        else {
+            panic!("expected hello");
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::CanvasImageFlip)
         );
     }
 

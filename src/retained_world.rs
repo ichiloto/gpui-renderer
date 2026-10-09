@@ -4,8 +4,8 @@
 //! same grid, independent of the owner glyphs; a tile is placed at one cell
 //! and may overhang the cells beside it.
 use crate::retained_protocol::{
-    MAX_WORLD_TILE_CELLS, Viewport, WorldCell, WorldDefinition, WorldLayerKind, WorldRow,
-    WorldTileCell, WorldTileRow,
+    MAX_WORLD_TILE_CELLS, Viewport, WorldCell, WorldDefinition, WorldRow, WorldTileCell,
+    WorldTileRow,
 };
 use std::{
     collections::{HashMap, HashSet},
@@ -23,7 +23,7 @@ const MAX_CELL_TEXT_CHARS: usize = 8;
 pub struct World {
     pub definition: Arc<WorldDefinition>,
     rows: Vec<Option<Arc<WorldRow>>>,
-    /// Column-sorted tile rows of each `tiles` layer.
+    /// Column-sorted tile rows of each `tiles` or `shadows` layer.
     tiles: HashMap<String, Vec<Option<Arc<[WorldTileCell]>>>>,
     complete_rows: usize,
     owner_bytes: usize,
@@ -64,7 +64,7 @@ impl World {
         let tiles = definition
             .layers
             .iter()
-            .filter(|layer| layer.kind == WorldLayerKind::Tiles)
+            .filter(|layer| layer.kind.has_tile_cells())
             .map(|layer| (layer.id.clone(), vec![None; definition.rows as usize]))
             .collect();
         Ok(Self {
@@ -128,7 +128,7 @@ impl World {
         let rows = self
             .tiles
             .get_mut(layer_id)
-            .ok_or("worldTiles must reference a tiles layer of the world")?;
+            .ok_or("worldTiles must reference a tiles or shadows layer of the world")?;
         let mut seen = HashSet::new();
         for row in &updates {
             if row.row >= self.definition.rows || !seen.insert(row.row) {
@@ -529,6 +529,158 @@ mod tests {
             "layers":[{"id":"map:ground","layer":0,"kind":"tiles"}],
             "tileset":tileset(1),"extra":true}))
             .is_err()
+        );
+    }
+
+    #[test]
+    fn shadow_layers_and_fill_sources_keep_strict_tile_validation() {
+        let fill = json!({"fill":[10,20,30,64],"width":24,"height":48,"left":0,"top":0});
+        let mut value = tiled(tileset(1));
+        value["layers"].as_array_mut().unwrap().push(json!({
+            "id":"map:shadows","layer":-100,"kind":"shadows"
+        }));
+        value["tileset"]["tiles"][0] = json!({"width":24,"frames":[[fill]]});
+        assert!(validate(value.clone()).is_ok());
+        for color in [
+            json!([0, 0, 0]),
+            json!([0, 0, 0, 0, 0]),
+            json!([0, 0, 0, 256]),
+            json!([-1, 0, 0, 64]),
+            json!([0, 0, 0, 0.5]),
+            json!(null),
+            json!("black"),
+        ] {
+            let mut bad = value.clone();
+            bad["tileset"]["tiles"][0]["frames"][0][0]["fill"] = color;
+            assert!(validate(bad).is_err());
+        }
+        for (field, invalid) in [
+            ("sheet", json!(0)),
+            ("x", json!(0)),
+            ("y", json!(0)),
+            ("width", json!(0)),
+            ("width", json!(25)),
+            ("height", json!(49)),
+            ("height", json!(0)),
+            ("left", json!(1)),
+            ("top", json!(1)),
+            ("left", json!(u32::MAX)),
+            ("top", json!(-1)),
+            ("opacity", json!(0.5)),
+        ] {
+            let mut bad = value.clone();
+            bad["tileset"]["tiles"][0]["frames"][0][0][field] = invalid;
+            assert!(validate(bad).is_err(), "{field}");
+        }
+        let mut hybrid = value.clone();
+        hybrid["tileset"]["tiles"][0]["frames"][0][0]
+            .as_object_mut()
+            .unwrap()
+            .extend([
+                ("sheet".into(), json!(0)),
+                ("x".into(), json!(0)),
+                ("y".into(), json!(0)),
+            ]);
+        assert!(validate(hybrid).is_err());
+        let mut no_source = value.clone();
+        no_source["tileset"]["tiles"][0]["frames"][0][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("fill");
+        assert!(validate(no_source).is_err());
+        let mut covering = value.clone();
+        covering["layers"][3]["coversLayerId"] = json!("map:terrain");
+        assert!(validate(covering).is_err());
+        let mut bare = value.clone();
+        bare.as_object_mut().unwrap().remove("tileset");
+        assert!(validate(bare).is_err());
+        for count in [0, 9] {
+            let mut bad = value.clone();
+            bad["tileset"]["tiles"][0]["frames"] = json!([vec![fill.clone(); count]]);
+            assert!(validate(bad).is_err());
+        }
+        for count in [0, 5] {
+            let mut bad = value.clone();
+            bad["tileset"]["tiles"][0]["frames"] = json!(vec![vec![fill.clone()]; count]);
+            assert!(validate(bad).is_err());
+        }
+        let mut world = World::new(from_value(value).unwrap()).unwrap();
+        let shadow = |row: u32, cells: serde_json::Value| -> WorldTileRow {
+            from_value(json!({"row":row,"cells":cells})).unwrap()
+        };
+        world
+            .replace_tile_rows(
+                "map:shadows",
+                vec![shadow(0, json!([{"column":1,"tile":0}]))],
+            )
+            .unwrap();
+        assert_eq!(world.tile_count(), 1);
+        for row in [
+            shadow(3, json!([])),
+            shadow(0, json!([{"column":4,"tile":0}])),
+            shadow(0, json!([{"column":1,"tile":1}])),
+            shadow(0, json!([{"column":1,"tile":0},{"column":1,"tile":0}])),
+        ] {
+            assert!(world.replace_tile_rows("map:shadows", vec![row]).is_err());
+            assert_eq!(world.tile_count(), 1);
+        }
+        assert!(
+            world
+                .replace_rows(vec![
+                    from_value(json!({"row":0,"cells":[{
+                        "glyph":".","ownerLayerId":"map:shadows"
+                    }]}))
+                    .unwrap()
+                ])
+                .is_err()
+        );
+        world
+            .replace_tile_rows("map:shadows", vec![shadow(0, json!([]))])
+            .unwrap();
+        assert_eq!(world.tile_count(), 0);
+    }
+
+    #[test]
+    fn shadow_rows_share_the_world_tile_cell_and_source_budgets() {
+        let value = json!({"columns":1024,"rows":1024,"cellWidth":48,"cellHeight":48,
+        "layers":[{"id":"ground","layer":-100,"kind":"tiles"},
+            {"id":"shade","layer":-100,"kind":"shadows"}],
+        "tileset":{"tileSize":2,"sheets":["unused.png"],"tiles":[{
+            "frames":[[{"fill":[0,0,0,64],"width":1,"height":2,"left":0,"top":0}]]
+        }]}});
+        let mut world = World::new(from_value(value).unwrap()).unwrap();
+        let bytes = world.estimated_bytes();
+        let full = |row: u32| -> WorldTileRow {
+            from_value(json!({"row":row,"cells":(0..1024)
+                .map(|column| json!({"column":column,"tile":0})).collect::<Vec<_>>()}))
+            .unwrap()
+        };
+        world
+            .replace_tile_rows("ground", (0..1024).map(full).collect())
+            .unwrap();
+        assert_eq!(world.tile_count(), MAX_WORLD_TILE_CELLS);
+        assert_eq!(
+            world.estimated_bytes(),
+            bytes + MAX_WORLD_TILE_CELLS * TILE_CELL_BYTES
+        );
+        let one = || from_value(json!({"row":0,"cells":[{"column":0,"tile":0}]})).unwrap();
+        assert!(world.replace_tile_rows("shade", vec![one()]).is_err());
+        assert_eq!(world.tile_count(), MAX_WORLD_TILE_CELLS);
+        world
+            .replace_tile_rows(
+                "ground",
+                vec![from_value(json!({"row":0,"cells":[]})).unwrap()],
+            )
+            .unwrap();
+        world.replace_tile_rows("shade", vec![one()]).unwrap();
+        assert_eq!(world.tile_count(), MAX_WORLD_TILE_CELLS - 1024 + 1);
+        assert_eq!(
+            world.estimated_bytes(),
+            bytes + world.tile_count() * TILE_CELL_BYTES
+        );
+        assert!(
+            std::mem::size_of::<crate::retained_protocol::TilePiece>()
+                <= crate::retained_protocol::TILE_PIECE_BYTES
         );
     }
 

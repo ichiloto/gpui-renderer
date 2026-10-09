@@ -233,6 +233,9 @@ fn validate_retained_sprite_capability(
     scene: &SceneSource,
     enabled: &[Capability],
 ) -> Result<(), String> {
+    if !scene.sprite_pivots.is_empty() && !enabled.contains(&Capability::SpritePivot) {
+        return Err("sprite pivot requires negotiated sprite_pivot capability".into());
+    }
     if !scene.sprite_quarter_turns.is_empty() && !enabled.contains(&Capability::SpriteQuarterTurns)
     {
         return Err(
@@ -248,6 +251,7 @@ struct CanvasFeatures {
     glyph_effects: bool,
     clip_opacity: bool,
     image_tone: bool,
+    image_flip: bool,
     source_rect: bool,
 }
 
@@ -266,6 +270,10 @@ impl CanvasFeatures {
                     .iter()
                     .any(|text| text.clip_rect.is_some() || text.opacity.is_some()),
             image_tone: canvas.images.iter().any(|image| image.brightness.is_some()),
+            image_flip: canvas
+                .images
+                .iter()
+                .any(|image| image.flip_x.is_some() || image.flip_y.is_some()),
             source_rect: canvas
                 .images
                 .iter()
@@ -292,6 +300,10 @@ impl CanvasFeatures {
                 .canvas_images
                 .values()
                 .any(|image| image.item.brightness.is_some()),
+            image_flip: scene
+                .canvas_images
+                .values()
+                .any(|image| image.item.flip_x.is_some() || image.item.flip_y.is_some()),
             source_rect: scene
                 .canvas_images
                 .values()
@@ -320,6 +332,9 @@ impl CanvasFeatures {
                 "canvas brightness requires negotiated canvas_image_tone and graphical_canvas capabilities"
                     .into(),
             );
+        }
+        if self.image_flip && !enabled.contains(&Capability::CanvasImageFlip) {
+            return Err("canvas mirroring requires negotiated canvas_image_flip capability".into());
         }
         if self.source_rect && !enabled.contains(&Capability::SpriteSourceRect) {
             return Err(
@@ -552,6 +567,56 @@ mod tests {
     }
 
     #[test]
+    fn retained_image_flips_require_negotiation_and_clear_on_replacement() {
+        let grid = protocol::Grid {
+            columns: 4,
+            rows: 2,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut scene = SceneSource::default();
+        scene
+            .apply(
+                serde_json::from_value(json!({"op":"put","kind":"canvas","id":"canvas",
+            "value":{"width":40,"height":40}}))
+                .unwrap(),
+                grid,
+            )
+            .unwrap();
+        let image = |flip: Option<bool>| {
+            let mut value = json!({"id":"stroke","order":0,"layer":1,"asset":"stroke.png",
+                "destination":{"x":0,"y":0,"width":10,"height":10}});
+            if let Some(flip) = flip {
+                value["flipX"] = json!(flip);
+            }
+            serde_json::from_value(
+                json!({"op":"put","kind":"canvas_image","id":"stroke","value":value}),
+            )
+            .unwrap()
+        };
+        let graphical = [Capability::GraphicalCanvas];
+        scene.apply(image(None), grid).unwrap();
+        assert!(validate_retained_canvas_capability(&scene, &graphical).is_ok());
+        for flip in [false, true] {
+            scene.apply(image(Some(flip)), grid).unwrap();
+            assert_eq!(
+                validate_retained_canvas_capability(&scene, &graphical).unwrap_err(),
+                "canvas mirroring requires negotiated canvas_image_flip capability"
+            );
+            assert!(
+                validate_retained_canvas_capability(
+                    &scene,
+                    &[Capability::GraphicalCanvas, Capability::CanvasImageFlip]
+                )
+                .is_ok()
+            );
+        }
+        scene.apply(image(None), grid).unwrap();
+        assert!(validate_retained_canvas_capability(&scene, &graphical).is_ok());
+        assert_eq!(scene.canvas_images["stroke"].item.flip_x, None);
+    }
+
+    #[test]
     fn retained_canvas_crops_and_clips_require_the_same_capabilities_as_complete_frames() {
         let grid = protocol::Grid {
             columns: 4,
@@ -645,6 +710,45 @@ mod tests {
         assert!(validate_retained_sprite_capability(&scene, &enabled).is_ok());
         scene.apply(sprite(None), grid).unwrap();
         assert!(validate_retained_sprite_capability(&scene, &[]).is_ok());
+    }
+
+    #[test]
+    fn retained_sprite_pivot_requires_capability_even_for_explicit_bottom_center() {
+        let grid = protocol::Grid {
+            columns: 4,
+            rows: 2,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut scene = SceneSource::default();
+        for pivot in [
+            None,
+            Some(json!({"x":0.5,"y":1})),
+            Some(json!({"x":0.25,"y":0.625})),
+            None,
+        ] {
+            let mut value = json!({"id":"effect","order":0,"layer":1,
+                "asset":"effect.png","x":0,"y":0,"width":10,"height":10,"anchor":"bottom_center"});
+            if let Some(pivot) = &pivot {
+                value["pivot"] = pivot.clone();
+            }
+            scene
+                .apply(
+                    serde_json::from_value(
+                        json!({"op":"put","kind":"sprite","id":"effect","value":value}),
+                    )
+                    .unwrap(),
+                    grid,
+                )
+                .unwrap();
+            assert_eq!(
+                validate_retained_sprite_capability(&scene, &[]).is_ok(),
+                pivot.is_none()
+            );
+            assert!(
+                validate_retained_sprite_capability(&scene, &[Capability::SpritePivot]).is_ok()
+            );
+        }
     }
 
     #[test]

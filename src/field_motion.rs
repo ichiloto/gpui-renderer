@@ -593,11 +593,11 @@ mod tests {
                     let shift = field.motion.get_sprite_shift(id, now);
                     let shifted = shift_viewport(&viewport, shift, cell);
                     let (content, _) = content_geometry_retained(base, &shifted);
-                    let placed = sprite_bounds(item, 0, cell, content);
-                    let drawn = sprite_bounds(item, scene.get_sprite_lift(id), cell, content);
+                    let placed = sprite_bounds(item, 0, cell, content, None);
+                    let drawn = sprite_bounds(item, scene.get_sprite_lift(id), cell, content, None);
                     // The sprite slides exactly as its cell does, and the lift
                     // only raises where that slide is drawn.
-                    let rest = sprite_bounds(item, 0, cell, resting);
+                    let rest = sprite_bounds(item, 0, cell, resting, None);
                     assert!((placed.left - rest.left - shift.0 * cell.0 * scale).abs() < 1e-3);
                     assert!((placed.top - rest.top - shift.1 * cell.1 * scale).abs() < 1e-3);
                     assert_eq!(drawn.left, placed.left);
@@ -606,6 +606,66 @@ mod tests {
                 // The followed player holds still on screen throughout.
                 let player = field.motion.get_sprite_shift("player", now);
                 assert!(player.0.abs() < 1e-5 && player.1.abs() < 1e-5);
+            }
+        }
+    }
+
+    #[test]
+    fn sprite_pivot_tracks_the_same_ground_during_scrolling_and_followed_motion() {
+        use crate::renderer::{content_geometry_retained, sprite_bounds};
+        use crate::retained_protocol::SpritePivot;
+        use crate::viewport::ViewportTransform;
+        let pivot = SpritePivot { x: 0.25, y: 0.625 };
+        let cell = (24.0, 48.0);
+        let put = |id: &str, x, y, motion| {
+            let mut value = sprite(id, x, y, motion);
+            value["value"]["pivot"] = json!({"x":pivot.x,"y":pivot.y});
+            value["value"]["width"] = json!(144);
+            value
+        };
+        for follow in [false, true] {
+            let mut field = Field::new(
+                vec![put("player", 10, 5, None), put("npc:guide", 15, 10, None)],
+                view(20, 30, follow),
+            );
+            field.present(
+                vec![
+                    put("player", 10, 5, Some(VERTICAL)),
+                    put("npc:guide", 16, 9, Some(HORIZONTAL)),
+                ],
+                Some(view(20, 31, follow)),
+                1.0,
+            );
+            let scene = field.scene.clone().unwrap();
+            let viewport = field.viewport(20, 31);
+            for scale in [0.5, 1.0] {
+                let base = ViewportTransform::fit(400.0, 400.0, 400.0 * scale, 400.0 * scale);
+                for step in 0..=16 {
+                    let now = 1.0 + VERTICAL * f64::from(step) / 16.0;
+                    for id in ["player", "npc:guide"] {
+                        let item = &scene.sprites[id].item;
+                        let shift = field.motion.get_sprite_shift(id, now);
+                        let shifted = shift_viewport(&viewport, shift, cell);
+                        let (content, _) = content_geometry_retained(base, &shifted);
+                        let legacy = sprite_bounds(item, 0, cell, content, None);
+                        let drawn =
+                            sprite_bounds(item, 0, cell, content, scene.get_sprite_pivot(id));
+                        assert!(
+                            (drawn.left + drawn.width * pivot.x as f32
+                                - legacy.left
+                                - legacy.width / 2.0)
+                                .abs()
+                                < 1e-3
+                        );
+                        assert!(
+                            (drawn.top + drawn.height * pivot.y as f32
+                                - legacy.top
+                                - legacy.height)
+                                .abs()
+                                < 1e-3
+                        );
+                    }
+                }
             }
         }
     }

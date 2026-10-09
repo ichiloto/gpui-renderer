@@ -3,10 +3,9 @@ use crate::color::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
 use crate::display_cache::DisplayRasterCache;
 use crate::input;
 use crate::protocol::{Anchor, Event, FrameViewport, SourceRect, Sprite};
-use crate::retained_paint::FieldPaint;
-use crate::retained_prepared::{PreparedScene, PreparedWorld};
-use crate::retained_protocol::{Viewport as RetainedViewport, WorldLayerKind};
-use crate::retained_world::ProjectedCell;
+use crate::retained_paint::{FieldPaint, world_layer_element};
+use crate::retained_prepared::PreparedScene;
+use crate::retained_protocol::{SpritePivot, Viewport as RetainedViewport};
 use crate::state::{PaintItem, RendererState, painted_cells};
 use crate::viewport::{PaintRect, ViewportTransform};
 use gpui::{
@@ -150,18 +149,20 @@ pub fn sprite_origin(sprite: &Sprite, cell_width: f32, cell_height: f32) -> (f32
     }
 }
 
-/// Where a sprite is drawn through `transform`: bottom-centred on its cell,
-/// then `lift` logical pixels higher. The cell alone still orders it.
+/// Place the image pivot at the cell's ground anchor, then apply its lift.
+/// The cell alone still orders and moves the sprite; omission is bottom-center.
 pub fn sprite_bounds(
     sprite: &Sprite,
     lift: u32,
     cell: (f32, f32),
     transform: ViewportTransform,
+    pivot: Option<SpritePivot>,
 ) -> PaintRect {
     let (left, top) = sprite_origin(sprite, cell.0, cell.1);
+    let pivot = pivot.unwrap_or(SpritePivot { x: 0.5, y: 1.0 });
     transform.surface_rect(
-        left,
-        top - lift as f32,
+        left + (0.5 - pivot.x as f32) * sprite.width as f32,
+        top + (1.0 - pivot.y as f32) * sprite.height as f32 - lift as f32,
         sprite.width as f32,
         sprite.height as f32,
     )
@@ -253,7 +254,7 @@ impl Render for Renderer {
                 + f32::from(text.descent(font_id, px(1.0)));
             (advance, line_em)
         });
-        let logical_font_size = *self.logical_font_size.get_or_insert_with(|| {
+        self.logical_font_size.get_or_insert_with(|| {
             let size = fit_cell_font(cw, ch, advance, line_em);
             self.output.diagnostics.geometry("text_metrics", || {
                 vec![
@@ -372,267 +373,25 @@ impl Render for Renderer {
         if transform.scale == 0.0 {
             return crate::render_trace::observe(root, &self.output.diagnostics, observation);
         }
-        // The field has its own cell size, carried by the world the retained
-        // viewport presents: one terminal cell, in the terminal's shape. UI
-        // text keeps the session grid's pitch.
-        let field_cell = self
-            .retained_viewport
-            .as_ref()
-            .and_then(|view| view.world_id.as_ref())
-            .and_then(|id| self.retained_scene.as_ref()?.get_world(id))
-            .map(|world| world.source.cell_size());
-        let field_font_size =
-            field_cell.map(|(width, height)| fit_cell_font(width, height, advance, line_em));
-        // Slides are drawn on the renderer's own clock; while any runs, the
-        // next frame is requested. The committed cells never change here.
         let now = self.field_clock.elapsed().as_secs_f64();
-        let world_view = self
-            .retained_viewport
-            .as_ref()
-            .zip(field_cell)
-            .map(|(view, cell)| self.field_motion.get_world_viewport(view, cell, now));
+        let surface = paint_frame(
+            FramePaint {
+                frame: self.state.frame.as_deref(),
+                scene: self.retained_scene.as_ref(),
+                viewport: self.retained_viewport.as_ref(),
+                grid,
+                transform,
+                metrics: (advance, line_em),
+                motion: &self.field_motion,
+                time: now,
+                fonts: &mut self.canvas_fonts,
+                glyphs: &self.glyph_frame.images,
+                samples: &self.tile_samples,
+            },
+            cx,
+        );
         if self.field_motion.is_animating(now) {
             window.request_animation_frame();
-        }
-        let bounds = transform.surface_bounds();
-        let mut surface = positioned(div(), bounds)
-            .overflow_hidden()
-            .text_color(rgb(DEFAULT_FOREGROUND))
-            .font_family(FONT_FAMILY)
-            .text_size(px(logical_font_size * transform.scale))
-            .line_height(px(ch * transform.scale));
-        if let Some(frame) = &self.state.frame {
-            if let Some(canvas) = frame.canvas.as_ref().filter(|_| !frame.canvas_overlay) {
-                surface = surface.child(canvas.element(
-                    transform,
-                    &mut self.canvas_fonts,
-                    &self.glyph_frame.images,
-                    self.tile_samples.clone(),
-                    cx,
-                ));
-            } else if frame.canvas.is_none() {
-                self.canvas_fonts.clear();
-            }
-            // World layers interleave with the plan by layer, so a tiles
-            // layer above characters paints above their sprites.
-            let field_world = world_view
-                .as_ref()
-                .zip(self.retained_scene.as_ref())
-                .and_then(|(view, scene)| Some((view, scene.get_world(view.world_id.as_ref()?)?)));
-            let world_layers: Vec<i32> = field_world.map_or_else(Vec::new, |(_, world)| {
-                world.layers.iter().map(|layer| layer.layer).collect()
-            });
-            let plan_layers: Vec<i32> = frame
-                .plan
-                .iter()
-                .map(|item| frame.get_item_layer(item))
-                .collect();
-            let projected =
-                field_world.map(|(view, world)| crate::retained_paint::project_world(world, view));
-            for step in crate::retained_paint::merge_paint_order(&world_layers, &plan_layers) {
-                let item = match step {
-                    FieldPaint::World(index) => {
-                        if let (Some((view, world)), Some(projected)) = (field_world, &projected) {
-                            surface = surface.child(world_layer_element(
-                                world,
-                                index,
-                                view,
-                                projected,
-                                transform,
-                                field_font_size.unwrap_or_default(),
-                                &self.tile_samples,
-                            ));
-                        }
-                        continue;
-                    }
-                    FieldPaint::Plan(index) => &frame.plan[index],
-                };
-                let retained_member = self.retained_viewport.as_ref().filter(|view| match *item {
-                    PaintItem::Text(index) => {
-                        view.text_layer_ids.contains(&frame.text_layers[index].id)
-                    }
-                    PaintItem::Sprite(index) => {
-                        view.sprite_ids.contains(&frame.sprites[index].sprite.id)
-                    }
-                    _ => false,
-                });
-                let member = frame.viewport.as_ref().filter(|view| match *item {
-                    PaintItem::Tiles(index) => {
-                        view.contains_tile(&frame.tile_batches[index].batch.id)
-                    }
-                    PaintItem::Text(index) => view.contains_text(&frame.text_layers[index].id),
-                    PaintItem::Sprite(index) => {
-                        view.contains_sprite(&frame.sprites[index].sprite.id)
-                    }
-                    #[cfg(test)]
-                    PaintItem::LegacyText => false,
-                });
-                // Field members share the world's cell: text is one terminal
-                // cell per field cell, sprites are placed by whole cells.
-                let (pitch_width, pitch_height, item_font) =
-                    match (retained_member.is_some(), field_cell, field_font_size) {
-                        (true, Some((width, height)), Some(font)) => (width, height, font),
-                        _ => (cw, ch, logical_font_size),
-                    };
-                let (item_transform, clip) = if let Some(view) = retained_member {
-                    // Camera-screen members move with the drawn camera; a
-                    // sprite also moves along its own step.
-                    let shift = match *item {
-                        PaintItem::Text(index) => self.field_motion.get_text_shift(
-                            view,
-                            &frame.text_layers[index].id,
-                            now,
-                        ),
-                        PaintItem::Sprite(index) => self
-                            .field_motion
-                            .get_sprite_shift(&frame.sprites[index].sprite.id, now),
-                        _ => (0.0, 0.0),
-                    };
-                    let shifted = crate::field_motion::shift_viewport(
-                        view,
-                        shift,
-                        (pitch_width, pitch_height),
-                    );
-                    let (content, clip) = content_geometry_retained(transform, &shifted);
-                    (content, Some(clip))
-                } else {
-                    member.map_or((transform, None), |view| {
-                        let (content, clip) = content_geometry(transform, &view.geometry);
-                        (content, Some(clip))
-                    })
-                };
-                match *item {
-                    PaintItem::Tiles(index) => {
-                        surface = add_item(
-                            surface,
-                            crate::tiles::element(
-                                frame.tile_batches[index].clone(),
-                                grid,
-                                item_transform,
-                                self.tile_samples.clone(),
-                            ),
-                            clip,
-                        );
-                    }
-                    #[cfg(test)]
-                    PaintItem::LegacyText => {
-                        for (row, text) in frame.text.iter().enumerate() {
-                            for (column, glyph) in text.chars().enumerate() {
-                                if glyph != ' ' {
-                                    surface = surface.child(
-                                        cell(column as u32, row as u32, cw, ch, transform)
-                                            .child(glyph.to_string()),
-                                    );
-                                }
-                            }
-                        }
-                    }
-                    PaintItem::Text(index) => {
-                        let mut layer = div()
-                            .absolute()
-                            .size_full()
-                            .text_size(px(item_font * item_transform.scale))
-                            .line_height(px(pitch_height * item_transform.scale));
-                        for text in painted_cells(&frame.text_layers[index]) {
-                            let mut painted = cell(
-                                text.column,
-                                text.row,
-                                pitch_width,
-                                pitch_height,
-                                item_transform,
-                            )
-                            .bg(rgb(text.background))
-                            .text_color(rgb(text.foreground));
-                            if let Some(glyph) = text.glyph {
-                                painted = painted.child(glyph.to_string());
-                            }
-                            layer = layer.child(painted);
-                        }
-                        surface = add_item(surface, layer, clip);
-                    }
-
-                    PaintItem::Sprite(index) => {
-                        let item = &frame.sprites[index];
-                        // A lift belongs to field sprites, which slide and
-                        // follow with the field's own transform.
-                        let lift = retained_member
-                            .and(self.retained_scene.as_ref())
-                            .map_or(0, |scene| scene.source.get_sprite_lift(&item.sprite.id));
-                        let bounds = sprite_bounds(
-                            &item.sprite,
-                            lift,
-                            (pitch_width, pitch_height),
-                            item_transform,
-                        );
-                        if let Some(turned) = self
-                            .retained_scene
-                            .as_ref()
-                            .and_then(|scene| scene.get_turned_sprite_image(&item.sprite.id))
-                        {
-                            // The selected crop was turned during retained-scene
-                            // preparation. Keep the original destination and
-                            // bottom-center anchor; sourceRect retains its
-                            // established fill behavior, and whole images
-                            // retain their established contain behavior.
-                            let image = img(turned.clone())
-                                .absolute()
-                                .left(px(bounds.left))
-                                .top(px(bounds.top))
-                                .w(px(bounds.width))
-                                .h(px(bounds.height));
-                            surface = if item.sprite.source_rect.is_some() {
-                                add_item(surface, image.object_fit(ObjectFit::Fill), clip)
-                            } else {
-                                add_item(surface, image, clip)
-                            };
-                        } else if let Some(rect) = item.sprite.source_rect {
-                            let size = item.image.size(0);
-                            let sheet = sheet_bounds(
-                                rect,
-                                size.width.0 as u32,
-                                size.height.0 as u32,
-                                bounds.width,
-                                bounds.height,
-                            );
-                            surface = add_item(
-                                surface,
-                                positioned(div(), bounds).overflow_hidden().child(
-                                    img(item.image.clone())
-                                        .object_fit(ObjectFit::Fill)
-                                        .absolute()
-                                        .left(px(sheet.left))
-                                        .top(px(sheet.top))
-                                        .w(px(sheet.width))
-                                        .h(px(sheet.height)),
-                                ),
-                                clip,
-                            );
-                        } else {
-                            surface = add_item(
-                                surface,
-                                img(item.image.clone())
-                                    .absolute()
-                                    .left(px(bounds.left))
-                                    .top(px(bounds.top))
-                                    .w(px(bounds.width))
-                                    .h(px(bounds.height)),
-                                clip,
-                            );
-                        }
-                    }
-                }
-            }
-            // Overlay canvas pixels are transparent outside their elements and
-            // paint above the complete retained field, sprites, and screen HUD.
-            if let Some(canvas) = frame.canvas.as_ref().filter(|_| frame.canvas_overlay) {
-                surface = surface.child(canvas.element(
-                    transform,
-                    &mut self.canvas_fonts,
-                    &self.glyph_frame.images,
-                    self.tile_samples.clone(),
-                    cx,
-                ));
-            }
         }
 
         let root = root.child(surface);
@@ -640,84 +399,279 @@ impl Render for Renderer {
     }
 }
 
-/// One world layer. A tiles layer paints its composed tiles; a glyph layer
-/// paints the owner cells it owns, except where a tile covers that layer's
-/// glyph: one from a tiles layer covering it, or covering no particular layer.
-fn world_layer_element(
-    world: &Arc<PreparedWorld>,
-    index: usize,
-    view: &RetainedViewport,
-    projected: &[ProjectedCell],
-    transform: ViewportTransform,
-    field_font: f32,
-    samples: &Rc<RefCell<DisplayRasterCache>>,
-) -> gpui::AnyElement {
-    let layer = &world.layers[index];
-    if layer.kind == WorldLayerKind::Tiles {
-        return crate::retained_paint::tile_element(
-            world.clone(),
-            index,
-            transform,
-            view.clone(),
-            samples.clone(),
-        )
-        .into_any_element();
-    }
-    let field = world.source.cell_size();
-    let clip = transform.surface_rect(
-        view.clip_rect.x,
-        view.clip_rect.y,
-        view.clip_rect.width,
-        view.clip_rect.height,
-    );
-    let mut text = div()
-        .absolute()
-        .size_full()
-        .text_size(px(field_font * transform.scale * view.scale))
-        .line_height(px(field.1 * transform.scale * view.scale));
-    for &projected_cell in projected {
-        let Some(row) = world.source.get_row(projected_cell.world_row) else {
-            continue;
-        };
-        let source = &row.cells[projected_cell.world_column as usize];
-        if source.owner_layer_id != layer.id
-            || world.has_covering_tile(
-                projected_cell.world_column,
-                projected_cell.world_row,
-                &source.owner_layer_id,
-            )
-        {
-            continue;
-        }
-        let mut bounds = crate::retained_paint::cell_bounds(
-            projected_cell,
-            field,
-            (0.0, 0.0, field.0),
-            transform,
-            view,
-        );
-        bounds.left -= clip.left;
-        bounds.top -= clip.top;
-        let mut painted = positioned(div(), bounds)
-            .overflow_hidden()
-            .text_center()
-            .bg(rgb(source
-                .background
-                .as_ref()
-                .map_or(DEFAULT_BACKGROUND, crate::color::ColorSpec::rgb)))
-            .text_color(rgb(source
-                .foreground
-                .as_ref()
-                .map_or(DEFAULT_FOREGROUND, crate::color::ColorSpec::rgb)));
-        if !source.glyph.trim().is_empty() {
-            painted = painted.child(source.glyph.clone());
-        }
-        text = text.child(painted);
-    }
-    positioned(div(), clip)
+/// Shared complete-scene painter. Runtime and authoring views differ only in clock and input ownership.
+pub(crate) struct FramePaint<'a> {
+    pub frame: Option<&'a crate::state::PreparedFrame>,
+    pub scene: Option<&'a Arc<PreparedScene>>,
+    pub viewport: Option<&'a RetainedViewport>,
+    pub grid: crate::protocol::Grid,
+    pub transform: ViewportTransform,
+    pub metrics: (Option<f32>, f32),
+    pub motion: &'a crate::field_motion::FieldMotion,
+    pub time: f64,
+    pub fonts: &'a mut std::collections::HashMap<(u32, u32), f32>,
+    pub glyphs: &'a std::collections::HashMap<usize, Arc<RenderImage>>,
+    pub samples: &'a Rc<RefCell<DisplayRasterCache>>,
+}
+
+pub(crate) fn paint_frame(paint: FramePaint<'_>, cx: &gpui::App) -> gpui::Div {
+    let grid = paint.grid;
+    let (cw, ch) = (grid.cell_width as f32, grid.cell_height as f32);
+    let (advance, line_em) = paint.metrics;
+    let logical_font_size = fit_cell_font(cw, ch, advance, line_em);
+    let transform = paint.transform;
+    // The field has its own cell size, carried by the world the retained
+    // viewport presents: one terminal cell, in the terminal's shape. UI
+    // text keeps the session grid's pitch.
+    let field_cell = paint
+        .viewport
+        .and_then(|view| view.world_id.as_ref())
+        .and_then(|id| paint.scene.as_ref()?.get_world(id))
+        .map(|world| world.source.cell_size());
+    let field_font_size =
+        field_cell.map(|(width, height)| fit_cell_font(width, height, advance, line_em));
+    let now = paint.time;
+    let world_view = paint
+        .viewport
+        .zip(field_cell)
+        .map(|(view, cell)| paint.motion.get_world_viewport(view, cell, now));
+    let bounds = transform.surface_bounds();
+    let mut surface = positioned(div(), bounds)
         .overflow_hidden()
-        .child(text)
-        .into_any_element()
+        .text_color(rgb(DEFAULT_FOREGROUND))
+        .font_family(FONT_FAMILY)
+        .text_size(px(logical_font_size * transform.scale))
+        .line_height(px(ch * transform.scale));
+    if let Some(frame) = paint.frame {
+        if let Some(canvas) = frame.canvas.as_ref().filter(|_| !frame.canvas_overlay) {
+            surface = surface.child(canvas.element(
+                transform,
+                paint.fonts,
+                paint.glyphs,
+                paint.samples.clone(),
+                cx,
+            ));
+        } else if frame.canvas.is_none() {
+            paint.fonts.clear();
+        }
+        // World layers interleave with the plan by layer, so a tiles
+        // layer above characters paints above their sprites.
+        let field_world = world_view
+            .as_ref()
+            .zip(paint.scene.as_ref())
+            .and_then(|(view, scene)| Some((view, scene.get_world(view.world_id.as_ref()?)?)));
+        let world_layers: Vec<i32> = field_world.map_or_else(Vec::new, |(_, world)| {
+            world.layers.iter().map(|layer| layer.layer).collect()
+        });
+        let plan_layers: Vec<i32> = frame
+            .plan
+            .iter()
+            .map(|item| frame.get_item_layer(item))
+            .collect();
+        let projected =
+            field_world.map(|(view, world)| crate::retained_paint::project_world(world, view));
+        for step in crate::retained_paint::merge_paint_order(&world_layers, &plan_layers) {
+            let item = match step {
+                FieldPaint::World(index) => {
+                    if let (Some((view, world)), Some(projected)) = (field_world, &projected) {
+                        surface = surface.child(world_layer_element(
+                            world,
+                            index,
+                            view,
+                            projected,
+                            transform,
+                            field_font_size.unwrap_or_default(),
+                            paint.samples,
+                        ));
+                    }
+                    continue;
+                }
+                FieldPaint::Plan(index) => &frame.plan[index],
+            };
+            let retained_member = paint.viewport.as_ref().filter(|view| match *item {
+                PaintItem::Text(index) => {
+                    view.text_layer_ids.contains(&frame.text_layers[index].id)
+                }
+                PaintItem::Sprite(index) => {
+                    view.sprite_ids.contains(&frame.sprites[index].sprite.id)
+                }
+                _ => false,
+            });
+            let member = frame.viewport.as_ref().filter(|view| match *item {
+                PaintItem::Tiles(index) => view.contains_tile(&frame.tile_batches[index].batch.id),
+                PaintItem::Text(index) => view.contains_text(&frame.text_layers[index].id),
+                PaintItem::Sprite(index) => view.contains_sprite(&frame.sprites[index].sprite.id),
+                #[cfg(test)]
+                PaintItem::LegacyText => false,
+            });
+            // Field members share the world's cell: text is one terminal
+            // cell per field cell, sprites are placed by whole cells.
+            let (pitch_width, pitch_height, item_font) =
+                match (retained_member.is_some(), field_cell, field_font_size) {
+                    (true, Some((width, height)), Some(font)) => (width, height, font),
+                    _ => (cw, ch, logical_font_size),
+                };
+            let (item_transform, clip) = if let Some(view) = retained_member {
+                // Camera-screen members move with the drawn camera; a
+                // sprite also moves along its own step.
+                let shift = match *item {
+                    PaintItem::Text(index) => {
+                        paint
+                            .motion
+                            .get_text_shift(view, &frame.text_layers[index].id, now)
+                    }
+                    PaintItem::Sprite(index) => paint
+                        .motion
+                        .get_sprite_shift(&frame.sprites[index].sprite.id, now),
+                    _ => (0.0, 0.0),
+                };
+                let shifted =
+                    crate::field_motion::shift_viewport(view, shift, (pitch_width, pitch_height));
+                let (content, clip) = content_geometry_retained(transform, &shifted);
+                (content, Some(clip))
+            } else {
+                member.map_or((transform, None), |view| {
+                    let (content, clip) = content_geometry(transform, &view.geometry);
+                    (content, Some(clip))
+                })
+            };
+            match *item {
+                PaintItem::Tiles(index) => {
+                    surface = add_item(
+                        surface,
+                        crate::tiles::element(
+                            frame.tile_batches[index].clone(),
+                            grid,
+                            item_transform,
+                            paint.samples.clone(),
+                        ),
+                        clip,
+                    );
+                }
+                #[cfg(test)]
+                PaintItem::LegacyText => {
+                    for (row, text) in frame.text.iter().enumerate() {
+                        for (column, glyph) in text.chars().enumerate() {
+                            if glyph != ' ' {
+                                surface = surface.child(
+                                    cell(column as u32, row as u32, cw, ch, transform)
+                                        .child(glyph.to_string()),
+                                );
+                            }
+                        }
+                    }
+                }
+                PaintItem::Text(index) => {
+                    let mut layer = div()
+                        .absolute()
+                        .size_full()
+                        .text_size(px(item_font * item_transform.scale))
+                        .line_height(px(pitch_height * item_transform.scale));
+                    for text in painted_cells(&frame.text_layers[index]) {
+                        let mut painted = cell(
+                            text.column,
+                            text.row,
+                            pitch_width,
+                            pitch_height,
+                            item_transform,
+                        )
+                        .bg(rgb(text.background))
+                        .text_color(rgb(text.foreground));
+                        if let Some(glyph) = text.glyph {
+                            painted = painted.child(glyph.to_string());
+                        }
+                        layer = layer.child(painted);
+                    }
+                    surface = add_item(surface, layer, clip);
+                }
+
+                PaintItem::Sprite(index) => {
+                    let item = &frame.sprites[index];
+                    // A lift belongs to field sprites, which slide and
+                    // follow with the field's own transform.
+                    let lift = retained_member
+                        .and(paint.scene.as_ref())
+                        .map_or(0, |scene| scene.source.get_sprite_lift(&item.sprite.id));
+                    let bounds = sprite_bounds(
+                        &item.sprite,
+                        lift,
+                        (pitch_width, pitch_height),
+                        item_transform,
+                        paint
+                            .scene
+                            .and_then(|scene| scene.source.get_sprite_pivot(&item.sprite.id)),
+                    );
+                    if let Some(turned) = paint
+                        .scene
+                        .and_then(|scene| scene.get_turned_sprite_image(&item.sprite.id))
+                    {
+                        // The selected crop was turned during retained-scene
+                        // preparation. Keep the original destination and
+                        // image pivot; sourceRect retains its
+                        // established fill behavior, and whole images
+                        // retain their established contain behavior.
+                        let image = img(turned.clone())
+                            .absolute()
+                            .left(px(bounds.left))
+                            .top(px(bounds.top))
+                            .w(px(bounds.width))
+                            .h(px(bounds.height));
+                        surface = if item.sprite.source_rect.is_some() {
+                            add_item(surface, image.object_fit(ObjectFit::Fill), clip)
+                        } else {
+                            add_item(surface, image, clip)
+                        };
+                    } else if let Some(rect) = item.sprite.source_rect {
+                        let size = item.image.size(0);
+                        let sheet = sheet_bounds(
+                            rect,
+                            size.width.0 as u32,
+                            size.height.0 as u32,
+                            bounds.width,
+                            bounds.height,
+                        );
+                        surface = add_item(
+                            surface,
+                            positioned(div(), bounds).overflow_hidden().child(
+                                img(item.image.clone())
+                                    .object_fit(ObjectFit::Fill)
+                                    .absolute()
+                                    .left(px(sheet.left))
+                                    .top(px(sheet.top))
+                                    .w(px(sheet.width))
+                                    .h(px(sheet.height)),
+                            ),
+                            clip,
+                        );
+                    } else {
+                        surface = add_item(
+                            surface,
+                            img(item.image.clone())
+                                .absolute()
+                                .left(px(bounds.left))
+                                .top(px(bounds.top))
+                                .w(px(bounds.width))
+                                .h(px(bounds.height)),
+                            clip,
+                        );
+                    }
+                }
+            }
+        }
+        // Overlay canvas pixels are transparent outside their elements and
+        // paint above the complete retained field, sprites, and screen HUD.
+        if let Some(canvas) = frame.canvas.as_ref().filter(|_| frame.canvas_overlay) {
+            surface = surface.child(canvas.element(
+                transform,
+                paint.fonts,
+                paint.glyphs,
+                paint.samples.clone(),
+                cx,
+            ));
+        }
+    }
+
+    surface
 }
 
 fn add_item(surface: gpui::Div, item: impl IntoElement, clip: Option<PaintRect>) -> gpui::Div {
@@ -781,6 +735,191 @@ mod tests {
     use super::*;
     use crate::protocol::Grid;
     use crate::protocol::{ViewportPoint, ViewportRect};
+    use crate::retained_paint::should_paint_world_cell;
+    use crate::retained_prepared::PreparedWorld;
+    use crate::retained_protocol::{WorldCell, WorldRow, WorldTileCell, WorldTileRow};
+    use crate::retained_world::ProjectedCell;
+    use serde_json::{from_value, json};
+
+    fn create_world_cell(glyph: &str) -> WorldCell {
+        WorldCell {
+            glyph: glyph.into(),
+            foreground: None,
+            background: None,
+            owner_layer_id: "map:terrain".into(),
+        }
+    }
+
+    fn prepare_cell_world(
+        cells: Vec<WorldCell>,
+        covers: Option<&str>,
+        available: bool,
+    ) -> PreparedWorld {
+        let columns = cells.len() as u32;
+        let directory = tempfile::tempdir().unwrap();
+        if available {
+            image::RgbaImage::from_pixel(1, 2, image::Rgba([32, 96, 48, 255]))
+                .save(directory.path().join("sheet.png"))
+                .unwrap();
+        }
+        let piece = json!({"sheet":0,"x":0,"y":0,"width":1,"height":2,"left":0,"top":0});
+        let mut world = crate::retained_world::World::new(
+            from_value(
+                json!({"columns":columns,"rows":1,"cellWidth":10,"cellHeight":20,
+                "layers":[
+                    {"id":"tiles:ground","layer":-100,"kind":"tiles","coversLayerId":covers},
+                    {"id":"map:terrain","layer":-99,"kind":"gameplay"},
+                    {"id":"map:buildings","layer":-98,"kind":"gameplay"}
+                ],
+                "tileset":{"tileSize":2,"sheets":["sheet.png"],
+                    "tiles":[{"width":1,"frames":[[piece]]}]}}),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+        world
+            .replace_rows(vec![WorldRow { row: 0, cells }])
+            .unwrap();
+        world
+            .replace_tile_rows(
+                "tiles:ground",
+                vec![WorldTileRow {
+                    row: 0,
+                    cells: (0..columns)
+                        .map(|column| WorldTileCell { column, tile: 0 })
+                        .collect(),
+                }],
+            )
+            .unwrap();
+        world.validate_complete().unwrap();
+        let assets = crate::assets::AssetRoot::new(directory.path()).unwrap();
+        PreparedWorld::prepare("synthetic", Arc::new(world), &assets, None)
+    }
+
+    fn project_cell_world(world: &PreparedWorld) -> Vec<ProjectedCell> {
+        let view = from_value(
+            json!({"scale":1,"origin":{"x":0,"y":0},"worldId":"synthetic",
+            "clipRect":{"x":0,"y":0,"width":world.source.definition.columns * 10,"height":20}}),
+        )
+        .unwrap();
+        crate::retained_paint::project_world(world, &view).to_vec()
+    }
+
+    #[test]
+    fn world_owner_cells_leave_unstyled_blanks_transparent_over_other_layer_tiles() {
+        for foreground in [None, Some(crate::color::ColorSpec::Ansi16 { index: 2 })] {
+            for glyph in [" ", "   ", "\u{2003}"] {
+                let mut source = create_world_cell(glyph);
+                source.foreground = foreground.clone();
+                let world = prepare_cell_world(vec![source], Some("map:buildings"), true);
+                let projected = project_cell_world(&world)[0];
+                let source = &world.source.get_row(0).unwrap().cells[0];
+                assert_eq!(world.source.get_tile("tiles:ground", 0, 0), Some(0));
+                assert!(world.get_tile_image(0, 0).is_some());
+                assert!(world.has_covering_tile(0, 0, "map:buildings"));
+                assert!(!world.has_covering_tile(0, 0, "map:terrain"));
+                assert_eq!(
+                    world
+                        .layers
+                        .iter()
+                        .map(|layer| layer.layer)
+                        .collect::<Vec<_>>(),
+                    [-100, -99, -98]
+                );
+                assert!(
+                    !should_paint_world_cell(&world, "map:terrain", projected, source),
+                    "unstyled blank owner cell must not cover the tile on another gameplay layer"
+                );
+                assert_eq!(source.glyph, glyph);
+                assert_eq!(source.owner_layer_id, "map:terrain");
+                assert!(source.background.is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn world_owner_cells_keep_nonblank_glyphs_and_authored_backgrounds() {
+        let backgrounds = [
+            crate::color::ColorSpec::Ansi16 { index: 0 },
+            crate::color::ColorSpec::Rgb {
+                r: 17,
+                g: 24,
+                b: 32,
+            },
+        ];
+        let mut cells: Vec<_> = [".", "\u{754c}", "e\u{301}", "  X  "]
+            .into_iter()
+            .map(create_world_cell)
+            .collect();
+        for background in backgrounds.clone() {
+            let mut cell = create_world_cell(" ");
+            cell.background = Some(background);
+            cells.push(cell);
+        }
+        let world = prepare_cell_world(cells, Some("map:buildings"), true);
+        for projected in project_cell_world(&world) {
+            let source = &world.source.get_row(0).unwrap().cells[projected.world_column as usize];
+            assert!(should_paint_world_cell(
+                &world,
+                "map:terrain",
+                projected,
+                source
+            ));
+        }
+        assert_eq!(
+            world.source.get_row(0).unwrap().cells[4].background,
+            Some(backgrounds[0].clone())
+        );
+        assert_eq!(
+            world.source.get_row(0).unwrap().cells[5].background,
+            Some(backgrounds[1].clone())
+        );
+    }
+
+    #[test]
+    fn world_owner_cells_keep_layer_identity_and_available_tile_coverage() {
+        for covers in [None, Some("map:terrain"), Some("map:buildings")] {
+            let mut cells = vec![create_world_cell("#"), create_world_cell(" ")];
+            cells[1].background = Some(crate::color::ColorSpec::Ansi16 { index: 0 });
+            let world = prepare_cell_world(cells, covers, true);
+            for projected in project_cell_world(&world) {
+                let source =
+                    &world.source.get_row(0).unwrap().cells[projected.world_column as usize];
+                assert_eq!(
+                    should_paint_world_cell(&world, "map:terrain", projected, source),
+                    covers == Some("map:buildings")
+                );
+                assert!(!should_paint_world_cell(
+                    &world,
+                    "map:buildings",
+                    projected,
+                    source
+                ));
+            }
+        }
+    }
+
+    #[test]
+    fn world_owner_cells_keep_glyph_fallback_when_tile_art_is_unavailable() {
+        let mut cells = vec![
+            create_world_cell("#"),
+            create_world_cell(" "),
+            create_world_cell(" "),
+        ];
+        cells[2].background = Some(crate::color::ColorSpec::Ansi16 { index: 0 });
+        let world = prepare_cell_world(cells, Some("map:terrain"), false);
+        assert!(world.get_tile_image(0, 0).is_none());
+        let selected: Vec<_> = project_cell_world(&world)
+            .into_iter()
+            .filter(|projected| {
+                let source =
+                    &world.source.get_row(0).unwrap().cells[projected.world_column as usize];
+                should_paint_world_cell(&world, "map:terrain", *projected, source)
+            })
+            .map(|projected| projected.world_column)
+            .collect();
+        assert_eq!(selected, [0, 2]);
+    }
 
     #[test]
     fn selected_text_tile_and_sprite_share_a_clipped_presentation() {
@@ -1018,8 +1157,8 @@ mod tests {
         for scale in [1.0, 0.75, 0.5] {
             let transform =
                 ViewportTransform::fit(480.0, 480.0, 480.0 * scale + 60.0, 480.0 * scale);
-            let placed = sprite_bounds(&sprite, 0, (48.0, 48.0), transform);
-            let lifted = sprite_bounds(&sprite, 6, (48.0, 48.0), transform);
+            let placed = sprite_bounds(&sprite, 0, (48.0, 48.0), transform, None);
+            let lifted = sprite_bounds(&sprite, 6, (48.0, 48.0), transform, None);
             assert_eq!(transform.scale, scale);
             // Unlifted, the frame's bottom edge is the cell's bottom edge.
             assert_eq!(
@@ -1078,6 +1217,64 @@ mod tests {
             sprite_origin(&sprite, grid.cell_width as f32, grid.cell_height as f32),
             (-40.0, -72.0)
         );
+    }
+
+    #[test]
+    fn sprite_pivot_maps_the_drawn_image_to_ground_after_fit_crop_and_scale() {
+        for (width, height, source_width, source_height) in
+            [(144, 48, 12, 4), (24, 48, 3, 6), (144, 48, 3, 6)]
+        {
+            let sprite = Sprite {
+                id: "effect".into(),
+                asset: "effect.png".into(),
+                x: 7,
+                y: 9,
+                width,
+                height,
+                anchor: Anchor::BottomCenter,
+                layer: 100,
+                source_rect: Some(SourceRect {
+                    x: source_width,
+                    y: 0,
+                    width: source_width,
+                    height: source_height,
+                }),
+            };
+            for scale in [0.5, 0.75, 1.0] {
+                let transform = ViewportTransform::fit(400.0, 400.0, 400.0 * scale, 400.0 * scale);
+                let legacy = sprite_bounds(&sprite, 0, (48.0, 48.0), transform, None);
+                assert_eq!(
+                    legacy,
+                    sprite_bounds(
+                        &sprite,
+                        0,
+                        (48.0, 48.0),
+                        transform,
+                        Some(SpritePivot { x: 0.5, y: 1.0 })
+                    )
+                );
+                for pivot in [
+                    SpritePivot { x: 0.0, y: 1.0 },
+                    SpritePivot { x: 1.0, y: 0.0 },
+                    SpritePivot { x: 0.25, y: 0.625 },
+                ] {
+                    let drawn = sprite_bounds(&sprite, 6, (48.0, 48.0), transform, Some(pivot));
+                    assert!(
+                        (drawn.left + drawn.width * pivot.x as f32 - 7.5 * 48.0 * scale).abs()
+                            < 1e-4
+                    );
+                    assert!(
+                        (drawn.top + drawn.height * pivot.y as f32 - (10.0 * 48.0 - 6.0) * scale)
+                            .abs()
+                            < 1e-4
+                    );
+                    assert_eq!(
+                        (drawn.width, drawn.height),
+                        (width as f32 * scale, height as f32 * scale)
+                    );
+                }
+            }
+        }
     }
 
     #[test]

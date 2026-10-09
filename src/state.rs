@@ -156,7 +156,12 @@ impl<'a> FrameImages<'a> {
         });
         rect.validate_image(size.width.0 as u32, size.height.0 as u32)?;
         let region = self.region(&source, rect)?;
-        let toned = self.assets.prepare_tone(&region, image.get_brightness())?;
+        let toned = self.assets.prepare_canvas_image(
+            &region,
+            image.get_brightness(),
+            image.flip_x.unwrap_or(false),
+            image.flip_y.unwrap_or(false),
+        )?;
         if !self.regions.contains_key(&toned.id) {
             self.resources.region_bytes += toned.as_bytes(0).unwrap().len();
             if self.resources.region_bytes > crate::tile_regions::MAX_REGION_BYTES {
@@ -165,6 +170,32 @@ impl<'a> FrameImages<'a> {
             self.regions.insert(toned.id, toned.clone());
         }
         Ok(toned)
+    }
+    fn prepare_canvas(
+        &mut self,
+        source: crate::canvas_protocol::Canvas,
+    ) -> Result<crate::canvas::PreparedCanvas, String> {
+        source.validate()?;
+        let specs = source.composites.as_deref().unwrap_or_default();
+        let mut sources = crate::composite_cache::Sources::new();
+        for op in specs.iter().flat_map(|composite| &composite.operations) {
+            for path in op.get_assets() {
+                sources.insert(path.to_owned(), self.load(path)?);
+            }
+        }
+        let (composites, stats) = self.assets.prepare_composites(specs, &sources)?;
+        if !specs.is_empty() {
+            self.resources.compositing = Some(Box::new(stats));
+        }
+        let canvas = crate::canvas::PreparedCanvas::prepare(
+            source,
+            |image| self.canvas_image(image),
+            composites,
+        )?;
+        self.resources.canvas_images = canvas.images.len();
+        self.resources.canvas_indicators = canvas.source.indicators.len();
+        self.resources.canvas_text_layers = canvas.source.text_layers.len();
+        Ok(canvas)
     }
     fn finish(mut self) -> (Vec<Arc<RenderImage>>, FrameResources) {
         let after = self.assets.preparation_totals();
@@ -186,6 +217,25 @@ impl<'a> FrameImages<'a> {
         }
         (images.into_values().collect(), self.resources)
     }
+}
+
+/// Canvas-only clients use exactly the same preparation and resource accounting.
+pub(crate) fn prepare_canvas(
+    source: crate::canvas_protocol::Canvas,
+    assets: &AssetRoot,
+) -> Result<
+    (
+        crate::canvas::PreparedCanvas,
+        Vec<Arc<RenderImage>>,
+        FrameResources,
+    ),
+    String,
+> {
+    let mut images = FrameImages::new(assets);
+    let canvas = images.prepare_canvas(source)?;
+    let (mut cached, resources) = images.finish();
+    cached.extend(canvas.composites.iter().cloned());
+    Ok((canvas, cached, resources))
 }
 
 impl PreparedFrame {
@@ -262,40 +312,15 @@ impl PreparedFrame {
             frame.validate(grid)?;
         }
         let mut images = FrameImages::new(assets);
-        let composite_specs = frame
-            .canvas
-            .as_ref()
-            .and_then(|c| c.composites.as_deref())
-            .unwrap_or_default();
-        let mut composite_sources = crate::composite_cache::Sources::new();
-        for op in composite_specs.iter().flat_map(|c| &c.operations) {
-            for path in op.get_assets() {
-                composite_sources.insert(path.to_owned(), images.load(path)?);
-            }
+        if frame.canvas.is_none() {
+            assets.prepare_composites(&[], &crate::composite_cache::Sources::new())?;
         }
-        let (composites, composite_stats) =
-            assets.prepare_composites(composite_specs, &composite_sources)?;
-        if !composite_specs.is_empty() {
-            images.resources.compositing = Some(Box::new(composite_stats));
-        }
-        let composite_images = composites.clone();
         let canvas = frame
             .canvas
-            .map(|canvas| {
-                crate::canvas::PreparedCanvas::prepare(
-                    canvas,
-                    |image| images.canvas_image(image),
-                    composites,
-                )
-            })
+            .map(|source| images.prepare_canvas(source))
             .transpose()?
             .map(Box::new);
         let viewport = frame.viewport.map(PreparedViewport::new);
-        if let Some(canvas) = &canvas {
-            images.resources.canvas_images = canvas.images.len();
-            images.resources.canvas_indicators = canvas.source.indicators.len();
-            images.resources.canvas_text_layers = canvas.source.text_layers.len();
-        }
         let sprites = prepare_sprites(frame.sprites, &mut images)?;
         let mut tile_batches = Vec::new();
         for batch in frame.tile_batches.unwrap_or_default() {
@@ -328,7 +353,9 @@ impl PreparedFrame {
             PaintItem::LegacyText => unreachable!(),
         });
         let (mut cached_images, resources) = images.finish();
-        cached_images.extend(composite_images);
+        if let Some(canvas) = &canvas {
+            cached_images.extend(canvas.composites.iter().cloned());
+        }
         Ok(Self {
             observation: None,
             canvas,

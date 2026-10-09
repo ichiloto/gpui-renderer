@@ -24,10 +24,19 @@ pub fn prepare(
     catalog: &mut FontCatalog,
     cache: &mut DisplayRasterCache,
 ) -> Result<GlyphFrame, String> {
-    let mut result = GlyphFrame::default();
     let Some(canvas) = &frame.canvas else {
-        return Ok(result);
+        return Ok(GlyphFrame::default());
     };
+    prepare_canvas(canvas, density, catalog, cache)
+}
+
+pub(crate) fn prepare_canvas(
+    canvas: &crate::canvas::PreparedCanvas,
+    density: f32,
+    catalog: &mut FontCatalog,
+    cache: &mut DisplayRasterCache,
+) -> Result<GlyphFrame, String> {
+    let mut result = GlyphFrame::default();
     let mut wanted = HashMap::new();
     let mut layers = Vec::new();
     let mut scratch = 0;

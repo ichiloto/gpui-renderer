@@ -53,10 +53,21 @@ impl PreparedTileset {
             .map(|tile| {
                 let mut usable = true;
                 for piece in tile.frames.iter().flatten() {
-                    match &sheets[piece.sheet as usize] {
+                    let TilePiece::Sheet {
+                        sheet,
+                        x,
+                        y,
+                        width,
+                        height,
+                        ..
+                    } = *piece
+                    else {
+                        continue;
+                    };
+                    match &sheets[sheet as usize] {
                         None => usable = false,
-                        Some(sheet) if !sheet.contains(piece) => {
-                            outside[piece.sheet as usize] += 1;
+                        Some(source) if !source.contains_region(x, y, width, height) => {
+                            outside[sheet as usize] += 1;
                             usable = false;
                         }
                         Some(_) => {}
@@ -138,9 +149,9 @@ impl Sheet {
         })
     }
 
-    fn contains(&self, piece: &TilePiece) -> bool {
-        u64::from(piece.x) + u64::from(piece.width) <= u64::from(self.width)
-            && u64::from(piece.y) + u64::from(piece.height) <= u64::from(self.height)
+    fn contains_region(&self, x: u32, y: u32, width: u32, height: u32) -> bool {
+        u64::from(x) + u64::from(width) <= u64::from(self.width)
+            && u64::from(y) + u64::from(height) <= u64::from(self.height)
     }
 }
 
@@ -154,20 +165,39 @@ fn compose(
 ) -> Arc<RenderImage> {
     let mut tile: Vec<Pixel> = vec![[0.0; 4]; (width * height) as usize];
     for piece in pieces {
-        let sheet = sheets[piece.sheet as usize]
-            .as_ref()
-            .expect("composed tiles use loaded sheets");
-        let bytes = sheet.image.as_bytes(0).expect("sheets hold pixels");
-        for y in 0..piece.height {
-            for x in 0..piece.width {
-                let source =
-                    ((piece.y + y) as usize * sheet.width as usize + (piece.x + x) as usize) * 4;
-                let target = ((piece.top + y) * width + piece.left + x) as usize;
-                tile[target] = blend(
-                    unpack(&bytes[source..source + 4]),
-                    tile[target],
-                    Blend::SourceOver,
-                );
+        let (piece_width, piece_height, left, top) = piece.get_bounds();
+        let (sheet, fill) = match *piece {
+            TilePiece::Sheet { sheet, x, y, .. } => {
+                let source = sheets[sheet as usize]
+                    .as_ref()
+                    .expect("composed tiles use loaded sheets");
+                (
+                    Some((
+                        source.image.as_bytes(0).expect("sheets hold pixels"),
+                        source.width,
+                        x,
+                        y,
+                    )),
+                    [0.0; 4],
+                )
+            }
+            TilePiece::Fill {
+                fill: [r, g, b, a], ..
+            } => (None, unpack(&[b, g, r, a])),
+        };
+        for y in 0..piece_height {
+            for x in 0..piece_width {
+                let source = match sheet {
+                    Some((bytes, sheet_width, source_x, source_y)) => {
+                        let offset = ((source_y + y) as usize * sheet_width as usize
+                            + (source_x + x) as usize)
+                            * 4;
+                        unpack(&bytes[offset..offset + 4])
+                    }
+                    None => fill,
+                };
+                let target = ((top + y) * width + left + x) as usize;
+                tile[target] = blend(source, tile[target], Blend::SourceOver);
             }
         }
     }
@@ -275,6 +305,55 @@ mod tests {
             ((1 + 2 * GUARD) as i32, (2 + 2 * GUARD) as i32)
         );
         assert_eq!(pixel(image, GUARD, GUARD), [255, 0, 0, 128]);
+    }
+
+    #[test]
+    fn rgba_fills_compose_with_sheets_in_order_and_keep_alpha_and_guards() {
+        let (_directory, assets) = assets();
+        let tileset = tileset(json!({"tileSize":2,"sheets":["sheet.png"],"tiles":[
+            {"frames":[[
+                {"sheet":0,"x":0,"y":0,"width":2,"height":2,"left":0,"top":0},
+                {"fill":[40,80,120,128],"width":1,"height":2,"left":0,"top":0}
+            ]]},
+            {"width":1,"frames":[[
+                {"fill":[40,80,120,128],"width":1,"height":2,"left":0,"top":0}
+            ]]},
+            {"frames":[[
+                {"fill":[40,80,120,128],"width":2,"height":2,"left":0,"top":0},
+                {"sheet":0,"x":0,"y":0,"width":1,"height":2,"left":0,"top":0}
+            ]]}
+        ]}));
+        let (prepared, diagnostics) = PreparedTileset::prepare(&tileset, &assets);
+        assert!(diagnostics.is_empty());
+        let blended = prepared.get_frame(0, 0).unwrap();
+        assert_eq!(pixel(blended, GUARD, GUARD), [60, 40, 147, 255]);
+        assert_eq!(pixel(blended, GUARD + 1, GUARD), [0, 0, 255, 255]);
+        assert_eq!(pixel(blended, 0, 0), [60, 40, 147, 255]);
+        let fill = prepared.get_frame(1, 0).unwrap();
+        assert_eq!(pixel(fill, GUARD, GUARD), [120, 80, 40, 128]);
+        assert_eq!(pixel(fill, 0, 0), [120, 80, 40, 128]);
+        assert_eq!(
+            pixel(prepared.get_frame(2, 0).unwrap(), GUARD, GUARD),
+            [0, 0, 255, 255]
+        );
+        assert_eq!(prepared.get_frame(1, 99).unwrap().id, fill.id);
+    }
+
+    #[test]
+    fn fills_stay_available_when_unrelated_sheet_tiles_cannot_load() {
+        let (_directory, assets) = assets();
+        let tileset = tileset(json!({"tileSize":2,"sheets":["missing.png"],"tiles":[
+            {"frames":[[{"sheet":0,"x":0,"y":0,"width":2,"height":2,"left":0,"top":0}]]},
+            {"width":1,"frames":[[{"fill":[0,0,0,64],"width":1,"height":2,"left":0,"top":0}]]}
+        ]}));
+        let (prepared, diagnostics) = PreparedTileset::prepare(&tileset, &assets);
+        assert_eq!(diagnostics.len(), 1);
+        assert!(!prepared.is_available(0));
+        assert!(prepared.is_available(1));
+        assert_eq!(
+            pixel(prepared.get_frame(1, 0).unwrap(), GUARD, GUARD),
+            [0, 0, 0, 64]
+        );
     }
     #[test]
     fn missing_sheets_and_outside_pieces_leave_only_their_tiles_unavailable() {

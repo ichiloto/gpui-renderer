@@ -93,6 +93,10 @@ pub struct CanvasImage {
     #[serde(default, deserialize_with = "present")]
     pub brightness: Option<f64>,
     #[serde(default, deserialize_with = "present")]
+    pub flip_x: Option<bool>,
+    #[serde(default, deserialize_with = "present")]
+    pub flip_y: Option<bool>,
+    #[serde(default, deserialize_with = "present")]
     pub clip_rect: Option<Rect>,
 }
 
@@ -334,6 +338,42 @@ impl Canvas {
 }
 
 #[cfg(test)]
+mod coordinate_wire_tests {
+    use super::*;
+
+    fn read_canvases(wire: &str) -> [Canvas; 2] {
+        [
+            serde_json::from_str(wire).unwrap(),
+            serde_json::from_value(serde_json::from_str::<serde_json::Value>(wire).unwrap())
+                .unwrap(),
+        ]
+    }
+
+    #[test]
+    fn fractional_coordinates_round_trip_at_the_canvas_edge() {
+        // Half an ulp at the canvas edge rounds to that edge, not outside it.
+        let wire = r#"{"width":1350,"height":720,"images":[{"id":"image","asset":"image.png","layer":0,"destination":{"x":155,"y":5.684341886080802e-14,"width":1024,"height":720}}]}"#;
+        let half_ulp = (720.0_f64.next_up() - 720.0) / 2.0;
+        for canvas in read_canvases(wire) {
+            let rect = canvas.images[0].destination;
+            assert_eq!(rect.y.to_bits(), half_ulp.to_bits());
+            assert_eq!(rect.y + rect.height, 720.0);
+            canvas.validate().unwrap();
+        }
+    }
+
+    #[test]
+    fn genuinely_outside_fractional_coordinates_are_still_rejected() {
+        let wire = r#"{"width":1350,"height":720,"images":[{"id":"image","asset":"image.png","layer":0,"destination":{"x":155,"y":5.684341886080803e-14,"width":1024,"height":720}}]}"#;
+        for canvas in read_canvases(wire) {
+            let rect = canvas.images[0].destination;
+            assert_eq!(rect.y + rect.height, 720.0_f64.next_up());
+            assert!(canvas.validate().is_err());
+        }
+    }
+}
+
+#[cfg(test)]
 mod brightness_tests {
     use super::*;
     use serde_json::json;
@@ -379,6 +419,35 @@ mod brightness_tests {
                 canvas.validate().unwrap_err(),
                 "canvas brightness must be finite and between 0 and 1"
             );
+        }
+    }
+    #[test]
+    fn image_flips_are_optional_boolean_fields_not_nullable_or_numeric() {
+        let image: CanvasImage = serde_json::from_value(make_canvas_image_value()).unwrap();
+        assert_eq!((image.flip_x, image.flip_y), (None, None));
+        for field in ["flipX", "flipY"] {
+            for valid in [true, false] {
+                let mut value = make_canvas_image_value();
+                value[field] = serde_json::json!(valid);
+                let image: CanvasImage = serde_json::from_value(value).unwrap();
+                assert_eq!(
+                    if field == "flipX" {
+                        image.flip_x
+                    } else {
+                        image.flip_y
+                    },
+                    Some(valid)
+                );
+            }
+            for invalid in [
+                serde_json::json!(null),
+                serde_json::json!(1),
+                serde_json::json!("true"),
+            ] {
+                let mut value = make_canvas_image_value();
+                value[field] = invalid;
+                assert!(serde_json::from_value::<CanvasImage>(value).is_err());
+            }
         }
     }
 }
