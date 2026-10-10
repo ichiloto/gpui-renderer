@@ -436,12 +436,11 @@ pub(crate) fn paint_frame(paint: FramePaint<'_>, cx: &gpui::App) -> gpui::Div {
         .zip(field_cell)
         .map(|(view, cell)| paint.motion.get_world_viewport(view, cell, now));
     let bounds = transform.surface_bounds();
-    let mut surface = positioned(div(), bounds)
-        .overflow_hidden()
-        .text_color(rgb(DEFAULT_FOREGROUND))
-        .font_family(FONT_FAMILY)
-        .text_size(px(logical_font_size * transform.scale))
-        .line_height(px(ch * transform.scale));
+    let mut surface = create_text_surface(
+        bounds,
+        logical_font_size * transform.scale,
+        ch * transform.scale,
+    );
     if let Some(frame) = paint.frame {
         if let Some(canvas) = frame.canvas.as_ref().filter(|_| !frame.canvas_overlay) {
             surface = surface.child(canvas.element(
@@ -730,6 +729,20 @@ pub(crate) fn positioned(element: gpui::Div, bounds: PaintRect) -> gpui::Div {
         .h(px(bounds.height))
 }
 
+/// Text grids use their measured font, never the embedding editor's UI font.
+pub(crate) fn create_text_surface(
+    bounds: PaintRect,
+    font_size: f32,
+    line_height: f32,
+) -> gpui::Div {
+    positioned(div(), bounds)
+        .overflow_hidden()
+        .text_color(rgb(DEFAULT_FOREGROUND))
+        .font_family(FONT_FAMILY)
+        .text_size(px(font_size))
+        .line_height(px(line_height))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -983,6 +996,26 @@ mod tests {
         );
         assert_eq!(cell_bounds(8, 4, 10.0, 20.0, base).left, 40.0);
     }
+    #[test]
+    fn text_surfaces_own_the_measured_font_and_scaled_grid_metrics() {
+        for scale in [0.5, 1.0, 2.0] {
+            let mut surface = create_text_surface(
+                PaintRect {
+                    left: 0.0,
+                    top: 0.0,
+                    width: 400.0,
+                    height: 240.0,
+                },
+                15.0 * scale,
+                20.0 * scale,
+            );
+            let text = surface.style().text.as_ref().unwrap();
+            assert_eq!(text.font_family, Some(FONT_FAMILY.into()));
+            assert_eq!(text.font_size, Some(px(15.0 * scale).into()));
+            assert_eq!(text.line_height, Some(px(20.0 * scale).into()));
+        }
+    }
+
     #[test]
     fn measured_font_fills_cells_without_changing_pitch_or_resize_geometry() {
         // Representative monospace metrics: 0.6em advance, 1.2em ascent+descent.

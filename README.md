@@ -26,6 +26,8 @@ silently substituting missing art.
 Keep one `CanvasPainter` per view. Its `paint(frame, width, height, window, app)`
 returns a uniformly fitted, centered element using runtime text/glyph-effects
 and image painting. It owns device-raster reuse and obsolete GPU-image retirement.
+Ordinary canvas text explicitly uses the same measured monospace font as runtime
+grids, so an embedding editor's UI font cannot change its cell fit.
 Call `clear(window)` while the window still exists when the preview closes or
 changes project, then drop its frames/assets when no longer needed. The host
 still owns seeking, reply generations and animation timing. Preparation and
