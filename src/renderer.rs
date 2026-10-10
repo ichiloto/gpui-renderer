@@ -415,6 +415,34 @@ pub(crate) struct FramePaint<'a> {
 }
 
 pub(crate) fn paint_frame(paint: FramePaint<'_>, cx: &gpui::App) -> gpui::Div {
+    paint_frame_with_authoring(paint, cx, None)
+}
+
+pub(crate) struct AuthoringPaint<'a> {
+    pub layer_opacities: &'a [Option<f32>],
+    pub excluded_cells: &'a std::collections::HashSet<(u32, u32)>,
+    pub overlay: Option<(i32, gpui::AnyElement)>,
+}
+
+impl AuthoringPaint<'_> {
+    fn take_overlay_before(&mut self, band: i32) -> Option<gpui::AnyElement> {
+        if self
+            .overlay
+            .as_ref()
+            .is_some_and(|(layer, _)| band >= *layer)
+        {
+            self.overlay.take().map(|(_, element)| element)
+        } else {
+            None
+        }
+    }
+}
+
+pub(crate) fn paint_frame_with_authoring(
+    paint: FramePaint<'_>,
+    cx: &gpui::App,
+    mut authoring: Option<AuthoringPaint<'_>>,
+) -> gpui::Div {
     let grid = paint.grid;
     let (cw, ch) = (grid.cell_width as f32, grid.cell_height as f32);
     let (advance, line_em) = paint.metrics;
@@ -467,13 +495,33 @@ pub(crate) fn paint_frame(paint: FramePaint<'_>, cx: &gpui::App) -> gpui::Div {
             .iter()
             .map(|item| frame.get_item_layer(item))
             .collect();
-        let projected =
-            field_world.map(|(view, world)| crate::retained_paint::project_world(world, view));
+        let projected = field_world.map(|(view, world)| match &authoring {
+            Some(options) => crate::retained_paint::project_world_excluding_cells(
+                world,
+                view,
+                options.excluded_cells,
+            ),
+            None => crate::retained_paint::project_world(world, view),
+        });
         for step in crate::retained_paint::merge_paint_order(&world_layers, &plan_layers) {
+            let band = match step {
+                FieldPaint::World(index) => world_layers[index],
+                FieldPaint::Plan(index) => plan_layers[index],
+            };
+            if let Some(options) = &mut authoring
+                && let Some(overlay) = options.take_overlay_before(band)
+            {
+                surface = surface.child(overlay);
+            }
             let item = match step {
                 FieldPaint::World(index) => {
                     if let (Some((view, world)), Some(projected)) = (field_world, &projected) {
-                        surface = surface.child(world_layer_element(
+                        let opacity = match &authoring {
+                            Some(options) => options.layer_opacities[index],
+                            None => Some(1.0),
+                        };
+                        let Some(opacity) = opacity else { continue };
+                        let layer = world_layer_element(
                             world,
                             index,
                             view,
@@ -481,7 +529,13 @@ pub(crate) fn paint_frame(paint: FramePaint<'_>, cx: &gpui::App) -> gpui::Div {
                             transform,
                             field_font_size.unwrap_or_default(),
                             paint.samples,
-                        ));
+                        );
+                        surface = if authoring.is_some() {
+                            surface
+                                .child(div().absolute().size_full().opacity(opacity).child(layer))
+                        } else {
+                            surface.child(layer)
+                        };
                     }
                     continue;
                 }
@@ -526,7 +580,11 @@ pub(crate) fn paint_frame(paint: FramePaint<'_>, cx: &gpui::App) -> gpui::Div {
                 };
                 let shifted =
                     crate::field_motion::shift_viewport(view, shift, (pitch_width, pitch_height));
-                let (content, clip) = content_geometry_retained(transform, &shifted);
+                let (content, clip) = if authoring.is_some() {
+                    content_geometry_authoring(transform, &shifted, (pitch_width, pitch_height))
+                } else {
+                    content_geometry_retained(transform, &shifted)
+                };
                 (content, Some(clip))
             } else {
                 member.map_or((transform, None), |view| {
@@ -657,6 +715,11 @@ pub(crate) fn paint_frame(paint: FramePaint<'_>, cx: &gpui::App) -> gpui::Div {
                 }
             }
         }
+        if let Some(options) = &mut authoring
+            && let Some((_, overlay)) = options.overlay.take()
+        {
+            surface = surface.child(overlay);
+        }
         // Overlay canvas pixels are transparent outside their elements and
         // paint above the complete retained field, sprites, and screen HUD.
         if let Some(canvas) = frame.canvas.as_ref().filter(|_| frame.canvas_overlay) {
@@ -709,6 +772,18 @@ pub(crate) fn content_geometry_retained(
     (content, clip)
 }
 
+/// Authoring field members are world-coordinate records, unlike runtime screen-coordinate frames.
+pub(crate) fn content_geometry_authoring(
+    base: ViewportTransform,
+    viewport: &RetainedViewport,
+    pitch: (f32, f32),
+) -> (ViewportTransform, PaintRect) {
+    let mut viewport = viewport.clone();
+    viewport.origin.x -= viewport.world_origin.column as f32 * pitch.0 * viewport.scale;
+    viewport.origin.y -= viewport.world_origin.row as f32 * pitch.1 * viewport.scale;
+    content_geometry_retained(base, &viewport)
+}
+
 fn cell(column: u32, row: u32, cw: f32, ch: f32, transform: ViewportTransform) -> gpui::Div {
     // Cell pitch never depends on glyph advance or font metrics.
     positioned(div(), cell_bounds(column, row, cw, ch, transform))
@@ -746,6 +821,22 @@ pub(crate) fn create_text_surface(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn authoring_overlay_interleaves_once_before_above_tiles_and_later_sprites() {
+        let excluded = std::collections::HashSet::new();
+        let mut options = AuthoringPaint {
+            layer_opacities: &[],
+            excluded_cells: &excluded,
+            overlay: Some((900, div().into_any_element())),
+        };
+        for band in [-100, 0, 50, 899] {
+            assert!(options.take_overlay_before(band).is_none());
+        }
+        assert!(options.take_overlay_before(900).is_some());
+        assert!(options.take_overlay_before(950).is_none());
+        assert!(options.overlay.is_none());
+    }
     use crate::protocol::Grid;
     use crate::protocol::{ViewportPoint, ViewportRect};
     use crate::retained_paint::should_paint_world_cell;

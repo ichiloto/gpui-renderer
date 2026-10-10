@@ -2,6 +2,226 @@ use super::*;
 use crate::{retained_state::RetainedSession, state::PaintItem};
 use serde_json::json;
 
+#[test]
+fn authoring_map_view_shares_the_accepted_world_without_redecoding_or_recomposing_coverage() {
+    let root = assets();
+    let mut session = SceneSession::new(root.path(), grid()).unwrap();
+    let frame = session.apply_update(first()).unwrap().unwrap();
+    let prepared = frame.prepared.get_world("map").unwrap();
+    let owners = Arc::strong_count(prepared);
+    std::fs::remove_file(root.path().join("actor.png")).unwrap();
+    let world = frame.get_world("map").unwrap();
+    assert_eq!(Arc::strong_count(prepared), owners + 1);
+    assert_eq!(world.get_size(), (4, 2));
+    assert_eq!(world.get_cell_size(), (48.0, 48.0));
+    assert!(world.has_covering_tile(0, 0, "map:floor"));
+    assert_eq!(world.get_shown_glyph_cells().len(), 7);
+    assert!(!world.get_shown_glyph_cells().contains(&(0, 0)));
+    assert!(frame.get_world("not-this-scene").is_none());
+    drop(world);
+    assert_eq!(Arc::strong_count(prepared), owners);
+}
+
+#[test]
+fn authoring_layer_policy_is_resolved_once_and_does_not_change_coverage() {
+    let root = assets();
+    let mut session = SceneSession::new(root.path(), grid()).unwrap();
+    let frame = session.apply_update(first()).unwrap().unwrap();
+    let world = frame.prepared.get_world("map").unwrap();
+    let camera = MapCamera {
+        left: 0.0,
+        top: 0.0,
+        scale: 1.0,
+        width: 80.0,
+        height: 40.0,
+        tile_frame: 0,
+    };
+    let excluded = HashSet::new();
+    let calls = std::cell::Cell::new(0);
+    let policy = |layer: MapWorldLayer<'_>| {
+        calls.set(calls.get() + 1);
+        match layer.kind {
+            crate::map_world::MapLayerKind::Gameplay => Some(0.3),
+            _ => None,
+        }
+    };
+    let options = SceneAuthoring {
+        camera,
+        layer_opacity: &policy,
+        excluded_cells: &excluded,
+        overlay: None,
+    };
+    assert_eq!(
+        options.get_layer_opacities(world).unwrap(),
+        vec![Some(0.3), None]
+    );
+    assert_eq!(calls.get(), world.layers.len());
+    assert!(world.has_covering_tile(0, 0, "map:floor"));
+    for opacity in [f32::NAN, -0.1, 1.1] {
+        let invalid = |_layer: MapWorldLayer<'_>| Some(opacity);
+        assert!(
+            SceneAuthoring {
+                camera,
+                layer_opacity: &invalid,
+                excluded_cells: &excluded,
+                overlay: None
+            }
+            .get_layer_opacities(world)
+            .is_err()
+        );
+    }
+}
+
+#[test]
+fn authoring_camera_uses_world_pitch_and_preserves_scene_members_without_follow_motion() {
+    let root = assets();
+    let mut session = SceneSession::new(root.path(), grid()).unwrap();
+    let frame = session.apply_update(first()).unwrap().unwrap();
+    let original = frame.viewport.clone().unwrap();
+    for (left, top, scale) in [(13.0, 9.0, 0.5), (-37.0, -51.0, 1.5), (0.0, 0.0, 2.0)] {
+        let camera = MapCamera {
+            left,
+            top,
+            scale,
+            width: 140.0,
+            height: 90.0,
+            tile_frame: 3,
+        };
+        let viewport = frame.create_authoring_viewport(camera).unwrap();
+        assert_eq!(viewport.world_id, original.world_id);
+        assert_eq!(viewport.sprite_ids, original.sprite_ids);
+        assert_eq!(viewport.text_layer_ids, original.text_layer_ids);
+        assert!(viewport.follow.is_none());
+        assert_eq!(viewport.tile_frame, 3);
+        let bounds = crate::retained_paint::cell_bounds(
+            crate::retained_world::ProjectedCell {
+                world_column: 1,
+                world_row: 1,
+                screen_column: 1 - viewport.world_origin.column,
+                screen_row: 1 - viewport.world_origin.row,
+            },
+            (48.0, 48.0),
+            (0.0, 0.0, 48.0),
+            ViewportTransform::fit(140.0, 90.0, 140.0, 90.0),
+            &viewport,
+        );
+        assert_eq!(
+            (bounds.left, bounds.top, bounds.width, bounds.height),
+            (
+                left + 48.0 * scale,
+                top + 48.0 * scale,
+                48.0 * scale,
+                48.0 * scale
+            )
+        );
+        let (transform, _) = crate::renderer::content_geometry_authoring(
+            ViewportTransform::fit(140.0, 90.0, 140.0, 90.0),
+            &viewport,
+            (48.0, 48.0),
+        );
+        let sprite = &frame.prepared.screen.sprites[0].sprite;
+        let sprite_bounds = crate::renderer::sprite_bounds(
+            sprite,
+            frame.prepared.source.get_sprite_lift(&sprite.id),
+            (48.0, 48.0),
+            transform,
+            frame.prepared.source.get_sprite_pivot(&sprite.id),
+        );
+        let base_bounds = crate::renderer::sprite_bounds(
+            sprite,
+            frame.prepared.source.get_sprite_lift(&sprite.id),
+            (48.0, 48.0),
+            ViewportTransform::fit(140.0, 90.0, 140.0, 90.0),
+            frame.prepared.source.get_sprite_pivot(&sprite.id),
+        );
+        assert_eq!(sprite_bounds.left, left + base_bounds.left * scale);
+        assert_eq!(sprite_bounds.top, top + base_bounds.top * scale);
+    }
+    assert_eq!(frame.viewport.unwrap().origin, original.origin);
+}
+
+#[test]
+fn authoring_rejects_invalid_camera_and_worldless_frames_before_painting() {
+    let root = assets();
+    let mut session = SceneSession::new(root.path(), grid()).unwrap();
+    let frame = session.apply_update(first()).unwrap().unwrap();
+    let camera = MapCamera {
+        left: 0.0,
+        top: 0.0,
+        scale: 1.0,
+        width: 80.0,
+        height: 40.0,
+        tile_frame: 0,
+    };
+    for invalid in [
+        MapCamera {
+            scale: 0.0,
+            ..camera
+        },
+        MapCamera {
+            left: f32::NAN,
+            ..camera
+        },
+        MapCamera {
+            width: -1.0,
+            ..camera
+        },
+    ] {
+        assert!(frame.create_authoring_viewport(invalid).is_err());
+    }
+    let mut empty = update(1, 2, true, vec![]);
+    empty["viewport"] = Value::Null;
+    assert!(
+        session
+            .apply_update(empty)
+            .unwrap()
+            .unwrap()
+            .create_authoring_viewport(camera)
+            .is_err()
+    );
+}
+
+#[test]
+fn authoring_stroke_exclusions_hide_only_world_glyph_cells_not_tiles_or_coverage() {
+    let root = assets();
+    let mut session = SceneSession::new(root.path(), grid()).unwrap();
+    let frame = session.apply_update(first()).unwrap().unwrap();
+    let viewport = frame
+        .create_authoring_viewport(MapCamera {
+            left: -24.0,
+            top: 5.0,
+            scale: 0.5,
+            width: 100.0,
+            height: 60.0,
+            tile_frame: 0,
+        })
+        .unwrap();
+    let world = frame.prepared.get_world("map").unwrap();
+    let original = crate::retained_paint::project_world(world, &viewport);
+    let excluded = HashSet::from([(1, 0), (999, 999)]);
+    let masked = crate::retained_paint::project_world_excluding_cells(world, &viewport, &excluded);
+    assert_eq!(masked.len(), original.len() - 1);
+    assert!(
+        !masked
+            .iter()
+            .any(|cell| cell.world_column == 1 && cell.world_row == 0)
+    );
+    assert!(world.has_covering_tile(0, 0, "map:floor"));
+    assert!(!world.has_covering_tile(1, 0, "map:floor"));
+    assert_eq!(world.source.get_row(0).unwrap().cells[1].glyph, ".");
+    let layers: Vec<_> = world
+        .layers
+        .iter()
+        .map(MapWorldLayer::get_from_definition)
+        .collect();
+    assert_eq!(layers[0].id, "map:floor");
+    assert_eq!(layers[1].kind, crate::map_world::MapLayerKind::Tiles);
+    assert_eq!(
+        crate::retained_paint::project_world(world, &viewport),
+        original
+    );
+}
+
 fn parse_event_line(line: &str, event: Event) -> Value {
     let mut production = Vec::new();
     write_event(&mut production, Version::V2, &event).unwrap();

@@ -51,6 +51,23 @@ pub struct MapWorldLayer<'a> {
     pub kind: MapLayerKind,
 }
 
+impl<'a> MapWorldLayer<'a> {
+    pub(crate) fn get_from_definition(
+        layer: &'a crate::retained_prepared::PreparedWorldLayer,
+    ) -> Self {
+        Self {
+            id: &layer.id,
+            layer: layer.layer,
+            kind: match layer.kind {
+                WorldLayerKind::Gameplay => MapLayerKind::Gameplay,
+                WorldLayerKind::Decoration => MapLayerKind::Decoration,
+                WorldLayerKind::Tiles => MapLayerKind::Tiles,
+                WorldLayerKind::Shadows => MapLayerKind::Shadows,
+            },
+        }
+    }
+}
+
 /// A map world prepared for painting.
 #[derive(Clone)]
 pub struct MapWorld {
@@ -59,6 +76,10 @@ pub struct MapWorld {
 }
 
 impl MapWorld {
+    pub(crate) fn get_from_prepared(id: String, prepared: Arc<PreparedWorld>) -> Self {
+        Self { id, prepared }
+    }
+
     /// Builds a world from a world `put` followed by its `worldRows` and
     /// `worldTiles`, validated as the renderer validates them.
     pub fn from_operations(operations: Vec<Value>, assets: &MapAssets) -> Result<Self, String> {
@@ -144,22 +165,39 @@ impl MapWorld {
     }
 
     pub fn get_layers(&self) -> impl Iterator<Item = MapWorldLayer<'_>> {
-        self.prepared.layers.iter().map(|layer| MapWorldLayer {
-            id: &layer.id,
-            layer: layer.layer,
-            kind: match layer.kind {
-                WorldLayerKind::Gameplay => MapLayerKind::Gameplay,
-                WorldLayerKind::Decoration => MapLayerKind::Decoration,
-                WorldLayerKind::Tiles => MapLayerKind::Tiles,
-                WorldLayerKind::Shadows => MapLayerKind::Shadows,
-            },
-        })
+        self.prepared
+            .layers
+            .iter()
+            .map(MapWorldLayer::get_from_definition)
     }
 
     /// Whether the graphical field hides the glyph its owner layer shows at
     /// this cell, because a usable tile covers it.
     pub fn has_covering_tile(&self, column: u32, row: u32, owner_layer_id: &str) -> bool {
         self.prepared.has_covering_tile(column, row, owner_layer_id)
+    }
+
+    /// Gameplay glyphs left visible by the accepted composition, including object coverage.
+    pub fn get_shown_glyph_cells(&self) -> Vec<(u32, u32)> {
+        let mut cells = Vec::new();
+        let (columns, rows) = self.get_size();
+        for row in 0..rows {
+            let Some(source) = self.prepared.source.get_row(row) else {
+                continue;
+            };
+            for column in 0..columns {
+                let cell = &source.cells[column as usize];
+                if !cell.glyph.trim().is_empty()
+                    && self.prepared.layers.iter().any(|layer| {
+                        layer.id == cell.owner_layer_id && layer.kind == WorldLayerKind::Gameplay
+                    })
+                    && !self.has_covering_tile(column, row, &cell.owner_layer_id)
+                {
+                    cells.push((column, row));
+                }
+            }
+        }
+        cells
     }
 
     /// Paints one tiles layer's visible tiles through `camera`, filling its
@@ -261,12 +299,7 @@ impl MapWorld {
         if self.prepared.layers[layer_index].kind.has_tile_cells() {
             return Arc::new(Vec::new());
         }
-        let mut projected = crate::retained_paint::project_world(&self.prepared, view);
-        if !excluded_cells.is_empty() {
-            Arc::make_mut(&mut projected)
-                .retain(|cell| !excluded_cells.contains(&(cell.world_column, cell.world_row)));
-        }
-        projected
+        crate::retained_paint::project_world_excluding_cells(&self.prepared, view, excluded_cells)
     }
 }
 
@@ -289,7 +322,7 @@ impl MapCamera {
     /// The renderer viewport showing the same cells. Its world origin is the
     /// cell under the element's corner, negative while the map starts inside
     /// the element, and its origin is where that cell lands.
-    fn get_viewport(&self, (cell_width, cell_height): (f32, f32)) -> Viewport {
+    pub(crate) fn get_viewport(&self, (cell_width, cell_height): (f32, f32)) -> Viewport {
         let first = |offset: f32, pitch: f32| {
             if pitch > 0.0 && offset.is_finite() {
                 (-offset / pitch).floor() as i32

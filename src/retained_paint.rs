@@ -22,6 +22,20 @@ pub fn project_world(world: &PreparedWorld, viewport: &Viewport) -> Arc<Vec<Proj
     Arc::new(cells)
 }
 
+/// Authoring exclusions address physical world cells, never screen cells or tiles.
+pub(crate) fn project_world_excluding_cells(
+    world: &PreparedWorld,
+    viewport: &Viewport,
+    excluded: &std::collections::HashSet<(u32, u32)>,
+) -> Arc<Vec<ProjectedCell>> {
+    let mut cells = project_world(world, viewport);
+    if !excluded.is_empty() {
+        Arc::make_mut(&mut cells)
+            .retain(|cell| !excluded.contains(&(cell.world_column, cell.world_row)));
+    }
+    cells
+}
+
 /// Runtime and authoring share glyph coverage, colors, pitch and clipping.
 pub(crate) fn world_layer_element(
     world: &Arc<PreparedWorld>,

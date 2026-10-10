@@ -67,6 +67,28 @@ Retain the previous accepted picture when preparation fails and label it as
 such. Call `clear(window)` before closing the view or replacing the project,
 then drop frames and session resources when no longer needed.
 
+For an editable map, `ScenePainter::paint_authoring(frame, playhead_seconds,
+SceneAuthoring, window, app)` uses the same world, sprite and text paint loop.
+The host supplies a `MapCamera` for pan, zoom, visible bounds and tile animation;
+field sprites and text must use world cell coordinates. This view applies the
+camera immediately, without runtime follow or movement slides. Screen items keep
+their screen coordinates. `SceneAuthoring::layer_opacity` returns `None` to omit
+a prepared world layer, or a finite opacity in `0..=1` to show or dim it. Hiding
+a layer does not recompose glyph ownership or coverage. `excluded_cells` leaves
+world glyph/background cells to a transient editing stroke without suppressing
+tiles or sprites. The optional `(draw_band, element)` overlay paints before the
+first world layer or scene item at or above that band, or last when all bands
+are lower; the host owns its coordinates. Retained canvas overlays still paint
+above the field.
+
+`SceneFrame::get_world(id)` returns a read-only `MapWorld` sharing the accepted
+prepared world and images, so the editor need not decode or compose a second
+copy. `get_shown_glyph_cells()` reports its uncovered nonblank gameplay glyphs,
+including any coverage already resolved by the Engine in the accepted rows.
+The host owns source updates, authoring identity, hit testing and playhead time.
+Use one painter per owning view/window and call `clear(window)` before that view
+closes or changes project; both paint entry points share image retirement.
+
 The adapter has synthetic preparation, ownership, rejection, mutable-art,
 clock and retirement coverage. This does not establish native Editor visual
 acceptance or Windows/Linux support.
