@@ -63,7 +63,7 @@ logical pixels: content 960×528, screenshot 960×560 including the 32-point tit
 The sprite is the repository's existing calibration PNG, scaled 128×192, cell (16,13).
 Its origin is (200,144), feet (264,336), relative to content. No game assets are used.
 
-1. `scripts/inspect-fixture.py` sends v2 hello and first frame. World text is layer 0,
+1. `scripts/inspect-fixture.php` sends v2 hello and first frame. World text is layer 0,
    the PNG layer 100, UI layer 1000. Head and feet cover world glyphs. UI text/background
    cuts across the PNG. The next UI stripe uses **seven explicit spaces with null
    background**, covering sprite/world with the renderer default. Another stripe uses
@@ -188,3 +188,7 @@ The complete schema, palette and rules are in [README](../README.md). In particu
 
 No tilemaps, sprite effects/source rectangles, animation state, audio, mouse gameplay,
 gamepad input or S7-E implementation is included.
+
+Utility links and reproduction commands now point to PHP equivalents. Recorded
+native measurements above predate this utility migration; the migration did not
+rerun native validation or change retained measurement data.

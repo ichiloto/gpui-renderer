@@ -310,11 +310,10 @@ fn exact_glyph_wire_cases_keep_negotiation_and_schema_strict() {
                 }
             }
             "session" => assert!(
-                session
-                    .prepare(parsed.unwrap())
-                    .err()
-                    .unwrap()
-                    .contains("negotiated"),
+                matches!(
+                    session.prepare(parsed.unwrap()).unwrap(),
+                    crate::transport::Update::Frame(_)
+                ),
                 "{name}"
             ),
             "accept" => {

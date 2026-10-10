@@ -11,6 +11,8 @@ pub struct PaintRect {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ViewportTransform {
     pub scale: f32,
+    content_origin_x: f32,
+    content_origin_y: f32,
     pub offset_x: f32,
     pub offset_y: f32,
     pub logical_width: f32,
@@ -38,6 +40,8 @@ impl ViewportTransform {
         let presented_height = logical_height * scale;
         Self {
             scale,
+            content_origin_x: 0.0,
+            content_origin_y: 0.0,
             offset_x: (width - presented_width).max(0.0) / 2.0,
             offset_y: (height - presented_height).max(0.0) / 2.0,
             logical_width,
@@ -60,10 +64,21 @@ impl ViewportTransform {
     /// Child coordinates inside the scaled surface. Its parent applies centering once.
     pub fn surface_rect(self, left: f32, top: f32, width: f32, height: f32) -> PaintRect {
         PaintRect {
-            left: left * self.scale,
-            top: top * self.scale,
+            left: self.content_origin_x + left * self.scale,
+            top: self.content_origin_y + top * self.scale,
             width: nonnegative(width) * self.scale,
             height: nonnegative(height) * self.scale,
+        }
+    }
+
+    /// A selected frame item paints inside a clip anchored on the session surface.
+    /// Origin is relative to that clip; the physical window fit still applies once.
+    pub fn transform_content(self, scale: f32, origin_x: f32, origin_y: f32) -> Self {
+        Self {
+            scale: self.scale * scale,
+            content_origin_x: self.scale * origin_x,
+            content_origin_y: self.scale * origin_y,
+            ..self
         }
     }
 
@@ -148,5 +163,37 @@ mod tests {
                 assert!(t.presented_width <= width && t.presented_height <= height);
             }
         }
+    }
+
+    #[test]
+    fn selected_content_scales_inside_clip_without_moving_other_content() {
+        let fit = ViewportTransform::fit(1350.0, 720.0, 675.0, 360.0);
+        let clip = fit.surface_rect(100.0, 40.0, 500.0, 400.0);
+        assert_eq!(
+            (clip.left, clip.top, clip.width, clip.height),
+            (50.0, 20.0, 250.0, 200.0)
+        );
+        let selected = fit.transform_content(2.0, 120.0 - 100.0, 50.0 - 40.0);
+        let selected_cell = selected.surface_rect(80.0, 80.0, 10.0, 20.0);
+        assert_eq!(
+            selected_cell,
+            PaintRect {
+                left: 90.0,
+                top: 85.0,
+                width: 10.0,
+                height: 20.0
+            }
+        );
+        let unchanged_cell = fit.surface_rect(80.0, 80.0, 10.0, 20.0);
+        assert_eq!(
+            unchanged_cell,
+            PaintRect {
+                left: 40.0,
+                top: 40.0,
+                width: 5.0,
+                height: 10.0
+            }
+        );
+        assert_eq!((fit.offset_x, fit.offset_y), (0.0, 0.0));
     }
 }

@@ -1,7 +1,9 @@
 use crate::assets::AssetRoot;
-use crate::protocol::{Frame, FrameV2, Grid, Hello, Sprite, TextLayer, TileBatch};
+#[cfg(test)]
+use crate::protocol::Frame;
+use crate::protocol::{FrameV2, FrameViewport, Grid, Hello, Sprite, TextLayer, TileBatch};
 use gpui::RenderImage;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -13,6 +15,7 @@ pub struct PreparedSprite {
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum PaintItem {
+    #[cfg(test)]
     LegacyText,
     Text(usize),
     Sprite(usize),
@@ -22,15 +25,50 @@ pub enum PaintItem {
 #[derive(Debug)]
 pub struct PreparedFrame {
     pub observation: Option<crate::diagnostics::FrameTrace>,
+    #[allow(dead_code)] // Test reference labels remain useful for parity fixtures.
     pub number: u64,
+    #[allow(dead_code)] // Historical v1 text is constructed only in tests.
     pub text: Vec<String>,
     pub sprites: Vec<PreparedSprite>,
     pub text_layers: Vec<TextLayer>,
     pub plan: Vec<PaintItem>,
     pub cached_images: Vec<Arc<RenderImage>>,
     pub tile_batches: Vec<Arc<PreparedTileBatch>>,
+    #[allow(dead_code)] // Resource counters are retained for headless parity reports.
     pub resources: FrameResources,
     pub canvas: Option<Box<crate::canvas::PreparedCanvas>>,
+    /// Retained canvas entities drawn above the field instead of replacing it.
+    pub canvas_overlay: bool,
+    pub viewport: Option<PreparedViewport>,
+}
+
+#[derive(Debug)]
+pub struct PreparedViewport {
+    pub geometry: FrameViewport,
+    text_ids: HashSet<String>,
+    sprite_ids: HashSet<String>,
+    tile_ids: HashSet<String>,
+}
+
+impl PreparedViewport {
+    fn new(geometry: FrameViewport) -> Self {
+        Self {
+            text_ids: geometry.text_layer_ids.iter().cloned().collect(),
+            sprite_ids: geometry.sprite_ids.iter().cloned().collect(),
+            tile_ids: geometry.tile_batch_ids.iter().cloned().collect(),
+            geometry,
+        }
+    }
+
+    pub fn contains_text(&self, id: &str) -> bool {
+        self.text_ids.contains(id)
+    }
+    pub fn contains_sprite(&self, id: &str) -> bool {
+        self.sprite_ids.contains(id)
+    }
+    pub fn contains_tile(&self, id: &str) -> bool {
+        self.tile_ids.contains(id)
+    }
 }
 
 #[derive(Debug)]
@@ -117,7 +155,47 @@ impl<'a> FrameImages<'a> {
             height: size.height.0 as u32,
         });
         rect.validate_image(size.width.0 as u32, size.height.0 as u32)?;
-        self.region(&source, rect)
+        let region = self.region(&source, rect)?;
+        let toned = self.assets.prepare_canvas_image(
+            &region,
+            image.get_brightness(),
+            image.flip_x.unwrap_or(false),
+            image.flip_y.unwrap_or(false),
+        )?;
+        if !self.regions.contains_key(&toned.id) {
+            self.resources.region_bytes += toned.as_bytes(0).unwrap().len();
+            if self.resources.region_bytes > crate::tile_regions::MAX_REGION_BYTES {
+                return Err("frame exceeds 64 MiB prepared-region limit".into());
+            }
+            self.regions.insert(toned.id, toned.clone());
+        }
+        Ok(toned)
+    }
+    fn prepare_canvas(
+        &mut self,
+        source: crate::canvas_protocol::Canvas,
+    ) -> Result<crate::canvas::PreparedCanvas, String> {
+        source.validate()?;
+        let specs = source.composites.as_deref().unwrap_or_default();
+        let mut sources = crate::composite_cache::Sources::new();
+        for op in specs.iter().flat_map(|composite| &composite.operations) {
+            for path in op.get_assets() {
+                sources.insert(path.to_owned(), self.load(path)?);
+            }
+        }
+        let (composites, stats) = self.assets.prepare_composites(specs, &sources)?;
+        if !specs.is_empty() {
+            self.resources.compositing = Some(Box::new(stats));
+        }
+        let canvas = crate::canvas::PreparedCanvas::prepare(
+            source,
+            |image| self.canvas_image(image),
+            composites,
+        )?;
+        self.resources.canvas_images = canvas.images.len();
+        self.resources.canvas_indicators = canvas.source.indicators.len();
+        self.resources.canvas_text_layers = canvas.source.text_layers.len();
+        Ok(canvas)
     }
     fn finish(mut self) -> (Vec<Arc<RenderImage>>, FrameResources) {
         let after = self.assets.preparation_totals();
@@ -141,7 +219,47 @@ impl<'a> FrameImages<'a> {
     }
 }
 
+/// Canvas-only clients use exactly the same preparation and resource accounting.
+pub(crate) fn prepare_canvas(
+    source: crate::canvas_protocol::Canvas,
+    assets: &AssetRoot,
+) -> Result<
+    (
+        crate::canvas::PreparedCanvas,
+        Vec<Arc<RenderImage>>,
+        FrameResources,
+    ),
+    String,
+> {
+    let mut images = FrameImages::new(assets);
+    let canvas = images.prepare_canvas(source)?;
+    let (mut cached, resources) = images.finish();
+    cached.extend(canvas.composites.iter().cloned());
+    Ok((canvas, cached, resources))
+}
+
 impl PreparedFrame {
+    pub fn get_logical_size(&self, grid: Grid) -> (f32, f32) {
+        if !self.canvas_overlay
+            && let Some(canvas) = &self.canvas
+        {
+            return (canvas.source.width as f32, canvas.source.height as f32);
+        }
+        get_grid_size(grid)
+    }
+
+    /// The layer a plan item paints at; the plan is in ascending layer order.
+    pub fn get_item_layer(&self, item: &PaintItem) -> i32 {
+        match *item {
+            PaintItem::Tiles(i) => self.tile_batches[i].batch.layer,
+            PaintItem::Text(i) => self.text_layers[i].layer,
+            PaintItem::Sprite(i) => self.sprites[i].sprite.layer,
+            #[cfg(test)]
+            PaintItem::LegacyText => i32::MIN,
+        }
+    }
+
+    #[cfg(test)]
     pub fn prepare(frame: Frame, grid: Grid, assets: &AssetRoot) -> Result<Self, String> {
         frame.validate(grid)?;
         assets.prepare_composites(&[], &Default::default())?;
@@ -155,6 +273,8 @@ impl PreparedFrame {
         Ok(Self {
             observation: None,
             canvas: None,
+            canvas_overlay: false,
+            viewport: None,
             number: frame.frame,
             text: frame.text,
             text_layers: vec![],
@@ -166,42 +286,41 @@ impl PreparedFrame {
         })
     }
 
+    #[cfg(test)]
     pub fn prepare_v2(frame: FrameV2, grid: Grid, assets: &AssetRoot) -> Result<Self, String> {
-        frame.validate(grid)?;
+        Self::prepare_v2_inner(frame, grid, assets, false)
+    }
+
+    pub fn prepare_retained_v2(
+        frame: FrameV2,
+        grid: Grid,
+        assets: &AssetRoot,
+        canvas_overlay: bool,
+    ) -> Result<Self, String> {
+        Self::prepare_v2_inner(frame, grid, assets, canvas_overlay)
+    }
+
+    fn prepare_v2_inner(
+        frame: FrameV2,
+        grid: Grid,
+        assets: &AssetRoot,
+        canvas_overlay: bool,
+    ) -> Result<Self, String> {
+        if canvas_overlay {
+            frame.validate_retained(grid, true)?;
+        } else {
+            frame.validate(grid)?;
+        }
         let mut images = FrameImages::new(assets);
-        let composite_specs = frame
-            .canvas
-            .as_ref()
-            .and_then(|c| c.composites.as_deref())
-            .unwrap_or_default();
-        let mut composite_sources = crate::composite_cache::Sources::new();
-        for op in composite_specs.iter().flat_map(|c| &c.operations) {
-            for path in op.get_assets() {
-                composite_sources.insert(path.to_owned(), images.load(path)?);
-            }
+        if frame.canvas.is_none() {
+            assets.prepare_composites(&[], &crate::composite_cache::Sources::new())?;
         }
-        let (composites, composite_stats) =
-            assets.prepare_composites(composite_specs, &composite_sources)?;
-        if !composite_specs.is_empty() {
-            images.resources.compositing = Some(Box::new(composite_stats));
-        }
-        let composite_images = composites.clone();
         let canvas = frame
             .canvas
-            .map(|canvas| {
-                crate::canvas::PreparedCanvas::prepare(
-                    canvas,
-                    |image| images.canvas_image(image),
-                    composites,
-                )
-            })
+            .map(|source| images.prepare_canvas(source))
             .transpose()?
             .map(Box::new);
-        if let Some(canvas) = &canvas {
-            images.resources.canvas_images = canvas.images.len();
-            images.resources.canvas_indicators = canvas.source.indicators.len();
-            images.resources.canvas_text_layers = canvas.source.text_layers.len();
-        }
+        let viewport = frame.viewport.map(PreparedViewport::new);
         let sprites = prepare_sprites(frame.sprites, &mut images)?;
         let mut tile_batches = Vec::new();
         for batch in frame.tile_batches.unwrap_or_default() {
@@ -230,13 +349,18 @@ impl PreparedFrame {
             PaintItem::Tiles(i) => tile_batches[i].batch.layer,
             PaintItem::Text(i) => frame.text_layers[i].layer,
             PaintItem::Sprite(i) => sprites[i].sprite.layer,
+            #[cfg(test)]
             PaintItem::LegacyText => unreachable!(),
         });
         let (mut cached_images, resources) = images.finish();
-        cached_images.extend(composite_images);
+        if let Some(canvas) = &canvas {
+            cached_images.extend(canvas.composites.iter().cloned());
+        }
         Ok(Self {
             observation: None,
             canvas,
+            canvas_overlay,
+            viewport,
             number: frame.frame,
             text: vec![],
             text_layers: frame.text_layers,
@@ -299,29 +423,32 @@ pub fn painted_cells(layer: &TextLayer) -> impl Iterator<Item = TextCell> + '_ {
 
 pub struct RendererState {
     pub hello: Hello,
-    pub frame: Option<PreparedFrame>,
+    pub frame: Option<Arc<PreparedFrame>>,
 }
 
 impl RendererState {
     pub fn logical_size(&self) -> (f32, f32) {
-        self.frame
-            .as_ref()
-            .and_then(|frame| frame.canvas.as_ref())
-            .map_or_else(
-                || {
-                    let grid = self.hello.grid;
-                    (
-                        (grid.columns * grid.cell_width) as f32,
-                        (grid.rows * grid.cell_height) as f32,
-                    )
-                },
-                |canvas| (canvas.source.width as f32, canvas.source.height as f32),
-            )
+        self.frame.as_ref().map_or_else(
+            || get_grid_size(self.hello.grid),
+            |frame| frame.get_logical_size(self.hello.grid),
+        )
     }
 
+    #[cfg(test)]
     pub fn replace(&mut self, frame: PreparedFrame) {
+        self.frame = Some(Arc::new(frame));
+    }
+
+    pub fn replace_shared(&mut self, frame: Arc<PreparedFrame>) {
         self.frame = Some(frame);
     }
+}
+
+fn get_grid_size(grid: Grid) -> (f32, f32) {
+    (
+        (grid.columns * grid.cell_width) as f32,
+        (grid.rows * grid.cell_height) as f32,
+    )
 }
 
 #[cfg(test)]
@@ -449,8 +576,16 @@ mod tests {
         assert!(painted_cells(&first.text_layers[2]).any(
             |cell| cell.glyph.is_none() && cell.background == crate::color::DEFAULT_BACKGROUND
         ));
-        let initial_one = sprite_origin(&first.sprites[0].sprite, grid);
-        let initial_two = sprite_origin(&first.sprites[1].sprite, grid);
+        let initial_one = sprite_origin(
+            &first.sprites[0].sprite,
+            grid.cell_width as f32,
+            grid.cell_height as f32,
+        );
+        let initial_two = sprite_origin(
+            &first.sprites[1].sprite,
+            grid.cell_width as f32,
+            grid.cell_height as f32,
+        );
 
         state.replace(prepare(1));
         let uncovered = state.frame.as_ref().unwrap();
@@ -483,11 +618,11 @@ mod tests {
         let two = &panned.sprites[1].sprite;
         assert_eq!((one.x, one.y, two.x, two.y), (6, 2, 6, 2));
         assert_eq!(
-            sprite_origin(one, grid),
+            sprite_origin(one, grid.cell_width as f32, grid.cell_height as f32),
             (initial_one.0 - 32.0, initial_one.1 - 48.0)
         );
         assert_eq!(
-            sprite_origin(two, grid),
+            sprite_origin(two, grid.cell_width as f32, grid.cell_height as f32),
             (initial_two.0 - 48.0, initial_two.1 - 48.0)
         );
         assert_eq!(one.source_rect.unwrap().x, 512);
@@ -499,8 +634,12 @@ mod tests {
         // Both the sheet effect and foreground remain anchored over the same cell.
         for sprite in &panned.sprites[2..] {
             assert_eq!(
-                sprite_origin(&sprite.sprite, grid),
-                sprite_origin(two, grid)
+                sprite_origin(
+                    &sprite.sprite,
+                    grid.cell_width as f32,
+                    grid.cell_height as f32
+                ),
+                sprite_origin(two, grid.cell_width as f32, grid.cell_height as f32)
             );
         }
         assert_eq!(
@@ -566,7 +705,14 @@ mod tests {
                 height: 256
             })
         );
-        assert_eq!(sprite_origin(&actor.sprite, grid), (132.0, 24.0));
+        assert_eq!(
+            sprite_origin(
+                &actor.sprite,
+                grid.cell_width as f32,
+                grid.cell_height as f32
+            ),
+            (132.0, 24.0)
+        );
         assert!(!Arc::ptr_eq(&sheet, &actor.image));
         let replacement_sheet = actor.image.clone();
         let replacement_sprite = actor.sprite.clone();
@@ -810,6 +956,7 @@ mod tests {
                 hello: Hello {
                     title: "Home".into(),
                     required_capabilities: vec![],
+                    icon: None,
                     asset_root,
                     grid: Grid {
                         columns: 80,
@@ -1115,11 +1262,106 @@ mod tests {
     fn v2() -> FrameV2 {
         FrameV2 {
             canvas: None,
+            viewport: None,
             tile_batches: None,
             frame: 1,
             text_layers: vec![layer("world", 0), layer("ui", 1000)],
             sprites: vec![sprite("player", 100)],
         }
+    }
+
+    #[test]
+    fn retained_overlay_keeps_field_geometry_and_prepares_both_presentations() {
+        use crate::canvas_protocol::Canvas;
+
+        let (mut state, assets) = setup();
+        let mut frame = v2();
+        frame.canvas = Some(Canvas {
+            width: 1280,
+            height: 576,
+            images: vec![],
+            composites: None,
+            indicators: vec![],
+            text_layers: vec![],
+        });
+        let prepared =
+            PreparedFrame::prepare_retained_v2(frame, state.hello.grid, &assets, true).unwrap();
+        assert!(prepared.canvas_overlay);
+        assert!(prepared.canvas.is_some());
+        assert_eq!(prepared.sprites.len(), 1);
+        assert_eq!(prepared.text_layers.len(), 2);
+        state.replace(prepared);
+        assert_eq!(state.logical_size(), (1280.0, 576.0));
+
+        // A full-canvas menu retains its independent dimensions.
+        let mut menu = v2();
+        menu.sprites.clear();
+        menu.text_layers.clear();
+        menu.canvas = Some(Canvas {
+            width: 1024,
+            height: 640,
+            images: vec![],
+            composites: None,
+            indicators: vec![],
+            text_layers: vec![],
+        });
+        state.replace(PreparedFrame::prepare_v2(menu, state.hello.grid, &assets).unwrap());
+        assert_eq!(state.logical_size(), (1024.0, 640.0));
+    }
+
+    #[test]
+    fn viewport_membership_follows_each_complete_frame() {
+        use crate::protocol::{SourceRect, TileCell, ViewportPoint, ViewportRect};
+        let (mut state, assets) = setup();
+        let mut source = v2();
+        source.tile_batches = Some(vec![TileBatch {
+            id: "terrain".into(),
+            asset: "test-sprite.png".into(),
+            layer: -100,
+            sources: vec![SourceRect {
+                x: 0,
+                y: 0,
+                width: 1,
+                height: 1,
+            }],
+            cells: vec![TileCell {
+                column: 0,
+                row: 0,
+                source: 0,
+            }],
+        }]);
+        source.viewport = Some(FrameViewport {
+            scale: 2.0,
+            origin: ViewportPoint { x: 4.0, y: 0.0 },
+            clip_rect: ViewportRect {
+                x: 0.0,
+                y: 0.0,
+                width: 1280.0,
+                height: 576.0,
+            },
+            text_layer_ids: vec!["world".into()],
+            sprite_ids: vec!["player".into()],
+            tile_batch_ids: vec!["terrain".into()],
+        });
+        state.replace(PreparedFrame::prepare_v2(source, state.hello.grid, &assets).unwrap());
+        let frame = state.frame.as_ref().unwrap();
+        let view = frame.viewport.as_ref().unwrap();
+        assert!(view.contains_text("world"));
+        assert!(!view.contains_text("ui"));
+        assert!(view.contains_sprite("player"));
+        assert!(view.contains_tile("terrain"));
+        assert_eq!(
+            frame.plan,
+            [
+                PaintItem::Tiles(0),
+                PaintItem::Text(0),
+                PaintItem::Sprite(0),
+                PaintItem::Text(1)
+            ]
+        );
+
+        state.replace(PreparedFrame::prepare_v2(v2(), state.hello.grid, &assets).unwrap());
+        assert!(state.frame.as_ref().unwrap().viewport.is_none());
     }
     #[test]
     fn text_cells_have_exact_positions_and_opaque_spaces() {
@@ -1201,6 +1443,7 @@ mod tests {
         );
         let frame = FrameV2 {
             canvas: None,
+            viewport: None,
             tile_batches: None,
             frame: 1,
             text_layers: vec![
@@ -1310,6 +1553,7 @@ mod tests {
             PreparedFrame::prepare_v2(
                 FrameV2 {
                     canvas: None,
+                    viewport: None,
                     tile_batches: None,
                     frame: 2,
                     text_layers: vec![],

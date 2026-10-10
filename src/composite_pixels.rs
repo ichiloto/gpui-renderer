@@ -30,6 +30,7 @@ impl PixelRect {
         self.width as usize * self.height as usize
     }
 }
+#[inline]
 pub fn unpack(bytes: &[u8]) -> Pixel {
     let a = bytes[3] as f32 / 255.0;
     [
@@ -39,6 +40,7 @@ pub fn unpack(bytes: &[u8]) -> Pixel {
         a,
     ]
 }
+#[inline]
 pub fn write(bytes: &mut [u8], p: Pixel) {
     let inverse = if p[3] > 0.0 { 255.0 / p[3] } else { 0.0 };
     for i in 0..3 {
@@ -46,6 +48,7 @@ pub fn write(bytes: &mut [u8], p: Pixel) {
     }
     bytes[3] = (p[3] * 255.0).round().clamp(0.0, 255.0) as u8;
 }
+#[inline]
 pub fn blend(s: Pixel, d: Pixel, mode: Blend) -> Pixel {
     let mut p = [0.0; 4];
     for i in 0..3 {
@@ -59,6 +62,15 @@ pub fn blend(s: Pixel, d: Pixel, mode: Blend) -> Pixel {
     p[3] = s[3] + d[3] * (1.0 - s[3]);
     p
 }
+#[inline]
+pub fn paint(target: &mut [u8], source: Pixel, mode: Blend) {
+    if target[3] == 0 || (mode == Blend::SourceOver && source[3] == 1.0) {
+        write(target, source);
+    } else {
+        write(target, blend(source, unpack(target), mode));
+    }
+}
+#[inline]
 fn mix(a: Pixel, b: Pixel, t: f32) -> Pixel {
     std::array::from_fn(|i| a[i] + (b[i] - a[i]) * t)
 }
@@ -102,6 +114,7 @@ pub fn sample(bytes: &[u8], width: u32, height: u32, source: Rect, uv: Point) ->
         (y - iy as f64) as f32,
     )
 }
+#[inline]
 pub fn rect_coverage(r: Rect, p: Point) -> f64 {
     let w = (r.x + r.width).min(p[0] + 0.5) - r.x.max(p[0] - 0.5);
     let h = (r.y + r.height).min(p[1] + 0.5) - r.y.max(p[1] - 0.5);
@@ -110,6 +123,30 @@ pub fn rect_coverage(r: Rect, p: Point) -> f64 {
 pub fn segment_distance(p: Point, a: Point, b: Point) -> f64 {
     segment_distance_squared(p, a, b).sqrt()
 }
+
+/// Conservative capsule extent at one scanline. Outside it, edge coverage is zero.
+pub fn segment_row_extent(a: Point, b: Point, y: f64, radius: f64) -> Option<(f64, f64)> {
+    let low = a[1].min(b[1]).max(y - radius);
+    let high = a[1].max(b[1]).min(y + radius);
+    if low > high {
+        return None;
+    }
+    let (left, right) = if a[1] == b[1] {
+        (a[0].min(b[0]), a[0].max(b[0]))
+    } else {
+        let at = |value: f64| a[0] + (value - a[1]) / (b[1] - a[1]) * (b[0] - a[0]);
+        let (x, z) = (at(low), at(high));
+        (x.min(z), x.max(z))
+    };
+    Some((left - radius, right + radius))
+}
+
+pub fn row_pixel_span(left: f64, right: f64, bounds: PixelRect) -> std::ops::Range<u32> {
+    let start = bounds.x as f64;
+    let end = (bounds.x + bounds.width) as f64;
+    (left - 0.5).ceil().clamp(start, end) as u32..(right + 0.5).ceil().clamp(start, end) as u32
+}
+
 fn segment_distance_squared(p: Point, a: Point, b: Point) -> f64 {
     let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
     let length = dx * dx + dy * dy;
@@ -172,6 +209,87 @@ fn color(rgb: u32, opacity: f32) -> Pixel {
         opacity,
     ]
 }
+
+pub enum PreparedBrush {
+    Solid(Pixel),
+    Linear {
+        start: Point,
+        direction: Point,
+        length: f64,
+        stops: Vec<(f64, Pixel)>,
+    },
+    Radial {
+        center: Point,
+        radius: Point,
+        stops: Vec<(f64, Pixel)>,
+    },
+}
+impl PreparedBrush {
+    pub fn prepare(brush: &Brush) -> Self {
+        let prepare_stops =
+            |stops: &[Stop]| stops.iter().map(|s| (s.offset, stop_color(s))).collect();
+        match brush {
+            Brush::Solid { color: c } => Self::Solid(color(c.rgb(), 1.0)),
+            Brush::Linear { start, end, stops } => {
+                let dx = end[0] - start[0];
+                let dy = end[1] - start[1];
+                let length = dx.hypot(dy);
+                Self::Linear {
+                    start: *start,
+                    direction: [dx / length, dy / length],
+                    length,
+                    stops: prepare_stops(stops),
+                }
+            }
+            Brush::Radial {
+                center,
+                radius,
+                stops,
+            } => Self::Radial {
+                center: *center,
+                radius: *radius,
+                stops: prepare_stops(stops),
+            },
+        }
+    }
+
+    #[inline]
+    pub fn sample(&self, p: Point) -> Pixel {
+        let (t, stops) = match self {
+            Self::Solid(pixel) => return *pixel,
+            Self::Linear {
+                start,
+                direction,
+                length,
+                stops,
+            } => (
+                ((p[0] - start[0]) * direction[0] + (p[1] - start[1]) * direction[1]) / length,
+                stops,
+            ),
+            Self::Radial {
+                center,
+                radius,
+                stops,
+            } => (
+                ((p[0] - center[0]) / radius[0]).hypot((p[1] - center[1]) / radius[1]),
+                stops,
+            ),
+        };
+        let t = t.clamp(0.0, 1.0);
+        for pair in stops.windows(2) {
+            if t <= pair[1].0 {
+                return mix(
+                    pair[0].1,
+                    pair[1].1,
+                    ((t - pair[0].0) / (pair[1].0 - pair[0].0)) as f32,
+                );
+            }
+        }
+        stops.last().unwrap().1
+    }
+}
+
+#[cfg(test)]
 pub fn brush(b: &Brush, p: Point) -> Pixel {
     let (t, stops) = match b {
         Brush::Solid { color: c } => return color(c.rgb(), 1.0),

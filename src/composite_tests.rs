@@ -66,6 +66,107 @@ fn screen_and_source_over_respect_transparency_and_alpha() {
 }
 
 #[test]
+fn prepared_brushes_and_paint_fast_paths_match_original_pixel_math() {
+    for value in [
+        json!({"type":"solid","color":rgb(23,51,198)}),
+        json!({"type":"linear","start":[-2.25,3.5],"end":[28.75,21.5],
+            "stops":[{"offset":0,"color":rgb(23,51,198),"opacity":0.2},
+                {"offset":0.4,"color":rgb(250,17,4),"opacity":0.8},
+                {"offset":1,"color":rgb(11,120,222)}]}),
+        json!({"type":"radial","center":[13.25,7.5],"radius":[11,18],
+            "stops":[{"offset":0,"color":rgb(255,100,27)},
+                {"offset":1,"color":rgb(0,12,222),"opacity":0.1}]}),
+    ] {
+        let brush = serde_json::from_value(value).unwrap();
+        let prepared = pixels::PreparedBrush::prepare(&brush);
+        for y in -4..28 {
+            for x in -4..36 {
+                let point = [x as f64 + 0.5, y as f64 + 0.5];
+                let original = pixels::brush(&brush, point);
+                assert_eq!(prepared.sample(point), original);
+                for alpha in [0., 0.2, 0.75, 1.] {
+                    let source = original.map(|v| v * alpha);
+                    for backdrop in [
+                        [0, 0, 0, 0],
+                        [210, 40, 155, 0],
+                        [7, 80, 19, 128],
+                        [33, 22, 11, 255],
+                    ] {
+                        for mode in [Blend::SourceOver, Blend::Screen] {
+                            let mut expected = [0; 4];
+                            pixels::write(
+                                &mut expected,
+                                pixels::blend(source, pixels::unpack(&backdrop), mode),
+                            );
+                            let mut actual = backdrop;
+                            pixels::paint(&mut actual, source, mode);
+                            assert_eq!(actual, expected);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn large_row_paints_match_serial_fractional_masked_blending() {
+    let (width, height) = (641, 431);
+    let destination = crate::canvas_protocol::Rect {
+        x: 0.25,
+        y: 0.2,
+        width: 640.5,
+        height: 430.6,
+    };
+    let contours = vec![vec![[0., 0.], [500., 0.], [310., 431.], [0., 431.]]];
+    let brush_value = json!({"type":"linear","start":[0,0],"end":[641,431],
+        "stops":[{"offset":0,"color":rgb(220,32,109),"opacity":0.2},
+            {"offset":0.5,"color":rgb(5,189,200),"opacity":0.7},
+            {"offset":1,"color":rgb(120,40,222)}]});
+    let brush = serde_json::from_value(brush_value.clone()).unwrap();
+    for mode in [Blend::SourceOver, Blend::Screen] {
+        let blend = if mode == Blend::SourceOver {
+            "source_over"
+        } else {
+            "screen"
+        };
+        let image = raster(
+            composite(
+                vec![
+                    solid(rgb(3, 7, 9), width, height),
+                    json!({"type":"fill","destination":rect(destination.x,destination.y,destination.width,destination.height),"brush":brush_value,"opacity":0.67,
+                "blend":blend,"masks":[{"type":"polygon","contours":contours,"feather":3}]}),
+                ],
+                width,
+                height,
+            ),
+            Sources::new(),
+        );
+        for y in 0..height {
+            for x in 0..width {
+                let point = [x as f64 + 0.5, y as f64 + 0.5];
+                let mask =
+                    (pixels::coverage(pixels::polygon_distance(point, &contours[0]), 3., false)
+                        * 255.)
+                        .round()
+                        .clamp(0., 255.) as u8;
+                let coverage = pixels::rect_coverage(destination, point) as f32;
+                let alpha = (0.67 * mask as f64 / 255.) as f32;
+                let mut source = pixels::brush(&brush, point);
+                for v in &mut source {
+                    *v *= coverage;
+                    *v *= alpha;
+                }
+                let mut expected = [9, 7, 3, 255];
+                let result = pixels::blend(source, pixels::unpack(&expected), mode);
+                pixels::write(&mut expected, result);
+                assert_eq!(pixel(&image, x, y), expected, "x={x} y={y} mode={mode:?}");
+            }
+        }
+    }
+}
+
+#[test]
 fn fractional_sampling_preserves_alpha_without_hidden_colour_fringes() {
     let p = pixels::sample(
         &[0, 0, 255, 255, 255, 0, 0, 0],
@@ -150,6 +251,86 @@ fn grid_displacement_is_fractional_and_strength_mask_is_independent_of_alpha() {
     let image = &prepared.canvas.unwrap().composites[0];
     assert_eq!(pixel(image, 1, 1), [0, 0, 45, 255]);
     assert_eq!(pixel(image, 6, 1), [0, 0, 180, 255]);
+}
+
+#[test]
+fn polygon_scanlines_match_signed_distance_for_union_inversion_and_feather() {
+    let shapes = [
+        vec![vec![[-8., 0.25], [25.75, 2.], [13., 29.], [-9., 26.]]],
+        vec![vec![[2., 2.], [30., 2.], [30., 22.], [18., 8.], [2., 22.]]],
+        vec![
+            vec![[1., 1.], [18., 1.], [18., 20.], [1., 20.]],
+            vec![[11., 5.], [31., 5.], [23., 23.]],
+        ],
+        vec![vec![[1., 1.], [30., 22.], [1., 22.], [30., 1.]]],
+        vec![vec![[10.25, 1.], [10.75, 1.], [11.25, 22.], [10.75, 22.]]],
+    ];
+    for contours in shapes {
+        for invert in [false, true] {
+            for feather in [0., 0.25, 1., 4.] {
+                let mut fill = solid(rgb(255, 255, 255), 32, 24);
+                fill["masks"] = json!([{"type":"polygon","contours":contours,"invert":invert,"feather":feather}]);
+                let image = raster(composite(vec![fill], 32, 24), Sources::new());
+                for y in 0..24 {
+                    for x in 0..32 {
+                        let distance = contours
+                            .iter()
+                            .map(|contour| {
+                                pixels::polygon_distance([x as f64 + 0.5, y as f64 + 0.5], contour)
+                            })
+                            .fold(f64::NEG_INFINITY, f64::max);
+                        let expected =
+                            (pixels::coverage(distance, feather, invert) * 255.).round() as u8;
+                        assert_eq!(
+                            pixel(&image, x, y)[3],
+                            expected,
+                            "x={x} y={y} invert={invert} feather={feather} contours={contours:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn stroke_scanlines_keep_caps_joins_fractional_edges_and_offscreen_segments() {
+    for points in [
+        vec![[-10., -2.], [39., 22.]],
+        vec![[5.25, 2.], [5.25, 20.]],
+        vec![[1., 8.25], [30., 8.25]],
+        vec![[-12., -12.], [-4., -4.]],
+        vec![[8., 8.], [8., 8.]],
+        vec![[3., 3.], [27., 8.], [6., 20.]],
+    ] {
+        for width in [0.25, 1., 4., 9.] {
+            let image = raster(
+                composite(
+                    vec![json!({"type":"stroke","points":points,
+                "width":width,"brush":{"type":"solid","color":rgb(255,255,255)}})],
+                    32,
+                    24,
+                ),
+                Sources::new(),
+            );
+            for y in 0..24 {
+                for x in 0..32 {
+                    let p = [x as f64 + 0.5, y as f64 + 0.5];
+                    let distance = points
+                        .windows(2)
+                        .map(|s| pixels::segment_distance(p, s[0], s[1]))
+                        .fold(f64::INFINITY, f64::min);
+                    let expected =
+                        ((width / 2. + 0.5 - distance).clamp(0., 1.) as f32 * 255.).round() as u8;
+                    assert_eq!(
+                        pixel(&image, x, y)[3],
+                        expected,
+                        "x={x} y={y} width={width} points={points:?}"
+                    );
+                }
+            }
+        }
+    }
 }
 
 #[test]
@@ -328,10 +509,10 @@ fn capability_negotiation_example_fixture_and_clear_are_compatible() {
             .unwrap();
         let result =
             session.prepare(parse(include_bytes!("../fixtures/compositing/frame.json")).unwrap());
-        assert_eq!(result.is_ok(), negotiated);
+        assert!(result.is_ok());
         let clear = json!({"protocol":2,"type":"frame","frame":2,"textLayers":[],"sprites":[],"canvas":{"width":64,"height":48,"composites":[]}});
         let result = session.prepare(parse(&serde_json::to_vec(&clear).unwrap()).unwrap());
-        assert_eq!(result.is_ok(), negotiated);
+        assert!(result.is_ok());
         if let Ok(Update::Frame(frame)) = result {
             assert!(frame.canvas.unwrap().composites.is_empty());
         }
@@ -574,7 +755,9 @@ fn replay_engine_composite_packets_without_a_native_window() {
             .unwrap_or("frame")
             .to_owned();
         let wire = serde_json::to_vec(value.get("message").unwrap_or(&value)).unwrap();
+        let parse_start = std::time::Instant::now();
         let parsed = parse(&wire).unwrap();
+        let parse_ms = parse_start.elapsed().as_secs_f64() * 1000.;
         if !matches!(parsed.message, Message::FrameV2(_)) {
             session.prepare(parsed).unwrap();
             continue;
@@ -584,7 +767,7 @@ fn replay_engine_composite_packets_without_a_native_window() {
         let elapsed = start.elapsed().as_secs_f64() * 1000.;
         match prepared {
             Ok(Update::Frame(frame)) => {
-                results.push(json!({"index":index,"label":label,"elapsedMs":elapsed,"resources":frame.resources}));
+                results.push(json!({"index":index,"label":label,"parseMs":parse_ms,"elapsedMs":elapsed,"totalMs":parse_ms+elapsed,"resources":frame.resources}));
                 if (results.len() - 1) % capture_every == 0
                     && let Some(canvas) = &frame.canvas
                 {
@@ -607,7 +790,7 @@ fn replay_engine_composite_packets_without_a_native_window() {
             Err(error) => {
                 failures.push(format!("{index}/{label}: {error}"));
                 results
-                    .push(json!({"index":index,"label":label,"elapsedMs":elapsed,"error":error}));
+                    .push(json!({"index":index,"label":label,"parseMs":parse_ms,"elapsedMs":elapsed,"totalMs":parse_ms+elapsed,"error":error}));
             }
             _ => panic!("expected a prepared frame"),
         }

@@ -299,7 +299,7 @@ fn results_layout_stages_share_art_clip_gauges_and_release_complete_pages() {
         frame: None,
     };
     for (index, frame) in frames.into_iter().enumerate() {
-        state.replace(frame);
+        state.replace(*frame);
         assert_eq!(state.logical_size(), (1350.0, 720.0));
         let current = state.frame.as_ref().unwrap().canvas.as_ref().unwrap();
         if index == 6 {
@@ -337,7 +337,7 @@ fn exact_wire_corpus_matches_stages_and_preserves_the_previous_display_on_error(
         let assets = AssetRoot::new(&root()).unwrap();
         let mut state = RendererState {
             hello: config.clone(),
-            frame: Some(prepared("valid-full-canvas.json", &config, &assets)),
+            frame: Some(prepared("valid-full-canvas.json", &config, &assets).into()),
         };
         let original = state
             .frame
@@ -388,7 +388,15 @@ fn exact_wire_corpus_matches_stages_and_preserves_the_previous_display_on_error(
                     other => panic!("{name}: unexpected {other:?}"),
                 }
             }
-            "session" | "preparation" => {
+            "session" => {
+                // This renderer advertises all V2 drawing features, even when
+                // the shared legacy-client corpus does not require them.
+                assert!(
+                    matches!(session.prepare(parsed.unwrap()).unwrap(), Update::Frame(_)),
+                    "{name}"
+                );
+            }
+            "preparation" => {
                 let incoming = parsed.unwrap_or_else(|error| panic!("{name}: {error}"));
                 let Message::FrameV2(frame) = &incoming.message else {
                     panic!("{name}")
@@ -414,7 +422,7 @@ fn exact_wire_corpus_matches_stages_and_preserves_the_previous_display_on_error(
                     panic!("{name}")
                 };
                 let expected = source(name).canvas;
-                state.replace(frame);
+                state.replace(*frame);
                 assert_eq!(
                     state
                         .frame
@@ -471,7 +479,7 @@ fn canvas_size_and_fractional_geometry_ignore_the_legacy_cell_metrics() {
         config.grid.cell_height = ch;
         let mut state = RendererState {
             hello: config.clone(),
-            frame: Some(prepared("valid-fractional-crop.json", &config, &assets)),
+            frame: Some(prepared("valid-fractional-crop.json", &config, &assets).into()),
         };
         assert_eq!(state.logical_size(), (1350.0, 720.0));
         let rect = state
@@ -536,7 +544,7 @@ fn full_replacement_reuses_source_images_and_clears_all_canvas_collections() {
     );
     let mut state = RendererState {
         hello: config.clone(),
-        frame: Some(first),
+        frame: Some(first.into()),
     };
     let survivor = prepared("valid-reordered-survivor.json", &config, &assets);
     assert_eq!(survivor.resources.png_decodes, 0);
@@ -766,4 +774,169 @@ fn whole_canvas_images_and_crops_have_cached_edge_guards_with_original_alpha() {
             &again.canvas.as_ref().unwrap().images[0]
         ));
     }
+}
+
+#[test]
+fn canvas_brightness_uses_one_cached_variant_in_complete_and_retained_frames() {
+    let dir = tempfile::tempdir().unwrap();
+    image::RgbaImage::from_fn(2, 2, |x, y| {
+        image::Rgba([200, 100, 50, if x == y { 64 } else { 255 }])
+    })
+    .save(dir.path().join("portrait.png"))
+    .unwrap();
+    let assets = AssetRoot::new(dir.path()).unwrap();
+    let grid = hello().grid;
+    let mut frame: FrameV2 = serde_json::from_value(serde_json::json!({
+        "frame": 1,
+        "textLayers": [],
+        "sprites": [],
+        "canvas": {
+            "width": 320,
+            "height": 320,
+            "images": [{
+                "id": "portrait",
+                "asset": "portrait.png",
+                "destination": {"x": 10, "y": 10, "width": 200, "height": 200},
+                "layer": 0,
+                "opacity": 0.25,
+                "brightness": 0.6
+            }]
+        }
+    }))
+    .unwrap();
+    let complete = PreparedFrame::prepare_v2(frame.clone(), grid, &assets).unwrap();
+    let toned = &complete.canvas.as_ref().unwrap().images[0];
+    let original = assets.load(std::path::Path::new("portrait.png")).unwrap();
+    let region = assets
+        .prepare_region(
+            &original,
+            SourceRect {
+                x: 0,
+                y: 0,
+                width: 2,
+                height: 2,
+            },
+        )
+        .unwrap();
+    assert_ne!(toned.id, region.id);
+    for (source, result) in region
+        .as_bytes(0)
+        .unwrap()
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .zip(toned.as_bytes(0).unwrap().as_chunks::<4>().0.iter())
+    {
+        assert_eq!(result, &[30, 60, 120, source[3]]);
+    }
+    assert_eq!(
+        complete.canvas.as_ref().unwrap().source.images[0].opacity,
+        0.25
+    );
+    assert_eq!(complete.resources.png_decodes, 1);
+    assert_eq!(complete.resources.region_builds, 1);
+    assert_eq!(complete.resources.prepared_regions, 2);
+
+    let repeated = PreparedFrame::prepare_v2(frame.clone(), grid, &assets).unwrap();
+    assert!(Arc::ptr_eq(
+        toned,
+        &repeated.canvas.as_ref().unwrap().images[0]
+    ));
+    assert_eq!(
+        (
+            repeated.resources.png_decodes,
+            repeated.resources.region_builds
+        ),
+        (0, 0)
+    );
+    let retained = PreparedFrame::prepare_retained_v2(frame.clone(), grid, &assets, true).unwrap();
+    assert!(retained.canvas_overlay);
+    assert!(Arc::ptr_eq(
+        toned,
+        &retained.canvas.as_ref().unwrap().images[0]
+    ));
+
+    frame.canvas.as_mut().unwrap().images[0].brightness = None;
+    let default = PreparedFrame::prepare_v2(frame.clone(), grid, &assets).unwrap();
+    assert!(Arc::ptr_eq(
+        &region,
+        &default.canvas.as_ref().unwrap().images[0]
+    ));
+    frame.canvas.as_mut().unwrap().images[0].brightness = Some(1.0);
+    let explicit_one = PreparedFrame::prepare_v2(frame, grid, &assets).unwrap();
+    assert!(Arc::ptr_eq(
+        &region,
+        &explicit_one.canvas.as_ref().unwrap().images[0]
+    ));
+}
+
+#[test]
+fn canvas_brightness_crops_current_replacement_art_without_changing_alpha() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("portrait.png");
+    image::RgbaImage::from_pixel(2, 2, image::Rgba([210, 100, 40, 73]))
+        .save(&path)
+        .unwrap();
+    let assets = AssetRoot::new(dir.path()).unwrap();
+    let frame: FrameV2 = serde_json::from_value(serde_json::json!({
+        "frame":1,"textLayers":[],"sprites":[],"canvas":{
+            "width":320,"height":320,"images":[{
+                "id":"portrait","asset":"portrait.png","layer":0,
+                "destination":{"x":0,"y":0,"width":100,"height":100},
+                "sourceRect":{"x":1,"y":0,"width":1,"height":2},
+                "brightness":0.6
+            }]
+        }
+    }))
+    .unwrap();
+    let first = PreparedFrame::prepare_v2(frame.clone(), hello().grid, &assets).unwrap();
+    let first_image = &first.canvas.as_ref().unwrap().images[0];
+    let first_length = fs::metadata(&path).unwrap().len();
+
+    // A new file can have different dimensions while retaining the authored
+    // crop and presentation identity. The replacement gets its own tone image.
+    image::RgbaImage::from_fn(7, 9, |x, y| {
+        image::Rgba([
+            x as u8 * 17,
+            y as u8 * 19,
+            180,
+            if y == 0 { 31 } else { 201 },
+        ])
+    })
+    .save(&path)
+    .unwrap();
+    assert_ne!(fs::metadata(&path).unwrap().len(), first_length);
+    let replaced = PreparedFrame::prepare_v2(frame, hello().grid, &assets).unwrap();
+    let current = &replaced.canvas.as_ref().unwrap().images[0];
+    assert_ne!(first_image.id, current.id);
+    assert_eq!(replaced.resources.png_decodes, 1);
+    let source = assets.load(std::path::Path::new("portrait.png")).unwrap();
+    let region = assets
+        .prepare_region(
+            &source,
+            SourceRect {
+                x: 1,
+                y: 0,
+                width: 1,
+                height: 2,
+            },
+        )
+        .unwrap();
+    for (original, toned) in region
+        .as_bytes(0)
+        .unwrap()
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .zip(current.as_bytes(0).unwrap().as_chunks::<4>().0.iter())
+    {
+        for channel in 0..3 {
+            assert_eq!(
+                toned[channel],
+                (f64::from(original[channel]) * 0.6).round() as u8
+            );
+        }
+        assert_eq!(toned[3], original[3]);
+    }
+    assert_eq!(first_image.as_bytes(0).unwrap()[3], 73);
 }

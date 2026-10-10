@@ -29,8 +29,11 @@ pub struct Incoming {
 #[derive(Debug)]
 pub enum Message {
     Hello(Hello),
+    #[cfg(test)]
     Frame(Frame),
+    #[cfg(test)]
     FrameV2(FrameV2),
+    RetainedFrame(crate::retained_protocol::FrameUpdate),
     Shutdown,
 }
 
@@ -66,6 +69,49 @@ pub struct Hello {
     pub grid: Grid,
     #[serde(default)]
     pub required_capabilities: Vec<Capability>,
+    /// The game's application icon, relative to assetRoot.
+    #[serde(default)]
+    pub icon: Option<PathBuf>,
+}
+
+impl Hello {
+    /// Requirements are a startup minimum, not a drawing-feature allowlist.
+    /// Event-stream extensions remain explicit subscriptions for older clients.
+    pub fn get_enabled_capabilities(&self, version: Version) -> Vec<Capability> {
+        if version == Version::V1 {
+            return self.required_capabilities.clone();
+        }
+        let mut enabled = vec![
+            Capability::SpriteSourceRect,
+            Capability::TileBatches,
+            Capability::GraphicalCanvas,
+            Capability::CanvasOverlay,
+            Capability::CanvasClipOpacity,
+            Capability::CanvasImageTone,
+            Capability::CanvasImageFlip,
+            Capability::CanvasGlyphEffects,
+            Capability::CanvasCompositing,
+            Capability::FrameViewport,
+            Capability::FieldMotion,
+            Capability::TileCovers,
+            Capability::TileShadows,
+            Capability::SpriteLift,
+            Capability::SpriteQuarterTurns,
+            Capability::SpritePivot,
+        ];
+        for subscription in [Capability::WindowActivation, Capability::KeyTransitions] {
+            if self.required_capabilities.contains(&subscription) {
+                enabled.push(subscription);
+            }
+        }
+        enabled
+    }
+
+    /// Whether the session subscribed to key press, release and reset events.
+    pub fn reports_key_transitions(&self) -> bool {
+        self.required_capabilities
+            .contains(&Capability::KeyTransitions)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
@@ -74,10 +120,36 @@ pub enum Capability {
     SpriteSourceRect,
     TileBatches,
     GraphicalCanvas,
+    /// Retained canvases can layer over the field and screen content.
+    CanvasOverlay,
     CanvasClipOpacity,
+    /// Canvas images may multiply RGB brightness without reducing alpha.
+    CanvasImageTone,
+    /// Mirror the selected canvas image region without changing its placement.
+    CanvasImageFlip,
     CanvasGlyphEffects,
     CanvasCompositing,
+    FrameViewport,
     WindowActivation,
+    /// Drawing feature: retained field sprites slide between cells and the
+    /// camera may follow one of them.
+    FieldMotion,
+    /// Drawing feature: a world's tiles layer may name the gameplay layer
+    /// whose glyphs its tiles cover.
+    TileCovers,
+    /// Drawing feature: fill tiles and non-covering shadow world layers.
+    TileShadows,
+    /// Drawing feature: a retained field sprite may be drawn a lift above
+    /// the cell that places and orders it.
+    SpriteLift,
+    /// Drawing feature: a retained sprite's cropped image may be rotated in
+    /// clockwise quarter turns without changing its placement or ordering.
+    SpriteQuarterTurns,
+    /// Drawing feature: a normalized image point at the unchanged cell anchor.
+    SpritePivot,
+    /// Event subscription: key presses carry a stable control identity and
+    /// a repeat flag, releases and input resets are reported.
+    KeyTransitions,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
@@ -107,6 +179,7 @@ impl Grid {
     }
 }
 
+#[cfg(test)]
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Frame {
@@ -115,6 +188,7 @@ pub struct Frame {
     pub sprites: Vec<Sprite>,
 }
 
+#[cfg(test)]
 impl Frame {
     pub fn validate(&self, grid: Grid) -> Result<(), String> {
         if self.text.len() > grid.rows as usize
@@ -159,6 +233,106 @@ pub struct FrameV2 {
     pub tile_batches: Option<Vec<TileBatch>>,
     #[serde(default, deserialize_with = "crate::canvas_protocol::optional_canvas")]
     pub canvas: Option<crate::canvas_protocol::Canvas>,
+    #[serde(default, deserialize_with = "optional_viewport")]
+    pub viewport: Option<FrameViewport>,
+}
+
+pub const MAX_RENDER_SCALE: f32 = 8.0;
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ViewportPoint {
+    pub x: f32,
+    pub y: f32,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ViewportRect {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FrameViewport {
+    pub scale: f32,
+    pub origin: ViewportPoint,
+    pub clip_rect: ViewportRect,
+    pub text_layer_ids: Vec<String>,
+    pub sprite_ids: Vec<String>,
+    pub tile_batch_ids: Vec<String>,
+}
+
+fn optional_viewport<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> Result<Option<FrameViewport>, D::Error> {
+    // Omission is the legacy full-session presentation; explicit null is invalid.
+    FrameViewport::deserialize(d).map(Some)
+}
+
+impl FrameViewport {
+    pub fn validate(&self, grid: Grid, frame: &FrameV2) -> Result<(), String> {
+        let width = (grid.columns * grid.cell_width) as f32;
+        let height = (grid.rows * grid.cell_height) as f32;
+        let clip = self.clip_rect;
+        if !self.scale.is_finite() || self.scale <= 0.0 || self.scale > MAX_RENDER_SCALE {
+            return Err("viewport scale must be finite and in (0, 8]".into());
+        }
+        if !self.origin.x.is_finite()
+            || !self.origin.y.is_finite()
+            || self.origin.x.abs() > width * MAX_RENDER_SCALE
+            || self.origin.y.abs() > height * MAX_RENDER_SCALE
+        {
+            return Err("viewport origin must be finite and bounded by the session canvas".into());
+        }
+        if ![clip.x, clip.y, clip.width, clip.height]
+            .into_iter()
+            .all(f32::is_finite)
+            || clip.x < 0.0
+            || clip.y < 0.0
+            || clip.width <= 0.0
+            || clip.height <= 0.0
+            || clip.x + clip.width > width
+            || clip.y + clip.height > height
+        {
+            return Err("viewport clipRect must lie within the session canvas".into());
+        }
+        validate_viewport_ids(
+            &self.text_layer_ids,
+            frame.text_layers.iter().map(|v| v.id.as_str()),
+            "text layer",
+        )?;
+        validate_viewport_ids(
+            &self.sprite_ids,
+            frame.sprites.iter().map(|v| v.id.as_str()),
+            "sprite",
+        )?;
+        validate_viewport_ids(
+            &self.tile_batch_ids,
+            frame.tile_batches.iter().flatten().map(|v| v.id.as_str()),
+            "tile batch",
+        )
+    }
+}
+
+fn validate_viewport_ids<'a>(
+    members: &[String],
+    available: impl Iterator<Item = &'a str>,
+    kind: &str,
+) -> Result<(), String> {
+    let available: std::collections::HashSet<&str> = available.collect();
+    let mut seen = std::collections::HashSet::new();
+    for id in members {
+        if !seen.insert(id.as_str()) || !available.contains(id.as_str()) {
+            return Err(format!(
+                "viewport {kind} ids must be unique and reference frame items"
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn tile_batches<'de, D: serde::Deserializer<'de>>(
@@ -262,12 +436,30 @@ fn required_color<'de, D: serde::Deserializer<'de>>(
 
 impl FrameV2 {
     pub fn validate(&self, grid: Grid) -> Result<(), String> {
+        self.validate_with_canvas_mode(grid, false)
+    }
+
+    /// Retained scenes carry the canvas mode on their root, outside FrameV2.
+    /// Historical full-frame input continues to use exclusive canvas validation.
+    pub fn validate_retained(&self, grid: Grid, canvas_overlay: bool) -> Result<(), String> {
+        self.validate_with_canvas_mode(grid, canvas_overlay)
+    }
+
+    fn validate_with_canvas_mode(&self, grid: Grid, canvas_overlay: bool) -> Result<(), String> {
         if let Some(canvas) = &self.canvas {
-            if !self.text_layers.is_empty()
-                || !self.sprites.is_empty()
-                || self.tile_batches.as_ref().is_some_and(|b| !b.is_empty())
+            if canvas_overlay
+                && (canvas.width != grid.columns * grid.cell_width
+                    || canvas.height != grid.rows * grid.cell_height)
             {
-                return Err("canvas cannot mix with nonempty legacy text, sprites or tiles".into());
+                return Err("overlay canvas must match the session grid in logical pixels".into());
+            }
+            if !canvas_overlay
+                && (!self.text_layers.is_empty()
+                    || !self.sprites.is_empty()
+                    || self.tile_batches.as_ref().is_some_and(|b| !b.is_empty())
+                    || self.viewport.is_some())
+            {
+                return Err("canvas cannot mix with text, sprites, tiles or viewport".into());
             }
             canvas.validate()?;
         }
@@ -306,7 +498,11 @@ impl FrameV2 {
             }
         }
         validate_sprites(&self.sprites)?;
-        validate_tiles(self.tile_batches.as_deref().unwrap_or_default(), grid)
+        validate_tiles(self.tile_batches.as_deref().unwrap_or_default(), grid)?;
+        if let Some(viewport) = &self.viewport {
+            viewport.validate(grid, self)?;
+        }
+        Ok(())
     }
 }
 
@@ -399,26 +595,53 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
     let probe: VersionProbe =
         serde_json::from_slice(line).map_err(|e| format!("invalid protocol message: {e}"))?;
     let (version, message) = match probe.protocol {
-        1 => (
-            Version::V1,
-            match decode::<Frame>(line)? {
-                WireMessage::Hello(h) => Message::Hello(h),
-                WireMessage::Frame(f) => Message::Frame(f),
-                WireMessage::Shutdown(_) => Message::Shutdown,
-            },
-        ),
-        2 => (
-            Version::V2,
-            match decode::<FrameV2>(line)? {
-                WireMessage::Hello(h) => Message::Hello(h),
-                WireMessage::Frame(f) => Message::FrameV2(f),
-                WireMessage::Shutdown(_) => Message::Shutdown,
-            },
-        ),
+        1 => {
+            #[cfg(not(test))]
+            return Err("protocol v1 is no longer accepted by the native renderer".into());
+            #[cfg(test)]
+            {
+                (
+                    Version::V1,
+                    match decode::<Frame>(line)? {
+                        WireMessage::Hello(h) => Message::Hello(h),
+                        WireMessage::Frame(f) => Message::Frame(f),
+                        WireMessage::Shutdown(_) => Message::Shutdown,
+                    },
+                )
+            }
+        }
+        2 => {
+            let retained = decode::<crate::retained_protocol::FrameUpdate>(line);
+            let message = match retained {
+                Ok(WireMessage::Hello(h)) => Message::Hello(h),
+                Ok(WireMessage::Frame(f)) => Message::RetainedFrame(f),
+                Ok(WireMessage::Shutdown(_)) => Message::Shutdown,
+                Err(_error) => {
+                    #[cfg(test)]
+                    {
+                        // Historical full-frame fixtures remain readable in tests
+                        // while the production v2 endpoint accepts retained updates.
+                        match decode::<FrameV2>(line).map_err(|legacy_error| {
+                            format!("retained: {_error}; legacy: {legacy_error}")
+                        })? {
+                            WireMessage::Hello(h) => Message::Hello(h),
+                            WireMessage::Frame(f) => Message::FrameV2(f),
+                            WireMessage::Shutdown(_) => Message::Shutdown,
+                        }
+                    }
+                    #[cfg(not(test))]
+                    return Err(_error);
+                }
+            };
+            (Version::V2, message)
+        }
         other => {
+            #[cfg(test)]
             return Err(format!(
                 "unsupported protocol version {other}; expected 1 or 2"
             ));
+            #[cfg(not(test))]
+            return Err(format!("unsupported protocol version {other}; expected 2"));
         }
     };
     if let Message::Hello(hello) = &message {
@@ -429,6 +652,9 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if hello.title.is_empty() || hello.title.chars().any(char::is_control) {
             return Err("title must be nonempty and contain no control characters".into());
         }
+        if let Some(icon) = &hello.icon {
+            crate::app_icon::validate(icon)?;
+        }
         let unique: std::collections::HashSet<_> = hello.required_capabilities.iter().collect();
         if unique.len() != hello.required_capabilities.len() {
             return Err("requiredCapabilities must not contain duplicates".into());
@@ -436,11 +662,40 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
         if version == Version::V1 && unique.contains(&Capability::TileBatches) {
             return Err("tile_batches requires protocol v2".into());
         }
+        if version == Version::V1 && unique.contains(&Capability::FrameViewport) {
+            return Err("frame_viewport requires protocol v2".into());
+        }
         if version == Version::V1 && unique.contains(&Capability::GraphicalCanvas) {
             return Err("graphical_canvas requires protocol v2".into());
         }
+        if unique.contains(&Capability::CanvasOverlay)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_overlay requires protocol v2 and graphical_canvas".into());
+        }
         if version == Version::V1 && unique.contains(&Capability::WindowActivation) {
             return Err("window_activation requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::KeyTransitions) {
+            return Err("key_transitions requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::FieldMotion) {
+            return Err("field_motion requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::TileCovers) {
+            return Err("tile_covers requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::TileShadows) {
+            return Err("tile_shadows requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::SpriteLift) {
+            return Err("sprite_lift requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::SpriteQuarterTurns) {
+            return Err("sprite_quarter_turns requires protocol v2".into());
+        }
+        if version == Version::V1 && unique.contains(&Capability::SpritePivot) {
+            return Err("sprite_pivot requires protocol v2".into());
         }
         if unique.contains(&Capability::CanvasClipOpacity) {
             if version != Version::V2 {
@@ -449,6 +704,16 @@ pub fn parse(line: &[u8]) -> Result<Incoming, String> {
             if !unique.contains(&Capability::GraphicalCanvas) {
                 return Err("canvas_clip_opacity requires graphical_canvas".into());
             }
+        }
+        if unique.contains(&Capability::CanvasImageTone)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_image_tone requires protocol v2 and graphical_canvas".into());
+        }
+        if unique.contains(&Capability::CanvasImageFlip)
+            && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
+        {
+            return Err("canvas_image_flip requires protocol v2 and graphical_canvas".into());
         }
         if unique.contains(&Capability::CanvasGlyphEffects)
             && (version != Version::V2 || !unique.contains(&Capability::GraphicalCanvas))
@@ -474,13 +739,53 @@ pub enum Event {
         #[serde(skip_serializing_if = "Vec::is_empty")]
         capabilities: Vec<Capability>,
     },
+    /// A key-down. Legacy sessions receive only `key`, OS repeats included.
+    /// A `key_transitions` session also receives the stable `control`
+    /// identity and whether the key-down repeats an already held control.
     Key {
         key: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        control: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        repeat: Option<bool>,
     },
+    /// `key_transitions` only: a held control came back up.
+    KeyRelease {
+        control: String,
+    },
+    /// `key_transitions` only: the renderer no longer vouches for any held
+    /// control, so every one is released.
+    InputReset,
     CloseRequested,
+    Resized,
     Error {
         message: String,
     },
+    FrameAck {
+        generation: u64,
+        frame: u64,
+        presented: bool,
+    },
+    FrameRejected {
+        generation: u64,
+        #[serde(rename = "expectedGeneration")]
+        expected_generation: u64,
+        message: String,
+        #[serde(rename = "resyncRequired")]
+        resync_required: bool,
+    },
+}
+
+impl Event {
+    /// A legacy key-down: the key identity only, as every session receives
+    /// it without `key_transitions`.
+    pub fn key(key: impl Into<String>) -> Self {
+        Self::Key {
+            key: key.into(),
+            control: None,
+            repeat: None,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -603,6 +908,327 @@ impl ProtocolWriter {
 mod tests {
     use super::*;
 
+    #[test]
+    fn v2_ready_advertises_drawing_features_without_subscribing_to_events() {
+        let Message::Hello(mut hello) =
+            parse(include_bytes!("../fixtures/tile-batches/hello.json"))
+                .unwrap()
+                .message
+        else {
+            panic!()
+        };
+        hello.required_capabilities = vec![Capability::SpriteSourceRect, Capability::TileBatches];
+        let enabled = hello.get_enabled_capabilities(Version::V2);
+        assert!(enabled.contains(&Capability::GraphicalCanvas));
+        assert!(enabled.contains(&Capability::CanvasOverlay));
+        assert!(enabled.contains(&Capability::CanvasImageTone));
+        assert!(enabled.contains(&Capability::CanvasCompositing));
+        assert!(enabled.contains(&Capability::FrameViewport));
+        assert!(!enabled.contains(&Capability::WindowActivation));
+        assert_eq!(hello.required_capabilities.len(), 2);
+        let mut bytes = Vec::new();
+        write_event(
+            &mut bytes,
+            Version::V2,
+            &Event::Ready {
+                capabilities: enabled.clone(),
+            },
+        )
+        .unwrap();
+        let ready: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(
+            ready["capabilities"],
+            serde_json::to_value(enabled).unwrap()
+        );
+        hello.required_capabilities = vec![Capability::SpriteSourceRect];
+        assert_eq!(
+            hello.get_enabled_capabilities(Version::V1),
+            hello.required_capabilities
+        );
+        hello
+            .required_capabilities
+            .push(Capability::WindowActivation);
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::WindowActivation)
+        );
+    }
+
+    fn walk_hello(protocol: u32, required: &str) -> Result<Incoming, String> {
+        parse(
+            format!(
+                "{{\"protocol\":{protocol},\"type\":\"hello\",\"title\":\"Walk\",\"assetRoot\":\"/tmp\",\
+                 \"grid\":{{\"columns\":10,\"rows\":10,\"cellWidth\":10,\"cellHeight\":20}},\
+                 \"requiredCapabilities\":[{required}]}}"
+            )
+            .as_bytes(),
+        )
+    }
+
+    #[test]
+    fn key_transitions_are_an_explicit_v2_subscription() {
+        let hello = walk_hello;
+        let Message::Hello(legacy) = hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        let enabled = legacy.get_enabled_capabilities(Version::V2);
+        assert!(!enabled.contains(&Capability::KeyTransitions));
+        assert!(!legacy.reports_key_transitions());
+        let Message::Hello(subscribed) = hello(2, "\"sprite_source_rect\",\"key_transitions\"")
+            .unwrap()
+            .message
+        else {
+            panic!()
+        };
+        assert!(subscribed.reports_key_transitions());
+        assert!(
+            subscribed
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::KeyTransitions)
+        );
+        assert_eq!(
+            hello(1, "\"key_transitions\"").unwrap_err(),
+            "key_transitions requires protocol v2"
+        );
+        let mut bytes = Vec::new();
+        write_event(
+            &mut bytes,
+            Version::V2,
+            &Event::Ready {
+                capabilities: subscribed.get_enabled_capabilities(Version::V2),
+            },
+        )
+        .unwrap();
+        let ready = String::from_utf8(bytes).unwrap();
+        assert!(ready.contains("\"key_transitions\""));
+    }
+
+    #[test]
+    fn field_motion_is_a_v2_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::FieldMotion)
+        );
+        assert_eq!(
+            walk_hello(1, "\"field_motion\"").unwrap_err(),
+            "field_motion requires protocol v2"
+        );
+    }
+
+    #[test]
+    fn tile_covers_is_a_v2_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::TileCovers)
+        );
+        assert_eq!(
+            walk_hello(1, "\"tile_covers\"").unwrap_err(),
+            "tile_covers requires protocol v2"
+        );
+    }
+
+    #[test]
+    fn tile_shadows_is_a_v2_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::TileShadows)
+        );
+        let Message::Hello(required) = walk_hello(2, "\"tile_shadows\"").unwrap().message else {
+            panic!()
+        };
+        assert_eq!(required.required_capabilities, [Capability::TileShadows]);
+        assert_eq!(
+            walk_hello(1, "\"tile_shadows\"").unwrap_err(),
+            "tile_shadows requires protocol v2"
+        );
+        assert!(walk_hello(2, "\"tile_shadows\",\"tile_shadows\"").is_err());
+    }
+
+    #[test]
+    fn sprite_lift_is_a_v2_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::SpriteLift)
+        );
+        let Message::Hello(required) = walk_hello(2, "\"sprite_lift\"").unwrap().message else {
+            panic!()
+        };
+        assert_eq!(required.required_capabilities, [Capability::SpriteLift]);
+        assert_eq!(
+            walk_hello(1, "\"sprite_lift\"").unwrap_err(),
+            "sprite_lift requires protocol v2"
+        );
+    }
+
+    #[test]
+    fn sprite_quarter_turns_is_a_v2_retained_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "\"sprite_source_rect\"").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::SpriteQuarterTurns)
+        );
+        assert_eq!(
+            serde_json::to_value(Capability::SpriteQuarterTurns).unwrap(),
+            serde_json::json!("sprite_quarter_turns")
+        );
+        let Message::Hello(required) = walk_hello(2, "\"sprite_quarter_turns\"").unwrap().message
+        else {
+            panic!()
+        };
+        assert_eq!(
+            required.required_capabilities,
+            [Capability::SpriteQuarterTurns]
+        );
+        assert_eq!(
+            walk_hello(1, "\"sprite_quarter_turns\"").unwrap_err(),
+            "sprite_quarter_turns requires protocol v2"
+        );
+
+        // Older full-frame sprite shapes cannot opt into the retained-only
+        // rotation field, even when its value is zero.
+        let legacy = serde_json::json!({"protocol":1,"type":"frame","frame":1,
+            "text":[],"sprites":[{"id":"hero","asset":"hero.png","x":1,"y":2,
+                "width":16,"height":16,"anchor":"bottom_center","layer":1,
+                "quarterTurns":0}]});
+        assert!(parse(&serde_json::to_vec(&legacy).unwrap()).is_err());
+    }
+
+    #[test]
+    fn sprite_pivot_is_an_optional_v2_retained_drawing_feature() {
+        let Message::Hello(hello) = walk_hello(2, "").unwrap().message else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::SpritePivot)
+        );
+        assert_eq!(
+            serde_json::to_value(Capability::SpritePivot).unwrap(),
+            serde_json::json!("sprite_pivot")
+        );
+        let Message::Hello(required) = walk_hello(2, "\"sprite_pivot\"").unwrap().message else {
+            panic!()
+        };
+        assert_eq!(required.required_capabilities, [Capability::SpritePivot]);
+        assert_eq!(
+            walk_hello(1, "\"sprite_pivot\"").unwrap_err(),
+            "sprite_pivot requires protocol v2"
+        );
+    }
+
+    #[test]
+    fn canvas_overlay_requires_graphical_canvas_and_retained_validation_only() {
+        assert_eq!(
+            walk_hello(2, "\"canvas_overlay\"").unwrap_err(),
+            "canvas_overlay requires protocol v2 and graphical_canvas"
+        );
+        assert_eq!(
+            walk_hello(1, "\"graphical_canvas\",\"canvas_overlay\"").unwrap_err(),
+            "graphical_canvas requires protocol v2"
+        );
+        let Message::Hello(hello) = walk_hello(2, "\"graphical_canvas\",\"canvas_overlay\"")
+            .unwrap()
+            .message
+        else {
+            panic!()
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::CanvasOverlay)
+        );
+
+        let grid = Grid {
+            columns: 4,
+            rows: 2,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut frame: FrameV2 = serde_json::from_value(serde_json::json!({
+            "frame":1,"textLayers":[{"id":"hud","layer":1000,"runs":[]}],
+            "sprites":[],"canvas":{"width":40,"height":40}
+        }))
+        .unwrap();
+        assert_eq!(
+            frame.validate(grid).unwrap_err(),
+            "canvas cannot mix with text, sprites, tiles or viewport"
+        );
+        assert!(frame.validate_retained(grid, true).is_ok());
+        frame.canvas.as_mut().unwrap().width = 39;
+        assert_eq!(
+            frame.validate_retained(grid, true).unwrap_err(),
+            "overlay canvas must match the session grid in logical pixels"
+        );
+    }
+
+    #[test]
+    fn canvas_image_tone_requires_v2_graphical_canvas_and_is_advertised() {
+        assert_eq!(
+            walk_hello(2, "\"canvas_image_tone\"").unwrap_err(),
+            "canvas_image_tone requires protocol v2 and graphical_canvas"
+        );
+        assert_eq!(
+            walk_hello(1, "\"canvas_image_tone\"").unwrap_err(),
+            "canvas_image_tone requires protocol v2 and graphical_canvas"
+        );
+        let Message::Hello(hello) = walk_hello(2, "\"graphical_canvas\",\"canvas_image_tone\"")
+            .unwrap()
+            .message
+        else {
+            panic!()
+        };
+        let enabled = hello.get_enabled_capabilities(Version::V2);
+        assert!(enabled.contains(&Capability::CanvasImageTone));
+        assert_eq!(
+            serde_json::to_value(Capability::CanvasImageTone).unwrap(),
+            serde_json::json!("canvas_image_tone")
+        );
+    }
+
+    #[test]
+    fn canvas_image_flip_requires_v2_graphical_canvas_and_is_advertised() {
+        assert_eq!(
+            walk_hello(2, "\"canvas_image_flip\"").unwrap_err(),
+            "canvas_image_flip requires protocol v2 and graphical_canvas"
+        );
+        assert_eq!(
+            walk_hello(1, "\"canvas_image_flip\"").unwrap_err(),
+            "canvas_image_flip requires protocol v2 and graphical_canvas"
+        );
+        let Message::Hello(hello) = walk_hello(2, "\"graphical_canvas\",\"canvas_image_flip\"")
+            .unwrap()
+            .message
+        else {
+            panic!("expected hello");
+        };
+        assert!(
+            hello
+                .get_enabled_capabilities(Version::V2)
+                .contains(&Capability::CanvasImageFlip)
+        );
+    }
+
     fn tile_frame() -> FrameV2 {
         let Message::FrameV2(frame) = parse(include_bytes!(
             "../fixtures/tile-batches/valid-tiles-text-player-ui.json"
@@ -613,6 +1239,96 @@ mod tests {
             panic!()
         };
         frame
+    }
+
+    #[test]
+    fn frame_viewport_membership_is_explicit_and_validated_atomically() {
+        let v1_hello = r#"{"protocol":1,"type":"hello","title":"Test","assetRoot":"/tmp","grid":{"columns":1,"rows":1,"cellWidth":1,"cellHeight":1},"requiredCapabilities":["frame_viewport"]}"#;
+        assert!(parse(v1_hello.as_bytes()).is_err());
+        let grid = Grid {
+            columns: 135,
+            rows: 36,
+            cell_width: 10,
+            cell_height: 20,
+        };
+        let mut frame = tile_frame();
+        let viewport = FrameViewport {
+            scale: 2.0,
+            origin: ViewportPoint { x: 5.0, y: 0.0 },
+            clip_rect: ViewportRect {
+                x: 0.0,
+                y: 0.0,
+                width: 1350.0,
+                height: 720.0,
+            },
+            text_layer_ids: vec!["world".into()],
+            sprite_ids: vec!["player".into()],
+            tile_batch_ids: vec!["terrain".into()],
+        };
+        frame.viewport = Some(viewport.clone());
+        frame.validate(grid).unwrap();
+        for invalid in [
+            FrameViewport {
+                scale: 0.0,
+                ..viewport.clone()
+            },
+            FrameViewport {
+                scale: MAX_RENDER_SCALE + 0.1,
+                ..viewport.clone()
+            },
+            FrameViewport {
+                scale: f32::NAN,
+                ..viewport.clone()
+            },
+            FrameViewport {
+                origin: ViewportPoint {
+                    x: f32::INFINITY,
+                    y: 0.0,
+                },
+                ..viewport.clone()
+            },
+            FrameViewport {
+                clip_rect: ViewportRect {
+                    x: 1.0,
+                    ..viewport.clip_rect
+                },
+                ..viewport.clone()
+            },
+            FrameViewport {
+                text_layer_ids: vec!["world".into(), "world".into()],
+                ..viewport.clone()
+            },
+            FrameViewport {
+                sprite_ids: vec!["missing".into()],
+                ..viewport.clone()
+            },
+            FrameViewport {
+                tile_batch_ids: vec!["missing".into()],
+                ..viewport.clone()
+            },
+        ] {
+            frame.viewport = Some(invalid);
+            assert!(frame.validate(grid).is_err());
+        }
+
+        let mut wire: serde_json::Value = serde_json::from_str(include_str!(
+            "../fixtures/tile-batches/valid-tiles-text-player-ui.json"
+        ))
+        .unwrap();
+        wire["viewport"] = serde_json::json!({
+            "scale":2,"origin":{"x":5,"y":0},
+            "clipRect":{"x":0,"y":0,"width":1350,"height":720},
+            "textLayerIds":["world"],"spriteIds":["player"],"tileBatchIds":["terrain"]
+        });
+        let valid = serde_json::to_vec(&wire).unwrap();
+        let Message::FrameV2(decoded) = parse(&valid).unwrap().message else {
+            panic!()
+        };
+        decoded.validate(grid).unwrap();
+        wire["viewport"] = serde_json::Value::Null;
+        assert!(parse(&serde_json::to_vec(&wire).unwrap()).is_err());
+        wire["viewport"] = serde_json::json!({"scale":2});
+        assert!(parse(&serde_json::to_vec(&wire).unwrap()).is_err());
     }
 
     #[test]
@@ -809,9 +1525,7 @@ mod tests {
                 let trace = d.native_key("right", true).unwrap();
                 let queued = QueuedEvent {
                     version,
-                    event: Event::Key {
-                        key: "right".into(),
-                    },
+                    event: Event::key("right"),
                     trace: Some(trace),
                 };
                 let mut writer = ShortWriter {
@@ -1017,6 +1731,8 @@ mod tests {
             FRAME.replace("\"width\":32,", ""),
             FRAME.replace("\"x\":8", "\"x\":\"8\""),
             FRAME.replace("\"sprites\":", "\"sprite\":"),
+            // A lift is a retained field sprite's alone.
+            FRAME.replace("\"layer\":100", "\"layer\":100,\"lift\":6"),
             "{".into(),
         ] {
             assert!(parse(bad.as_bytes()).is_err());
@@ -1041,14 +1757,14 @@ mod tests {
             Event::Error {
                 message: "bad\ninput".into(),
             },
-            Event::Key { key: "W".into() },
+            Event::key("W"),
         ] {
             let mut bytes = Vec::new();
             write_event(&mut bytes, Version::V1, &event).unwrap();
             assert_eq!(bytes.iter().filter(|&&b| b == b'\n').count(), 1);
             let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
             assert_eq!(value["protocol"], 1);
-            if let Event::Key { key } = event {
+            if let Event::Key { key, .. } = event {
                 assert_eq!(value["key"], key);
             }
         }
@@ -1255,7 +1971,7 @@ mod tests {
                 Event::Ready {
                     capabilities: vec![],
                 },
-                Event::Key { key: "C".into() },
+                Event::key("C"),
                 Event::CloseRequested,
                 Event::Error {
                     message: "bad".into(),

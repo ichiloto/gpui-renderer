@@ -137,28 +137,46 @@ fn rasterize(region: &RenderImage, geometry: SamplingGeometry) -> Arc<RenderImag
     let stride = size.width.0 as u32;
     let source_width = stride - 2 * GUARD;
     let source_height = size.height.0 as u32 - 2 * GUARD;
-    let source = region.as_bytes(0).unwrap();
+    let source = region.as_bytes(0).unwrap().as_chunks::<4>().0;
     let (width, height) = geometry.raster_size();
     let xs = axis_samples(width, geometry.phase_x, geometry.width, source_width);
     let ys = axis_samples(height, geometry.phase_y, geometry.height, source_height);
     let mut pixels = image::RgbaImage::new(width, height);
-    for (x, y, pixel) in pixels.enumerate_pixels_mut() {
-        let (x0, x1, tx) = xs[x as usize];
-        let (y0, y1, ty) = ys[y as usize];
-        let offsets = [
-            y0 * stride + x0,
-            y0 * stride + x1,
-            y1 * stride + x0,
-            y1 * stride + x1,
-        ];
-        for channel in 0..4 {
-            let [a, b, c, d] = offsets.map(|offset| source[offset as usize * 4 + channel] as f32);
-            let upper = a + (b - a) * tx;
-            let lower = c + (d - c) * tx;
-            // GPUI filters unorm BGRA and alpha linearly, without premultiplying.
-            pixel.0[channel] = (upper + (lower - upper) * ty).round() as u8;
-        }
-    }
+    let row_bytes = width as usize * 4;
+    crate::raster_work::process_rows(
+        pixels.as_mut(),
+        row_bytes,
+        width as usize * height as usize,
+        |chunk, first_row| {
+            for (row, target) in chunk.chunks_exact_mut(row_bytes).enumerate() {
+                let (y0, y1, ty) = ys[first_row + row];
+                let upper =
+                    &source[y0 as usize * stride as usize..(y0 + 1) as usize * stride as usize];
+                let lower =
+                    &source[y1 as usize * stride as usize..(y1 + 1) as usize * stride as usize];
+                for (pixel, &(x0, x1, tx)) in target.as_chunks_mut::<4>().0.iter_mut().zip(&xs) {
+                    let (a, b, c, d) = (
+                        upper[x0 as usize],
+                        upper[x1 as usize],
+                        lower[x0 as usize],
+                        lower[x1 as usize],
+                    );
+                    for channel in 0..4 {
+                        let (a, b, c, d) = (
+                            a[channel] as f32,
+                            b[channel] as f32,
+                            c[channel] as f32,
+                            d[channel] as f32,
+                        );
+                        let upper = a + (b - a) * tx;
+                        let lower = c + (d - c) * tx;
+                        // Retain the original unorm BGRA/alpha interpolation order.
+                        pixel[channel] = (upper + (lower - upper) * ty).round() as u8;
+                    }
+                }
+            }
+        },
+    );
     Arc::new(RenderImage::new(vec![image::Frame::new(pixels)]))
 }
 
@@ -166,6 +184,75 @@ fn rasterize(region: &RenderImage, geometry: SamplingGeometry) -> Arc<RenderImag
 mod tests {
     use super::*;
     use crate::{protocol::SourceRect, tile_regions::RegionCache, viewport::ViewportTransform};
+
+    fn rasterize_serial(region: &RenderImage, geometry: SamplingGeometry) -> Vec<u8> {
+        let size = region.size(0);
+        let stride = size.width.0 as u32;
+        let source = region.as_bytes(0).unwrap();
+        let (width, height) = geometry.raster_size();
+        let xs = axis_samples(width, geometry.phase_x, geometry.width, stride - 2 * GUARD);
+        let ys = axis_samples(
+            height,
+            geometry.phase_y,
+            geometry.height,
+            size.height.0 as u32 - 2 * GUARD,
+        );
+        let mut pixels = image::RgbaImage::new(width, height);
+        for (x, y, pixel) in pixels.enumerate_pixels_mut() {
+            let (x0, x1, tx) = xs[x as usize];
+            let (y0, y1, ty) = ys[y as usize];
+            let offsets = [
+                y0 * stride + x0,
+                y0 * stride + x1,
+                y1 * stride + x0,
+                y1 * stride + x1,
+            ];
+            for channel in 0..4 {
+                let [a, b, c, d] =
+                    offsets.map(|offset| source[offset as usize * 4 + channel] as f32);
+                let upper = a + (b - a) * tx;
+                let lower = c + (d - c) * tx;
+                pixel.0[channel] = (upper + (lower - upper) * ty).round() as u8;
+            }
+        }
+        pixels.into_raw()
+    }
+
+    #[test]
+    fn large_fractional_device_rasters_match_the_original_serial_pixels() {
+        let region = RenderImage::new(vec![image::Frame::new(image::RgbaImage::from_fn(
+            123,
+            93,
+            |x, y| {
+                image::Rgba([
+                    (x * 31 + y * 3) as u8,
+                    (y * 17 + x * 7) as u8,
+                    (x * y) as u8,
+                    (x * 13 + y * 19) as u8,
+                ])
+            },
+        ))]);
+        for (left, top, scale) in [
+            (0.0, 0.0, 1.0),
+            (-0.731, 1.235, 0.875),
+            (37.5, -23.25, 1.25),
+        ] {
+            let geometry = SamplingGeometry::new(
+                PaintRect {
+                    left,
+                    top,
+                    width: 641.75,
+                    height: 431.5,
+                },
+                scale,
+            );
+            let image = rasterize(&region, geometry);
+            assert_eq!(
+                image.as_bytes(0).unwrap(),
+                rasterize_serial(&region, geometry)
+            );
+        }
+    }
 
     fn gradient() -> Arc<RenderImage> {
         let atlas = Arc::new(RenderImage::new(vec![image::Frame::new(

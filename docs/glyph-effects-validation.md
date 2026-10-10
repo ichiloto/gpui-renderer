@@ -127,7 +127,7 @@ owned test window was closed. The [native receipt and evidence hashes](evidence/
 identify the tested candidate/source and the G1 executable preserved during
 that checkpoint, before the later canonical installation.
 
-The reusable silent scenario is `scripts/native-tile-smoke.py --glyphs --binary
+The reusable silent scenario is `scripts/native-tile-smoke.php --glyphs --binary
 <installed executable> --evidence-dir <directory>`. It checks negotiation, cached
 rise/fade/clipping, effects omission and whole-canvas clearing, then closes its
 owned process. With `--glyphs`, `--observe-seconds 45` holds each of the four frames
@@ -161,3 +161,7 @@ battle outcomes or the later Engine/Game cursor corrections. Current cursor
 policy is in the [README](../README.md#cursor-presentation). Linux/WSLg and native
 Windows builds/execution have not been validated. Local integration and canonical
 installation do not constitute publication or cross-platform acceptance.
+
+Utility links and reproduction commands now point to PHP equivalents. Recorded
+native measurements above predate this utility migration; the migration did not
+rerun native validation or change retained measurement data.

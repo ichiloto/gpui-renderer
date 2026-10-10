@@ -13,7 +13,7 @@ Only `ichiloto/gpui-renderer` was modified. Phase S2 and PHP integration were no
 | `cargo test --locked` | 22 passed, 0 failed, 0 ignored |
 | `cargo build --locked` | Pass |
 | `git diff --check` | Pass |
-| `python3 scripts/native-smoke.py` | All seven real-process checks pass |
+| `php scripts/native-smoke.php` | All seven real-process checks pass |
 
 The Rust tests cover hello, protocol versions, positive/bounded grid geometry,
 frame shape, anchors, shutdown, normalized key serialization and case, complete
@@ -77,7 +77,7 @@ longer running. This was repeated against the final build after the IPC cleanup.
 Added or populated: `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `.gitignore`,
 `src/main.rs`, `src/app.rs`, `src/protocol.rs`, `src/transport.rs`, `src/state.rs`,
 `src/renderer.rs`, `src/assets.rs`, `src/input.rs`, `fixtures/home-frame.ndjson`,
-`fixtures/test-sprite.png`, `scripts/fixture.py`, `scripts/native-smoke.py`, `README.md`,
+`fixtures/test-sprite.png`, `scripts/fixture.php`, `scripts/native-smoke.php`, `README.md`,
 and this validation record/capture. Removed the empty `src/scene.rs` placeholder:
 the renderer has no scene concept. The pre-existing AGENTS.md, LICENSE, and local
 settings were left as supplied.
@@ -118,3 +118,7 @@ invalid frames preserve prior state, equal-layer order is stable, and EOF after
 hello differs from shutdown. GPUI dimensions are logical pixels; display scaling
 applies after grid layout to both text and sprites. These decisions match the
 coordinator's zero-based PHP screen-coordinate and case-sensitive key contracts.
+
+Utility links and reproduction commands now point to PHP equivalents. Recorded
+native measurements above predate this utility migration; the migration did not
+rerun native validation or change retained measurement data.

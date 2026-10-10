@@ -1,7 +1,7 @@
 //! Prepared canvas images and native painting. PHP owns all authored layout/state.
 use crate::canvas_protocol::{Canvas, CanvasImage, Rect};
 use crate::color::DEFAULT_FOREGROUND;
-use crate::renderer::{FONT_FAMILY, fit_cell_font, positioned};
+use crate::renderer::{FONT_FAMILY, create_text_surface, fit_cell_font, positioned};
 use crate::viewport::{PaintRect, ViewportTransform};
 use gpui::{App, Div, RenderImage, div, font, prelude::*, px, rgb};
 use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc};
@@ -171,10 +171,8 @@ impl PreparedCanvas {
                                 + f32::from(text.descent(font_id, px(1.0)));
                             fit_cell_font(cw, ch, advance, line)
                         });
-                    let mut text = positioned(div(), bounds)
-                        .overflow_hidden()
-                        .text_size(px(size * transform.scale))
-                        .line_height(px(ch * transform.scale));
+                    let mut text =
+                        create_text_surface(bounds, size * transform.scale, ch * transform.scale);
                     for run in &layer.runs {
                         for (offset, glyph) in run.text.chars().enumerate() {
                             // Transparent spaces produce no paint; explicit backgrounds still paint.

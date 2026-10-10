@@ -62,11 +62,11 @@ These observations verify native startup, preparation and CPU painting. They
 do not measure GPU completion, FPS, real gameplay, collision or Garden scrolling.
 The ordinary CLI acceptance below is separate from this fixture check.
 
-The reusable [single-window check](../scripts/native-tile-smoke.py) accepts a
+The reusable [single-window check](../scripts/native-tile-smoke.php) accepts a
 packager-resolved executable and an evidence directory:
 
 ```sh
-python3 scripts/native-tile-smoke.py --binary /path/to/installed/gpui-renderer --evidence-dir /tmp/tile-smoke
+php scripts/native-tile-smoke.php --binary /path/to/installed/gpui-renderer --evidence-dir /tmp/tile-smoke
 ```
 
 It enforces a 20-second observation/write deadline and terminates only its owned
@@ -106,3 +106,7 @@ published its closeout as
 No additional native session or optimization round is required for this slice.
 This does not claim matched scrolling timings, graphical battle/NPC adoption,
 configurable window modes or support on untested platforms.
+
+Utility links and reproduction commands now point to PHP equivalents. Recorded
+native measurements above predate this utility migration; the migration did not
+rerun native validation or change retained measurement data.

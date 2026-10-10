@@ -234,17 +234,29 @@ impl CompositeCache {
             self.masks.push_back(entry);
             return Some(pixels);
         }
-        let mut data = Vec::with_capacity(bounds.get_area());
-        for y in bounds.y..bounds.y + bounds.height {
-            for x in bounds.x..bounds.x + bounds.width {
-                let p = [x as f64 + 0.5, y as f64 + 0.5];
-                let a = masks
-                    .iter()
-                    .map(|m| mask_alpha(m, p, sources))
-                    .product::<f64>();
-                data.push((a * 255.0).round().clamp(0.0, 255.0) as u8);
+        let data = if let [
+            mask @ Mask::Polygon {
+                contours,
+                feather,
+                invert,
+            },
+        ] = masks
+        {
+            prepare_polygon_mask(mask, contours, *feather, *invert, bounds, sources)
+        } else {
+            let mut data = Vec::with_capacity(bounds.get_area());
+            for y in bounds.y..bounds.y + bounds.height {
+                for x in bounds.x..bounds.x + bounds.width {
+                    let p = [x as f64 + 0.5, y as f64 + 0.5];
+                    let a = masks
+                        .iter()
+                        .map(|m| mask_alpha(m, p, sources))
+                        .product::<f64>();
+                    data.push((a * 255.0).round().clamp(0.0, 255.0) as u8);
+                }
             }
-        }
+            data
+        };
         stats.mask_builds += 1;
         let pixels = Arc::new(data);
         let bytes = pixels.len() + key.len();
@@ -288,6 +300,12 @@ impl CompositeCache {
                 continue;
             }
             let bounds = PixelRect::intersect(op.get_bounds(), c.width, c.height);
+            let brush = match op {
+                Operation::Fill { brush, .. } | Operation::Stroke { brush, .. } => {
+                    Some(pixels::PreparedBrush::prepare(brush))
+                }
+                Operation::Image { .. } => None,
+            };
             let masks = self.prepare_mask(op.get_masks(), bounds, sources, stats);
             let displacement_masks = if let Operation::Image {
                 displacement: Some(d),
@@ -298,6 +316,23 @@ impl CompositeCache {
             } else {
                 None
             };
+            if let Operation::Fill {
+                destination,
+                opacity,
+                blend,
+                ..
+            } = op
+            {
+                paint_fill(
+                    data,
+                    stride,
+                    bounds,
+                    (*destination, *opacity, *blend),
+                    masks.as_deref().map(Vec::as_slice),
+                    brush.as_ref().unwrap(),
+                );
+                continue;
+            }
             // A whole, unmodified background is a copy rather than four taps
             // and a blend per pixel; this is independent of any scene identity.
             if let Operation::Image {
@@ -347,7 +382,27 @@ impl CompositeCache {
                 }
             }
             for y in bounds.y..bounds.y + bounds.height {
-                for x in bounds.x..bounds.x + bounds.width {
+                let columns = if let Operation::Stroke { points, width, .. } = op {
+                    let extents = points.windows(2).filter_map(|segment| {
+                        pixels::segment_row_extent(
+                            segment[0],
+                            segment[1],
+                            y as f64 + 0.5,
+                            width / 2.0 + 0.5,
+                        )
+                    });
+                    let extent = extents.fold(None, |range, (left, right)| {
+                        Some(range.map_or((left, right), |(a, b): (f64, f64)| {
+                            (a.min(left), b.max(right))
+                        }))
+                    });
+                    extent.map_or(bounds.x..bounds.x, |(left, right)| {
+                        pixels::row_pixel_span(left, right, bounds)
+                    })
+                } else {
+                    bounds.x..bounds.x + bounds.width
+                };
+                for x in columns {
                     let i = ((y - bounds.y) * bounds.width + x - bounds.x) as usize;
                     let alpha =
                         op.get_opacity() * masks.as_ref().map_or(1.0, |m| m[i] as f64 / 255.0);
@@ -390,27 +445,13 @@ impl CompositeCache {
                             }
                             sample
                         }
-                        Operation::Fill {
-                            destination, brush, ..
-                        } => {
-                            let mut sample = pixels::brush(brush, p);
-                            let coverage = pixels::rect_coverage(*destination, p) as f32;
-                            for v in &mut sample {
-                                *v *= coverage;
-                            }
-                            sample
-                        }
-                        Operation::Stroke {
-                            points,
-                            width,
-                            brush,
-                            ..
-                        } => {
+                        Operation::Fill { .. } => unreachable!(),
+                        Operation::Stroke { points, width, .. } => {
                             let d = points
                                 .windows(2)
                                 .map(|s| pixels::segment_distance(p, s[0], s[1]))
                                 .fold(f64::INFINITY, f64::min);
-                            let mut sample = pixels::brush(brush, p);
+                            let mut sample = brush.as_ref().unwrap().sample(p);
                             let coverage = (width / 2.0 + 0.5 - d).clamp(0.0, 1.0) as f32;
                             for v in &mut sample {
                                 *v *= coverage;
@@ -426,10 +467,7 @@ impl CompositeCache {
                     }
                     let offset = ((y + GUARD) * stride + x + GUARD) as usize * 4;
                     let target = &mut data[offset..offset + 4];
-                    pixels::write(
-                        target,
-                        pixels::blend(pixel, pixels::unpack(target), op.get_blend()),
-                    );
+                    pixels::paint(target, pixel, op.get_blend());
                 }
             }
             if let Some(key) = base_key {
@@ -438,10 +476,11 @@ impl CompositeCache {
         }
         // Clamp output guards, just like normal cached canvas image regions.
         for y in 0..height {
-            for x in 0..stride {
-                if x >= GUARD && x < c.width + GUARD && y >= GUARD && y < c.height + GUARD {
-                    continue;
-                }
+            let border_row = y < GUARD || y >= c.height + GUARD;
+            let left_end = if border_row { stride } else { GUARD };
+            let right_start = if border_row { stride } else { c.width + GUARD };
+            let columns = (0..left_end).chain(right_start..stride);
+            for x in columns {
                 let sx = x.clamp(GUARD, c.width + GUARD - 1);
                 let sy = y.clamp(GUARD, c.height + GUARD - 1);
                 let src = ((sy * stride + sx) * 4) as usize;
@@ -452,6 +491,104 @@ impl CompositeCache {
         }
         Ok(Arc::new(RenderImage::new(vec![image::Frame::new(output)])))
     }
+}
+
+fn paint_fill(
+    data: &mut [u8],
+    stride: u32,
+    bounds: PixelRect,
+    paint: (crate::canvas_protocol::Rect, f64, wire::Blend),
+    masks: Option<&[u8]>,
+    brush: &pixels::PreparedBrush,
+) {
+    let (destination, opacity, blend) = paint;
+    if bounds.get_area() == 0 || opacity == 0.0 {
+        return;
+    }
+    let row_bytes = stride as usize * 4;
+    let begin = (bounds.y + GUARD) as usize * row_bytes;
+    let rows = &mut data[begin..begin + bounds.height as usize * row_bytes];
+    let paint_rows = |data: &mut [u8], first_row: usize| {
+        for (row, target_row) in data.chunks_exact_mut(row_bytes).enumerate() {
+            let local_row = first_row + row;
+            let y = bounds.y as usize + local_row;
+            for x in bounds.x..bounds.x + bounds.width {
+                let i = local_row * bounds.width as usize + (x - bounds.x) as usize;
+                let alpha = opacity * masks.map_or(1.0, |m| m[i] as f64 / 255.0);
+                if alpha == 0.0 {
+                    continue;
+                }
+                let point = [x as f64 + 0.5, y as f64 + 0.5];
+                let mut source = brush.sample(point);
+                let coverage = pixels::rect_coverage(destination, point) as f32;
+                for value in &mut source {
+                    *value *= coverage;
+                    *value *= alpha as f32;
+                }
+                if source[3] != 0.0 {
+                    let offset = (x + GUARD) as usize * 4;
+                    pixels::paint(&mut target_row[offset..offset + 4], source, blend);
+                }
+            }
+        }
+    };
+    crate::raster_work::process_rows(rows, row_bytes, bounds.get_area(), paint_rows);
+}
+
+fn prepare_polygon_mask(
+    mask: &Mask,
+    contours: &[Vec<Point>],
+    feather: f64,
+    invert: bool,
+    bounds: PixelRect,
+    sources: &Sources,
+) -> Vec<u8> {
+    let outside = if invert { 255 } else { 0 };
+    let inside = 255 - outside;
+    let mut data = vec![outside; bounds.get_area()];
+    let radius = if feather == 0.0 { 0.5 } else { feather };
+    let mut crossings = Vec::new();
+    for y in bounds.y..bounds.y + bounds.height {
+        let py = y as f64 + 0.5;
+        let row = (y - bounds.y) as usize * bounds.width as usize;
+        for contour in contours {
+            crossings.clear();
+            for (i, &a) in contour.iter().enumerate() {
+                let b = contour[(i + 1) % contour.len()];
+                if (a[1] > py) != (b[1] > py) {
+                    crossings.push((b[0] - a[0]) * (py - a[1]) / (b[1] - a[1]) + a[0]);
+                }
+            }
+            crossings.sort_by(f64::total_cmp);
+            for pair in crossings.as_chunks::<2>().0 {
+                let start = (pair[0] - 0.5)
+                    .ceil()
+                    .clamp(bounds.x as f64, (bounds.x + bounds.width) as f64)
+                    as u32;
+                let end = (pair[1] - 0.5)
+                    .ceil()
+                    .clamp(bounds.x as f64, (bounds.x + bounds.width) as f64)
+                    as u32;
+                data[row + (start - bounds.x) as usize..row + (end - bounds.x) as usize]
+                    .fill(inside);
+            }
+        }
+        // Only edge bands need signed distance. Union/intersection and feather
+        // coverage still use the original evaluator, including overlapping contours.
+        for contour in contours {
+            for (i, &a) in contour.iter().enumerate() {
+                let b = contour[(i + 1) % contour.len()];
+                if let Some((left, right)) = pixels::segment_row_extent(a, b, py, radius) {
+                    for x in pixels::row_pixel_span(left, right, bounds) {
+                        let alpha = mask_alpha(mask, [x as f64 + 0.5, py], sources);
+                        data[row + (x - bounds.x) as usize] =
+                            (alpha * 255.0).round().clamp(0.0, 255.0) as u8;
+                    }
+                }
+            }
+        }
+    }
+    data
 }
 
 fn mask_alpha(mask: &Mask, p: Point, sources: &Sources) -> f64 {

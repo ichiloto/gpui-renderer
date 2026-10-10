@@ -21,6 +21,11 @@
 
 declare(strict_types=1);
 
+use function Ichiloto\Renderer\Tools\{getAbsolutePackagePath, getPackageFingerprint, buildReleaseExecutable, parseOptions};
+
+require_once __DIR__ . '/lib/PackageBuild.php';
+require_once __DIR__ . '/lib/Support.php';
+
 const RENDERER_ID = 'gpui';
 const DISPLAY_NAME = 'GPUI';
 
@@ -44,7 +49,7 @@ function detectPlatform(): string
     return strtolower(PHP_OS_FAMILY) . '-' . $architecture;
 }
 
-function cargoVersion(string $root): string
+function getCargoVersion(string $root): string
 {
     $manifest = (string) file_get_contents($root . '/Cargo.toml');
 
@@ -93,14 +98,25 @@ Options:
   --platform=<id>   Target platform id, e.g. darwin-arm64, linux-x64,
                     windows-x64 (default: this host).
   --binary=<path>   The built release executable
-                    (default: target/release/gpui-renderer[.exe]).
+                    (default: Cargo-reported executable; with --skip-build,
+                    target/release/gpui-renderer[.exe]).
   --out=<dir>       Output directory for the staged package and archive
                     (default: dist/).
+  --describe        Print build-input JSON only; no build or filesystem writes.
   --skip-build      Package an existing release build without running cargo.
   --help            Show this help.
 USAGE;
 
-$options = getopt('', ['platform:', 'binary:', 'out:', 'skip-build', 'help']);
+try {
+    $options = parseOptions(array_fill_keys(['platform', 'binary', 'out', 'skip-build', 'describe'], null), ['skip-build', 'describe'], $usage);
+    if ($options['_'] !== []) { fail('Unexpected positional arguments.'); }
+} catch (Throwable $error) { fail($error->getMessage()); }
+
+foreach (['platform', 'binary', 'out'] as $option) {
+    if (isset($options[$option]) && (!is_string($options[$option]) || $options[$option] === '')) {
+        fail("--{$option} requires one non-empty value.");
+    }
+}
 
 if (isset($options['help'])) {
     echo $usage, PHP_EOL;
@@ -113,37 +129,46 @@ if (preg_match('/^[a-z]+-[a-z0-9_]+$/', $platform) !== 1) {
     fail('--platform must look like darwin-arm64, linux-x64 or windows-x64.');
 }
 
-if (! isset($options['skip-build'])) {
-    echo 'Building the optimized release renderer (cargo build --release --locked)...', PHP_EOL;
-    passthru(sprintf('cd %s && cargo build --release --locked', escapeshellarg($root)), $status);
-
-    if ($status !== 0) {
-        fail('The cargo build failed.');
+try {
+    $version = getCargoVersion($root);
+    if (preg_match('/^[A-Za-z0-9][A-Za-z0-9.+-]*$/', $version) !== 1) {
+        fail('Cargo package version is not safe for a package directory name.');
     }
+    $packageName = sprintf('%s-%s-%s', RENDERER_ID, $platform, $version);
+    $out = getAbsolutePackagePath(is_string($options['out'] ?? null) ? $options['out'] : $root . '/dist');
+    $stage = rtrim($out, '/') . '/' . $packageName;
+    if (isset($options['describe'])) {
+        if (isset($options['binary']) || isset($options['skip-build'])) {
+            fail('--describe cannot certify --binary or --skip-build artifacts.');
+        }
+        echo json_encode([
+            'renderer' => RENDERER_ID,
+            'platform' => $platform,
+            'profile' => 'release',
+            'fingerprint' => getPackageFingerprint($root, $platform, getenv()),
+            'packageDirectory' => $stage,
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), PHP_EOL;
+        exit(0);
+    }
+    if ($platform !== detectPlatform() && ! isset($options['binary'])) {
+        fail(sprintf('--platform %s differs from this host (%s); pass --binary with the cross-compiled executable.', $platform, detectPlatform()));
+    }
+    $builtBinary = null;
+    if (! isset($options['skip-build'])) {
+        echo 'Building the optimized release renderer (cargo build --release --locked)...', PHP_EOL;
+        $builtBinary = buildReleaseExecutable($root);
+    }
+    $executableName = str_starts_with($platform, 'windows-') ? 'gpui-renderer.exe' : 'gpui-renderer';
+    $binary = is_string($options['binary'] ?? null)
+        ? realpath($options['binary'])
+        : ($builtBinary ?? realpath($root . '/target/release/' . $executableName));
+    if ($binary === false || ! is_file($binary)) {
+        fail('No release executable was found. Build first, or pass --binary.');
+    }
+} catch (Throwable $error) {
+    fail($error->getMessage());
 }
-
-$executableName = str_starts_with($platform, 'windows-') ? 'gpui-renderer.exe' : 'gpui-renderer';
-$binary = is_string($options['binary'] ?? null)
-    ? realpath($options['binary'])
-    : realpath($root . '/target/release/' . $executableName);
-
-if ($binary === false || ! is_file($binary)) {
-    fail('No release executable was found. Build first, or pass --binary.');
-}
-
-if ($platform !== detectPlatform() && ! isset($options['binary'])) {
-    fail(sprintf(
-        '--platform %s differs from this host (%s); pass --binary with the cross-compiled executable.',
-        $platform,
-        detectPlatform(),
-    ));
-}
-
-$version = cargoVersion($root);
-$packageName = sprintf('%s-%s-%s', RENDERER_ID, $platform, $version);
-$out = is_string($options['out'] ?? null) ? rtrim($options['out'], '/') : $root . '/dist';
 ensureDirectory($out);
-$stage = $out . '/' . $packageName;
 removeTree($stage);
 $payloadRoot = $stage . '/' . RENDERER_ID . '/' . $platform;
 
@@ -172,12 +197,12 @@ $iterator = new RecursiveIteratorIterator(
 
 foreach ($iterator as $item) {
     if ($item->isFile()) {
-        $files[substr($item->getPathname(), strlen($stage) + 1)] = hash_file('sha256', $item->getPathname());
+        $files[str_replace('\\', '/', substr($item->getPathname(), strlen($stage) + 1))] = hash_file('sha256', $item->getPathname());
     }
 }
 
 ksort($files);
-$executableRelative = substr($installedExecutable, strlen($stage) + 1);
+$executableRelative = str_replace('\\', '/', substr($installedExecutable, strlen($stage) + 1));
 $descriptor = [
     'version' => 1,
     'renderer' => RENDERER_ID,
@@ -205,5 +230,3 @@ Phar::unlinkArchive($tarFile);
 echo 'Staged package directory: ', $stage, PHP_EOL;
 echo 'Package archive:          ', $archiveFile, PHP_EOL;
 echo 'Executable SHA-256:       ', $files[$executableRelative], PHP_EOL;
-echo 'Install with: ichiloto renderer:install ', $archiveFile,
-    '  (add --engine <engine checkout> for development staging)', PHP_EOL;

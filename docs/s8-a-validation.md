@@ -52,10 +52,15 @@ when the cached sheet is unchanged.
 
 The prior implementation cached only within a frame. The new session LRU cache
 holds at most 64 MiB of decoded full images and 1024 entries. Canonical path and
-file length/mtime identify a cached image. A metadata change reloads; content edits
-that preserve both length and timestamp require restarting the session. Paths are
-still resolved and validated before a cache hit. Absolute/escaping paths, deleted
-files and invalid PNGs retain their existing rejection behavior.
+file length/mtime identify a cached image. The October 7 correction also probes
+the current 33-byte PNG signature/IHDR before reuse: changed dimensions or invalid headers
+reload even with preserved length and full-resolution mtime. This removes the
+former restart requirement for header changes, not for same-header pixel edits
+that also preserve length and timestamp. Source and derived crop/colour identities
+refresh together; old snapshots retain immutable pixels. Paths and encoded limits
+are still checked before reuse. Absolute/escaping paths, deleted files and invalid
+PNGs retain their existing rejection behavior. This is a headless cache contract,
+not a claim of visible native motion or cross-platform filesystem qualification.
 
 Each prepared snapshot retains its bounded cache generation. Queued and currently
 displayed generations may keep older images alive in addition to the current

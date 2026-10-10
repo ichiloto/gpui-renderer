@@ -1,6 +1,8 @@
 # Ichiloto GPUI renderer
 
-The negotiated v2 `graphical_canvas` extension draws images at explicit graphical
+The protocol 2 retained renderer draws maps, sprites, text and canvas entities
+without resending the whole scene for every camera movement. The negotiated
+`graphical_canvas` capability draws images at explicit graphical
 rectangles, with outlines/underlines and locally positioned text. PHP resolves
 image pivots, contain-fit geometry and presentation state. Native resizing fits
 the complete canvas uniformly and centers it. Existing field sprite/tile grid
@@ -9,15 +11,115 @@ coordinates retain their meaning.
 Project-owned image cursors use the existing canvas image path; see
 [cursor presentation](#cursor-presentation) for ownership and limits.
 
+### Shared Authoring Canvas
+
+The library's `canvas_view` module lets authoring tools paint an Engine canvas
+without implementing another renderer. Create `CanvasAssets::new(asset_root)`
+once per project and call `prepare_canvas(canvas)` off the UI thread. Clones
+share bounded source/region/composite caches. It returns an immutable
+`CanvasFrame`, with `get_size()` and `get_resources()` for inspection. This
+uses the same preparation as runtime frames: validation, PNG decoding, atlas
+crops, brightness, flips, local compositing and resource admission. An invalid
+candidate returns an error; retain the previously accepted frame rather than
+silently substituting missing art.
+
+Keep one `CanvasPainter` per view. Its `paint(frame, width, height, window, app)`
+returns a uniformly fitted, centered element using runtime text/glyph-effects
+and image painting. It owns device-raster reuse and obsolete GPU-image retirement.
+Ordinary canvas text explicitly uses the same measured monospace font as runtime
+grids, so an embedding editor's UI font cannot change its cell fit.
+Call `clear(window)` while the window still exists when the preview closes or
+changes project, then drop its frames/assets when no longer needed. The host
+still owns seeking, reply generations and animation timing. Preparation and
+painting cannot run gameplay, play sound or infer a summon design.
+
+### Shared Field Preview
+
+Use `scene_view` for a complete field/cinematic preview rather than flattening
+it to an unrelated canvas. `SceneSession::new(asset_root, SceneGrid)` owns one
+project's retained source and preparation caches. Feed the Engine's existing
+retained update bodies to `apply_update(value)` off the UI thread. Staged map
+chunks return `None`; a visible update returns an immutable, cloneable
+`SceneFrame` with world tiles, uncovered glyphs, actors, camera and screen
+overlays. `get_generation()` supplies the accepted cursor. Rejected updates
+retain the previous visible generation and require an explicit reset.
+
+The preview bridge need not construct event JSON or access the private protocol
+module. `session.get_capabilities()` returns the existing `SceneCapability`
+values selected by production v2 negotiation, without input/window subscriptions.
+`session.encode_ready()` returns the canonical READY line.
+`SceneSession::encode_acknowledgement(generation, frame, presented)` carries the
+accepted input identifiers unchanged: use `false` for a staged `None`, `true`
+for a visible `Some`. `session.encode_rejection(generation, message)` preserves
+the diagnostic and supplies the session's accepted `expectedGeneration` and
+`resyncRequired: true`. All return `std::io::Result<String>`, encode through the
+production event writer, and include the terminating newline. Queue feedback
+until the Engine's `presentFrame` returns; never acknowledge reentrantly inside
+the sender. Encoding does not apply updates or change session state.
+
+`ScenePainter::paint(frame, playhead_seconds, width, height, window, app)` uses
+the runtime's complete field painter, including draw bands, tile coverage,
+atlas crops, lifts/turns, camera follow and transparent canvas overlays. The
+host owns the isolated interpreter, seeking, pause and timing; painting never
+advances gameplay or starts another wall clock. Backward seeks, resets and
+new sessions clear stale slides. Camera-only updates reuse prepared resources.
+Retain the previous accepted picture when preparation fails and label it as
+such. Call `clear(window)` before closing the view or replacing the project,
+then drop frames and session resources when no longer needed.
+
+For an editable map, `ScenePainter::paint_authoring(frame, playhead_seconds,
+SceneAuthoring, window, app)` uses the same world, sprite and text paint loop.
+The host supplies a `MapCamera` for pan, zoom, visible bounds and tile animation;
+field sprites and text must use world cell coordinates. This view applies the
+camera immediately, without runtime follow or movement slides. Screen items keep
+their screen coordinates. `SceneAuthoring::layer_opacity` returns `None` to omit
+a prepared world layer, or a finite opacity in `0..=1` to show or dim it. Hiding
+a layer does not recompose glyph ownership or coverage. `excluded_cells` leaves
+world glyph/background cells to a transient editing stroke without suppressing
+tiles or sprites. The optional `(draw_band, element)` overlay paints before the
+first world layer or scene item at or above that band, or last when all bands
+are lower; the host owns its coordinates. Retained canvas overlays still paint
+above the field.
+
+`SceneFrame::get_world(id)` returns a read-only `MapWorld` sharing the accepted
+prepared world and images, so the editor need not decode or compose a second
+copy. `get_shown_glyph_cells()` reports its uncovered nonblank gameplay glyphs,
+including any coverage already resolved by the Engine in the accepted rows.
+The host owns source updates, authoring identity, hit testing and playhead time.
+Use one painter per owning view/window and call `clear(window)` before that view
+closes or changes project; both paint entry points share image retirement.
+
+The adapter has synthetic preparation, ownership, rejection, mutable-art,
+clock and retirement coverage. This does not establish native Editor visual
+acceptance or Windows/Linux support.
+
+### Retained canvas overlays
+
+The v2 `canvas_overlay` capability extends `graphical_canvas`. A retained
+`canvas` root with `mode:"overlay"` may coexist with the current world viewport,
+sprites and screen text. Its width and height must equal the hello grid's logical
+pixel surface, and it must have no background. Canvas elements keep their
+existing bounds and resource limits. They paint in canvas layer order above the
+complete field and screen HUD; areas without canvas elements remain transparent.
+The field uses the same camera and native-window fit when the overlay opens.
+
+Retained canvas element IDs can be replaced or removed without replacing the
+world, camera or unrelated screen text. Field notifications remain in their
+existing layers and show through transparent portions of the overlay. A
+notification that must appear in front of an overlapping panel needs an explicit
+higher canvas layer from PHP; the renderer does not move notifications between
+presentations. Omitting `mode` keeps the existing exclusive full-canvas behavior
+for menus and skits, including its independent canvas dimensions.
+
 The [G1 wire corpus](fixtures/graphical-canvas/manifest.json) and its
-[hash manifest](fixtures/graphical-canvas/SHA256SUMS) freeze the shared boundary.
-Each accepted canvas fully replaces the previous one; omitting it clears all
-canvas content and resumes the legacy frame. Canvas text uses transparent null
-backgrounds, while explicit colors paint opaque cells. Legacy text backgrounds
-are unchanged. Canvas and nonempty legacy collections cannot share a frame.
+[hash manifest](fixtures/graphical-canvas/SHA256SUMS) remain historical
+stateless validation references. In the current contract, identified canvas
+elements persist until replaced or removed through retained operations. Canvas
+text uses transparent null backgrounds, while explicit colors paint opaque cells.
+Canvas and visible world content remain separate presentations.
 
 The additional v2 `canvas_clip_opacity` capability requires `graphical_canvas` in
-the same hello and acknowledgement in ready. It adds optional `clipRect` to canvas
+the enabled capability set advertised in ready. It adds optional `clipRect` to canvas
 images and text layers, and optional `opacity` to canvas text layers. See the
 [independent clipping/opacity wire cases](fixtures/canvas-clip-opacity/manifest.json)
 and their [hash manifest](fixtures/canvas-clip-opacity/SHA256SUMS).
@@ -35,14 +137,49 @@ Text opacity accepts finite values from 0 through 1 and applies to glyphs and
 explicit cell backgrounds. Omission means full opacity. Presence of either new
 field, including explicit text opacity `1`, requires negotiation; explicit null
 and unknown fields are rejected. Existing image opacity requires only
-`graphical_canvas`. Omitting the fields on a later full frame removes the previous
-clip/fade. Source crops, caches, budgets and legacy text behavior are unchanged;
+`graphical_canvas`. Replacing an element without those fields removes its previous
+clip/fade. Source crops, caches, budgets and screen text behavior are unchanged;
 PHP continues to resolve motion and fade timing.
 
 This extension has headless macOS validation. Text clipping/fading also passed
 the focused native glyph scenario below, followed by an isolated ordinary Game
 battle playtest on macOS. Linux/WSLg/Windows validation remains pending. See
 [availability and installation](#availability-and-installation) for current delivery status.
+
+### Canvas image brightness
+
+The protocol 2 `canvas_image_tone` capability requires `graphical_canvas`. A
+canvas image may include `brightness` from 0 through 1 to multiply its RGB
+channels while leaving its alpha unchanged. Omitting the field means 1 (the
+original image). A present value, including 1, requires negotiation; explicit
+null, non-finite values and values outside the range are rejected. Brightness
+applies to the selected image region before normal image opacity, clipping and
+placement. It can dim an inactive portrait without making the background show
+through its opaque pixels. PHP owns which image is active and when that changes.
+
+An older renderer that does not advertise `canvas_image_tone` cannot accept a
+session requiring it. Producers must use the negotiated contract rather than
+substituting opacity for brightness. Prepared tone variants share the renderer's
+bounded image resources: at most 64 MiB or 1024 tone variants remain in the
+asset-root cache, and active variants count toward the existing 64 MiB
+per-frame prepared-region limit. Changes do not reread artwork for each frame.
+
+### Canvas Image Mirroring
+
+Protocol v2's `canvas_image_flip` capability requires `graphical_canvas`.
+Canvas images may include boolean `flipX` and `flipY`; omission means false,
+while any present field (including false) requires negotiation. Null, numeric
+and string values are refused. Mirroring happens after selecting the source
+rectangle and before placement, clipping and opacity: it cannot select a
+neighbouring sheet frame or alter image alpha. PHP owns effect direction and
+authored stroke sequence; native preparation does not infer weapon types or
+run a second animation clock.
+
+Mirroring and brightness reuse one bounded image-variant cache, keyed by the
+prepared source image, brightness and both flips. The existing 64 MiB/1024
+variant and per-frame resource limits remain in force. Headless macOS tests
+cover pixel order, alpha preservation, variant reuse and retained replacement
+clearing. Linux, Windows and native visual acceptance remain separate checks.
 
 The separately negotiated v2 `canvas_glyph_effects` capability also requires
 `graphical_canvas`. A canvas text layer may then include:
@@ -75,16 +212,17 @@ glyph contours; unavailable system glyphs reject the complete candidate before
 visible replacement instead of substituting an approximation. See
 [glyph implementation and validation](docs/glyph-effects-validation.md).
 
-Run `scripts/native-tile-smoke.py --canvas --binary <installed-executable>
---evidence-dir <directory>` for one silent native check. Optional
-`--observe-seconds 45` holds its first frame for inspection, then closes the
-owned window automatically. This synthetic check is not real-game acceptance.
+Historical stateless native fixture results remain in the linked validation
+documents. For this retained build, use the Engine's fixture-only
+`tools/gpui-frame-smoke.php` with a local `--renderer` path and an absolute
+`--asset-root`; it has no Game audio path. Native validation of this change
+remains pending while the host is locked.
 
 ## Local image compositing
 
 The optional v2 capability `canvas_compositing` requires `graphical_canvas`.
-It adds `canvas.composites`; presence (including `[]`) requires negotiation,
-omission/`[]` clears, and null is rejected. The local development installation
+It adds retained `canvas_composite` entities; adding one requires negotiation,
+and `remove` clears it. The local development installation
 described below includes this capability; it is not a published renderer release.
 See the [sample frame](fixtures/compositing/frame.json), using the existing
 `fixtures/test-sprite.png` and `fixtures` as its asset root.
@@ -153,6 +291,19 @@ budgets are unchanged. Only current composite outputs are retained for reuse;
 older generations are weakly tracked until their owners release them. Geometry
 masks and immutable first images reuse bounded LRU entries. Source identities
 participate in keys; changed artwork invalidates derived pixels.
+Single polygon masks fill scanline interiors directly and evaluate the existing
+signed-distance coverage only in conservative edge bands. Strokes likewise
+evaluate coverage only within their row extents. Brush constants are prepared
+once per operation, and empty/opaque destination blends avoid unnecessary reads.
+Fills below 262,144 pixels remain serial; larger fills divide independent rows
+among at most four CPU workers, joined before the next operation or frame
+acceptance. Pixel arithmetic, feathering, blend order and admission limits are
+unchanged. Output guards visit only border pixels, not the full interior.
+Device-pixel raster sampling uses the same bounded row processing for large
+images. Its floor-origin/ceil-size policy, premultiplied bilinear arithmetic,
+fractional positioning, DPI behavior and cache retirement remain unchanged;
+small images stay serial. This avoids repeating expensive serial sampling in
+paint when a transition supplies a changing full-screen composite each frame.
 These are CPU image/scratch bounds, not a total process or GPU-memory guarantee.
 Composite raster density is one pixel per declared local unit; normal canvas
 scaling then applies, without rebuilding pixels during a window resize.
@@ -228,41 +379,41 @@ packet cadence reduction or platform-specific fallback is applied.
 
 ## Window activation
 
-With the optional v2 `window_activation` capability, the renderer sends
+Request `window_activation` explicitly in v2 hello.requiredCapabilities to subscribe.
+The renderer then sends
 `{"protocol":2,"type":"window_activation","active":true}` after `ready`,
 then only when OS activation changes. Unnegotiated sessions receive no such
-events. The GPUI observer is owned by the window entity and stops at teardown.
+events. This event subscription is not implicitly enabled by drawing support.
+Title and Credits do not require it for graphical presentation: without it, native
+focus-based pausing is unavailable while scene/modal pausing remains supported.
+The GPUI observer is owned by the window entity and stops at teardown. A
+`key_transitions` session installs the same observer to send `input_reset`
+on focus loss, without receiving activation events unless it also subscribed.
 PHP decides whether to pause elapsed time, defer local-time changes or clear input.
 `active` means OS focus, not visibility: visible unfocused windows are inactive.
 Hidden/minimized/occluded status is not reported or inferred from paint cadence.
 No native platform lifecycle acceptance is implied by CPU protocol tests.
 
 A standalone native presentation and keyboard surface using pinned **GPUI 0.2.2**.
-It supports protocol v1 and v2 sessions. PHP owns actions, input bindings, movement,
+Its production input accepts retained protocol 2 sessions. PHP owns actions, input bindings, movement,
 collision, scenes, battle state, camera conversion, timing and saves. Rust receives
-complete presentation snapshots and forwards key identities. It has no game loop,
+bounded presentation changes and forwards key identities (and, when
+subscribed, key transitions). It draws committed field steps as slides but
+never decides a position. It has no game loop,
 audio, ANSI parser, terminal emulator or gameplay meaning for layer IDs/numbers.
 
 ## Availability and installation
 
-This section is the current installation status; dated validation documents and
-receipts describe their original checkpoints, including superseded binaries.
-On 22 September 2026, the optimized development executable containing local
-image compositing, window activation and shared canvas destination sampling,
-SHA256 `781046dfb2c57b0b472e75a0d625bd65606ff7dfaf30224d8914abc08d20d6a8`,
-was packaged and installed in the normal Engine package at
-`resources/renderers/installed/gpui/darwin-arm64/Ichiloto Renderer.app/Contents/MacOS/gpui-renderer`.
-The existing packager reused the release executable, and Engine's installer
-performed its dry run and installation. The release unit suite passes 121 tests
-with three opt-in checks ignored; formatting, release Clippy and the release
-build also pass on macOS arm64. Earlier real-packet CPU replay results are
-recorded above. Native visual acceptance of the latest canvas sampling and
-activation behavior remains pending. The subsequent five-battle capture check
-stopped before launch when screen-capture preflight reported access unavailable;
-it produced no native screenshots. Linux, Windows and WSLg were not tested.
+The source-development installation is generated by the Console's explicit
+`ichiloto renderer:update gpui` flow. It builds a release package, verifies its
+payload hashes and installs it under the Engine's
+`resources/renderers/installed/` boundary. The generated manifest selects the
+executable for normal play, and the generated source receipt records the exact
+installed build. Dated validation documents describe their original checkpoints,
+including superseded binaries; their hashes do not identify the current install.
 
-That local installation is not a published renderer release or a Console
-installer. Pulling the Engine repository does not install GPUI: a clean
+This local installation is not a published renderer release. Pulling the Engine
+repository does not install GPUI: a clean
 `resources/renderers/` directory contains a README, while generated installed
 packages and manifests are ignored by Git. Public player delivery remains
 unfinished; it must supply compatible, verified platform packages without
@@ -296,6 +447,16 @@ do not accumulate standalone runtime copies. Before a game playtest, verify musi
 and sound effects are muted and preserve existing mute choices. The synthetic
 Renderer fixtures below contain no audio.
 
+Repository utilities use PHP 8.2 or later with JSON and zlib; no Python runtime
+or Composer installation is needed. Run the windowless utility regressions with
+`php tests/scripts/run.php`. They compare retained analysis results and exercise
+process drivers through PHP test doubles, not native rendering. The Darwin-only
+historical `sample-window.php` adapter also requires PHP FFI for its original
+`CLOCK_UPTIME_RAW` markers and `/usr/bin/sample`; other analysis and fixture tools
+do not require FFI. Evidence helpers share code under `scripts/lib/`, so run them
+from a complete checkout. Their `--base`, `--pid` and `--out` options allow replay
+into a new directory without overwriting retained measurements.
+
 Rust **1.98.1** is pinned in `rust-toolchain.toml`; commit and use `Cargo.lock`.
 
 ```sh
@@ -303,16 +464,43 @@ cargo test --locked
 cargo fmt --check
 cargo clippy --all-targets --locked -- -D warnings
 cargo build --release --locked
-python3 scripts/native-smoke.py --binary target/release/gpui-renderer
+php ../engine/tools/gpui-frame-smoke.php --renderer="$PWD/target/release/gpui-renderer" --asset-root="$PWD/fixtures" --duration=15 --change-after=7
 ```
 
-For a single silent window checking both negotiated capabilities, full-viewport
-terrain and frame clearing, run `scripts/native-tile-smoke.py` with `--binary`
-and `--evidence-dir`. See the [installed-renderer check](docs/s8-b-installation.md).
+For the combined development workspace, the GUI Editor's existing cache
+manager also manages this renderer checkout. Adopt a dedicated directory on
+the desired volume once, then run Cargo through the same manager:
+
+```sh
+php ../gui-editor/scripts/build-cache.php --checkout "$PWD" adopt /absolute/cache-root/gpui-renderer
+php ../gui-editor/scripts/build-cache.php --checkout "$PWD" status
+php ../gui-editor/scripts/build-cache.php --checkout "$PWD" cargo test --locked
+php ../gui-editor/scripts/build-cache.php --checkout "$PWD" run php scripts/package.php
+```
+
+Adoption preserves the usual `target` path as a symbolic link, so packaging
+and the normal Console renderer updater use the relocated artifacts without
+changing their installation or fingerprint contracts. Wrap the updater or
+package command with `run` to keep the same cache lock and budget checks
+around their internal Cargo build. Marked sibling caches
+share a 15 GiB budget, checked before and after managed commands. Cleanup uses
+Cargo and skips active builds; unrelated or unmarked directories are not
+reclaimed. The secondary volume must remain mounted. Source, installed
+applications, saved games and Rust tools are not build caches and stay in place.
+
+The Engine fixture smoke is silent and opens one bounded window. The older
+`scripts/native-tile-smoke.php` and its [installed-renderer check](docs/s8-b-installation.md)
+describe the prior stateless endpoint and are historical evidence only.
+For a retained wire capture, `scripts/native-retained-replay.php --binary
+target/release/gpui-renderer --replay /absolute/capture.ndjson --evidence-dir
+/absolute/output --hold-frame 1 --observe-seconds 15` opens one silent fixture
+window, checks every generation acknowledgement, and closes it automatically.
+The tool runs only the renderer; it does not start the Game or its audio system.
 
 Ordinary gameplay uses Engine's installed optimized executable. When a new build
-is necessary, `target/release/gpui-renderer` is the packaging and performance
-validation input. `cargo build --locked` produces an unoptimized
+is necessary, the package builder uses Cargo's reported native-target release
+executable (for example `target/aarch64-apple-darwin/release/gpui-renderer` on
+Apple Silicon), including a configured target directory. `cargo build --locked` produces an unoptimized
 `target/debug/gpui-renderer` for development/debugging; it is not the performance
 baseline. A matched Last Legend investigation found long foreground paint work in
 the debug build and substantially shorter frame handoff/draw intervals with the
@@ -334,6 +522,49 @@ bare executable. Cross-compiled targets pass `--platform` together with
 php scripts/package.php
 ```
 
+For Console's explicitly declared source-development checkout, the builder also
+provides a read-only description:
+
+```sh
+php scripts/package.php --describe --out=/private/output/directory
+```
+
+Stdout is exactly one JSON object with `renderer` (`gpui`), `platform` (host or
+`--platform`), `profile` (`release`), `fingerprint` (SHA-256), and
+`packageDirectory` (absolute `--out/gpui-<platform>-<version>`). The directory may
+not exist yet. Description runs no compiler or subprocess and creates no files;
+errors go to stderr with a nonzero exit code. Running without `--describe` and
+with the same `--out` builds and stages that package, retaining human-readable
+build output. Console can compare descriptions before and after preparation to
+reject concurrent input changes. Normal builds discover the executable from
+Cargo's compiler-artifact output, including configured target directories.
+At build time only, the builder queries `rustc -vV` (or `RUSTC`), verifies that
+its host matches the package host, and explicitly selects that native target.
+This overrides a foreign Cargo target configuration rather than mislabelling a
+cross-compiled executable. Explicit cross-platform packaging still uses
+`--platform` and `--binary`; `--skip-build` retains the conventional
+`target/release` default.
+
+The fingerprint covers Cargo manifests/lockfile, Rust source trees, optional
+`build.rs` and toolchain declarations, bundle resources, the packaging script and
+its helpers, applicable ancestor/Cargo-home configuration, and relevant declared
+compiler/linker/build environment. It excludes documentation, evidence, build
+outputs, Git metadata and game artwork. It is a source/build-context cache key,
+not verified compiler provenance: description does not query compiler versions,
+hash installed toolchains, resolve external build-script inputs or certify OS
+libraries. Replacing those external inputs without changing declarations may
+require explicit preparation again. `--describe` rejects `--binary` and
+`--skip-build`; manual packaging cannot certify an arbitrary executable as a
+build of the described source. Source preparation belongs to Console's declared
+development path; Engine's installed-renderer lookup remains build-free.
+
+Pure PHP regression checks (no Cargo or native windows):
+
+```sh
+php tests/scripts/run.php
+php tests/scripts/package.php
+```
+
 Installation is owned by the Console, which verifies every hash before
 staging anything into the Engine's `resources/renderers/installed/` boundary
 and backs up any existing installation:
@@ -351,13 +582,12 @@ Engine's GPUI launch now retains the shared presentation buffer while skipping
 physical terminal drawing. The [Garden of Roads comparison](docs/garden-performance.md)
 records that improvement, the shared style-processing fix, and validation limits.
 
-The native smoke suite opens **sequential silent windows** on a graphical desktop.
-It tests both versions and IPC/lifecycle failures; it does not synthesize keyboard
-proof or assert visual pixels. Use the interactive fixture below for those checks.
-Optional `--binary PATH` selects an executable, and `--evidence-dir PATH` records
-per-case stdout, stderr and exit status. `--trace` validates enabled diagnostic
-stderr separately from ordinary errors while retaining the same stdout assertions;
-the default smoke run explicitly disables tracing.
+The earlier `scripts/native-smoke.php` exercises stateless protocol 1 and 2
+fixtures and is historical evidence; it cannot validate this retained build.
+Use the Engine's silent retained fixture smoke or `scripts/native-retained-replay.php`
+on a graphical desktop. The replay checks acknowledgements and bounded process
+lifecycle, but does not prove keyboard input or visible GPU pixels. Its
+`--evidence-dir` records the input, output, and receipt.
 
 Native startup uses one window policy across GPUI backends: request desktop-managed
 maximization, with a centered restore size fitted to GPUI's suggested window bounds.
@@ -373,144 +603,274 @@ validation on those platforms; the renderer has no operating-system startup
 rejection. Native renderer backend support alone does not establish support for
 Engine's process transport or availability of an installed platform package. Upstream
 `block 0.1.6` and `proc-macro-error2 2.0.1` report future-compatibility warnings.
-The accepted source passed 106 optimized tests, Clippy and the recorded native
-checks; see [glyph-effects validation](docs/glyph-effects-validation.md), the
+The earlier glyph-effects source passed 106 optimized tests, Clippy and its
+recorded native checks; see [glyph-effects validation](docs/glyph-effects-validation.md), the
 earlier [S7-R validation](docs/s7-r-validation.md) and [S1 validation](docs/s1-validation.md).
 
 ## Session and channel contract
 
-One UTF-8 JSON object per NDJSON line. **stdin is protocol input only; stdout is
-protocol output only; stderr is diagnostics only.** No ANSI sequences or arbitrary
-CSS colours are accepted. Required fields are typed; unknown fields, message types,
-anchors and unsupported versions are rejected. Protocol messages use `protocol:1`
-or `protocol:2`; one successful hello selects the version for the entire process.
+The production renderer accepts **protocol 2 retained sessions**. One UTF-8 JSON
+object travels on each NDJSON line: stdin is input, stdout is protocol output,
+and stderr is diagnostics. The previous protocol 1 and stateless protocol 2
+frame decoders remain available only to historical tests. They are removed
+from the production input path.
+
+A session begins with one hello:
 
 ```json
 {"protocol":2,"type":"hello","title":"Last Legend","assetRoot":"/absolute/path/to/assets","grid":{"columns":135,"rows":36,"cellWidth":10,"cellHeight":20}}
 ```
 
-The hello shape is identical in both versions. Dimensions must satisfy the bounds
-below. `assetRoot` must be absolute and canonicalize to an existing directory; title
-must be nonempty without control characters. A successful hello opens one resizable
-native window, then emits `ready`. The version is latched before opening it, so even
-a window-creation error uses that version. A second hello cannot open another window.
+`assetRoot` must resolve to an existing directory. The grid fixes cell geometry
+for the session, independently of the native window size. Hello opens one
+resizable window and emits `ready`. A second hello or a mixed-version message is
+an error. `requiredCapabilities` is a mandatory minimum; `ready.capabilities`
+reports the available drawing features. `window_activation` and
+`key_transitions` are explicit event subscriptions; `field_motion`,
+`tile_covers`, `tile_shadows`, `sprite_lift` and `sprite_quarter_turns` are drawing features every
+v2 session is offered. An optional `icon` names the game's application icon, a PNG
+or ICNS path inside `assetRoot`; on macOS it replaces the renderer's own in the
+Dock. An unreadable icon is diagnosed and the renderer keeps its own. Before hello succeeds, an error may use the protocol 1
+envelope; this is not a downgrade.
 
-Sprite-sheet cropping is explicitly negotiated on either version. Add
-`"requiredCapabilities":["sprite_source_rect"]` to hello. A successful opted-in
-ready includes `"capabilities":["sprite_source_rect"]`; the caller must verify
-that acknowledgment before sending crops. Missing or empty requirements keep the
-legacy ready shape, with no capabilities field. Unknown or duplicate requirements
-are rejected. Older renderers reject the new hello field; callers must also reject
-a missing acknowledgment, never silently fall back to drawing the whole sheet.
+### Retained frames
 
-Graphical terrain uses the v2-only `tile_batches` capability. Automatic Engine
-startup requests both capabilities before any later map transfer. Every
-`tileBatches` field, including an empty array, requires acknowledgment; v1
-rejects this capability. See the [frozen tile contract](docs/tile-batches.md).
-
-Before a successfully validated hello, errors use the legacy `protocol:1` envelope,
-**including errors for invalid v2 hellos**. That is a pre-session exception, not
-negotiation or downgrade. Once initialized, every `ready`, `key`, `close_requested`
-and `error` uses the selected version. Mixed-version frames, hellos and shutdowns
-are errors; they do not replace the display, reinitialize or stop the session.
-
-Frames require a successful hello. Each accepted frame atomically replaces the
-entire previous snapshot. A malformed frame, invalid text or failed PNG load leaves
-the last accepted display unchanged. Labels are unsigned 64-bit integers, not clocks:
-duplicate/decreasing labels apply in arrival order. There is no frame acknowledgement,
-deduplication, interpolation or renderer timing. Every accepted frame notifies GPUI,
-including colour-only updates with unchanged glyphs or labels.
-
-## Protocol v1 compatibility
-
-The v1 frame schema and historical drawing order remain intact:
+A frame changes identified presentation entities rather than replacing every
+cell. For example:
 
 ```json
-{"protocol":1,"type":"frame","frame":1,"text":["row one","row two"],"sprites":[{"id":"player","asset":"South.png","x":8,"y":4,"width":32,"height":48,"anchor":"bottom_center","layer":100}]}
+{"protocol":2,"type":"frame","frame":1,"baseGeneration":0,"generation":1,"reset":true,"present":false,"operations":[{"op":"put","kind":"world","id":"map","value":{"columns":2,"rows":1,"cellWidth":24,"cellHeight":48,"layers":[{"id":"map:terrain","layer":-99,"kind":"gameplay"}]}},{"op":"worldRows","id":"map","rows":[{"row":0,"cells":[{"glyph":".","foreground":null,"background":null,"ownerLayerId":"map:terrain"},{"glyph":" ","foreground":null,"background":null,"ownerLayerId":"map:terrain"}]}]}]}
+{"protocol":2,"type":"frame","frame":1,"baseGeneration":1,"generation":2,"present":true,"operations":[],"viewport":{"scale":1,"origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":1350,"height":720},"worldId":"map","worldOrigin":{"column":0,"row":0},"textLayerIds":[],"spriteIds":[]}}
 ```
 
-Text uses the default colours. Missing rows/trailing cells are blank; `text:[]`
-clears all text, and `sprites:[]` clears all sprites. Overlong rows, too many rows
-and control characters are rejected. One Unicode scalar occupies one fixed cell.
-The complete text plane paints first, then sprites sorted by ascending layer with
-stable array order on ties. Even a sprite at `i32::MIN` paints after v1 text.
-V2 fields such as `textLayers` are not accepted in v1 frames.
+`generation` is a positive, strictly increasing delivery number;
+`baseGeneration` must equal the last accepted generation, except on `reset`.
+`frame` labels the presentation transaction and is independent of generation.
+`reset:true` starts a fresh retained scene and can recover after a rejected or
+lost update. Each line is limited to 4 MiB and 4096 operations. A
+`present:false` chunk stages changes without changing the visible scene; its
+viewport must be omitted. The final `present:true` chunk validates and commits
+the complete scene atomically. An empty operations list with a changed viewport
+is a camera-only frame; unchanged scenes are not decoded again.
 
-## Protocol v2
+Accepted chunks emit
+`{"protocol":2,"type":"frame_ack","generation":2,"frame":1,"presented":true}`.
+The same event uses `presented:false` for a staged chunk. A rejected update
+keeps the last visible scene and emits `frame_rejected` with `generation`,
+`expectedGeneration`, `message`, and `resyncRequired:true`. The sender must
+reset rather than retry a dependent delta. Native content-size or device-scale
+changes emit `{"protocol":2,"type":"resized"}`; the Engine coalesces this signal
+and sends an updated presentation. `shutdown` closes the session.
+
+Operations use one of these shapes:
+
+| Operation | Effect |
+| --- | --- |
+| `put` with `kind`, `id`, `value` | Insert or replace a `world`, `text`, `sprite`, `canvas`, `canvas_image`, `canvas_indicator`, `canvas_text`, or `canvas_composite` entity. |
+| `remove` with `kind`, `id` | Remove that entity. |
+| `worldRows` with `id`, `rows` | Replace complete, indexed owner-glyph rows of a world. |
+| `worldTiles` with `id`, `layerId`, `rows` | Replace indexed tile rows of one `tiles` or `shadows` layer; an empty row clears it. |
+| `textRows` with `id`, `rows` | Replace indexed runs of one screen text layer; an empty row clears it. |
+
+A world definition supplies bounded logical `columns`, `rows`, its
+`cellWidth` and `cellHeight` in logical pixels (1 to 256 each; Ichiloto uses
+48 x 48, one terminal cell drawn as one RPG Maker tile), and ordered layers. The field is drawn at that pitch, independent
+of the session text grid. Every world cell is one cell of that size whatever
+its text; its text, and the text layers named by the viewport, use a font
+fitted to the cell, so an unpainted map looks like its terminal presentation
+scaled. Sprites named by the viewport are placed by whole cells. Only unlisted screen
+text and sprites keep the text grid's cell pitch. Each layer has an `id`,
+numeric `layer` and `kind` (`gameplay`, `decoration`, `tiles` or `shadows`). With
+`tile_covers`, a `tiles` layer may name the gameplay layer its tiles belong to
+in `coversLayerId`; no other layer may carry it. Every world row must
+be supplied before presentation; a row may be shorter than `columns`, leaving
+an unpainted trailing background. Owner cells carry the cell's text (at most 8
+characters), nullable structured foreground/background, and the owning
+gameplay layer ID. A blank glyph (including whitespace) with a null background
+is transparent, even when another gameplay layer owns the tile beneath it.
+An explicit background paints a blank cell; a nonblank glyph keeps the default
+opaque background when none is supplied. Tile coverage still hides both.
+The renderer projects only visible rows and columns; camera
+movement does not resend the map. World limits are 16,384 on each axis and
+1,048,576 logical cells, with at most 64 layers. Retained
+source data has a 64 MiB budget; staged plus visible source data is bounded at
+128 MiB. These are source-state estimates, separate from decoded images; the
+sum of live prepared images referenced by a retained scene is limited to 256 MiB.
+Existing 64 MiB limits still apply independently to decoded PNG sources,
+prepared regions, and composite output work.
+The world source estimate is `sum(64 + UTF-8 glyph bytes + UTF-8 owner-layer ID
+bytes)` for supplied owner cells, plus `8192` per world layer, `16` per tile cell, and `32` per tileset piece plus
+the tileset's sheet path bytes. The logical cell
+ceiling does not guarantee that a fully populated world fits the separate
+source budget; producers should preflight both limits before uploading it.
+Malformed entity values and exceeded budgets reject the update.
+
+A world may carry a `tileset` for its `tiles` and `shadows` layers, which own no
+glyphs; either kind requires one. The renderer knows tiles only as sheet or fill
+pieces, so layouts, autotile rules and shadow derivation stay in the Engine:
 
 ```json
-{
-  "protocol": 2,
-  "type": "frame",
-  "frame": 1,
-  "textLayers": [
-    {"id":"world","layer":0,"runs":[
-      {"row":4,"column":2,"text":"Hello","foreground":{"kind":"ansi16","index":14},"background":null}
-    ]},
-    {"id":"ui","layer":1000,"runs":[
-      {"row":4,"column":8,"text":"     ","foreground":null,"background":null}
-    ]}
-  ],
-  "sprites": [
-    {"id":"player","asset":"South.png","x":8,"y":4,"width":32,"height":48,"anchor":"bottom_center","layer":100}
-  ]
-}
+{"tileSize":48,"sheets":["tilesets/home.png"],"tiles":[{"frames":[[{"sheet":0,"x":0,"y":0,"width":24,"height":48,"left":0,"top":0},{"sheet":0,"x":72,"y":0,"width":24,"height":48,"left":24,"top":0}]]}]}
 ```
 
-All shown frame/layer/run fields are required; empty arrays are allowed. Layer IDs
-are nonempty UTF-8 strings, unique among text layers in a frame, at most 256 UTF-8
-bytes. They are presentation identities only. Sprite IDs have their existing
-separate uniqueness domain. Layers are signed 32-bit integers.
+`tileSize` is an even 2 to 256 pixels and `sheets` holds 1 to 16 asset-relative
+PNG paths. The catalog has 1 to 8192 tiles, each with 1 to 4 frames of 1 to 8
+pieces. A piece copies its `x`, `y`, `width`, `height` rectangle of sheet
+`sheet` unscaled to `left`, `top` inside the tile, and must fit there; pieces
+compose in order with source-over. `worldTiles` rows list `{"column","tile"}`
+cells with a catalog index and unique columns. Listed rows are replaced, an
+empty row clears one, and omitted rows persist until the world is put again. A
+world holds at most 1,048,576 tile cells. A tile is `tileSize` pixels tall and
+drawn one cell tall. It may set its own `width` (1 to `tileSize`, default
+`tileSize`), and `left` and `top`, the offsets of its edges from its cell's
+corner in source pixels (-`tileSize` to `tileSize`, default 0), so a tile can be a slice as narrow
+as one cell or a whole tile centred on a narrower cell. Tiles placed just left of
+the camera still paint the part that overhangs into it. The viewport's optional
+`tileFrame`
+(default 0) shows frame `tileFrame % frames` of every tile, so animation is a
+camera-only frame.
 
-Runs contain a zero-based `row`, zero-based starting `column`, UTF-8 `text`, and
-required nullable `foreground`/`background`. Omission is malformed; explicit null
-means the renderer default. Every Unicode scalar advances exactly one grid cell,
-independent of byte length, glyph width or font advance. Grapheme clustering and
-terminal wide-character continuation cells are not inferred. Controls, tabs and
-newlines are rejected. The complete run must fit; invalid runs are never clipped.
-An empty run paints nothing, but its row and column must still be inside the grid.
+With `tile_shadows`, a piece may instead use `fill:[r,g,b,a]` (four integer
+bytes, 0..255) with `width`, `height`, `left` and `top`, for example
+`{"fill":[0,0,0,102],"width":24,"height":48,"left":0,"top":0}`.
+Fill and sheet sources are exclusive; fills cannot name `sheet`, `x` or `y`.
+Both sources share placement limits, ordered source-over composition, guard
+borders, sampling, retained source/cell/composed-byte budgets and camera projection.
+Fill-only tiles do not depend on sheet decoding.
 
-**Every covered cell is opaque, including spaces.** Its background rectangle uses
-the explicit colour or default background. A non-space scalar paints over that
-rectangle using the explicit foreground or default text colour. A space paints just
-the background. Cells absent from runs are transparent to lower layers. Overlapping
-runs execute in their array order, so later cells replace earlier cells.
+Each tile frame is composed once per world definition, within 64 MiB. A sheet
+that cannot be loaded, or a piece outside its sheet, is diagnosed once per sheet
+and makes only the tiles using it unavailable; the scene is still accepted. An
+owner cell's glyph and background are hidden where an available tile covers
+them, even where the tile is transparent: a tile of a layer whose
+`coversLayerId` names the cell's owning gameplay layer, or of a tiles layer
+without `coversLayerId`. A floor that belongs to the buildings layer therefore
+leaves the glyph of an untiled fixture standing on it visible. Other cells keep
+their glyph, including cells a tile only overhangs.
+World layers paint interleaved with screen text and sprites by `layer`, a world
+layer first on a tie, so tiles at layer 900 draw above characters at 100.
+Equal-depth world layers keep definition order. Engine shadow layers follow
+their casting tiles at the same depth, below later layers and characters.
+`shadows` layers never cover glyphs and cannot carry `coversLayerId`.
 
-For v2, tile batches, text layers and sprites share one ascending numeric order:
+Authoring clients may request `map.world` with `tileShadows:true` and consume
+the same canonical operations with `MapWorld`. Iterate `get_layers()` in order;
+`MapLayerKind::Tiles` and `MapLayerKind::Shadows` use `paint_layer` with the same
+`MapCamera`/`MapTileSamples`. Existing `paint_tiles` remains tiles-only for
+compatibility. Do not derive shadow bands or add a separate GUI painter.
 
-1. Lower layers paint before higher layers.
-2. Equal-layer tile batches paint first, preserving batch and cell array order.
-3. Equal-layer text layers paint next, preserving their frame array order.
-4. Equal-layer sprites paint last, preserving their frame array order.
+Screen `text` values contain `id`, numeric `layer`, stable `order`, and
+`runs`; each run has `row`, `column`, `text`, and required nullable
+`foreground`/`background`. Every covered cell is opaque, including a space.
+Absent cells are transparent. A `sprite` value uses the shared sprite fields
+plus `order`, with `field_motion` an optional `motion` and with `sprite_lift`
+an optional `lift`, and with `sprite_quarter_turns` an optional `quarterTurns`
+(see below). Canvas uses a `canvas` root with `id:"canvas"`, width and height,
+and the existing image, indicator, text, and composite DTOs as individually
+identified operations. Canvas and a world viewport cannot be visible together.
 
-Use distinct layers for specific cross-type occlusion. Values such as world `0`,
-sprite `100` and UI `1000` are caller policy, never hardcoded gameplay rules.
-`textLayers:[]` removes all previous text layers. Together with `sprites:[]` and
-omitted or empty `tileBatches`, it
-clears the entire snapshot to the default surface background.
+### Camera and selected content
 
-### Tile batches
+`viewport` omission keeps the last transform; explicit `null` clears it. A
+viewport has a finite positive scale through 8, a logical-pixel origin and clip
+rectangle inside the session surface. `worldId` and signed
+`worldOrigin:{column,row}` select the retained map. `worldId` may be omitted
+for screen-only zoom, in which case the world origin must be zero. Only the
+world subtracts `worldOrigin`. Named `textLayerIds` and `spriteIds` are
+already screen-projected; they receive the scale, origin, and clip but no world
+subtraction. Unlisted text and sprites keep their ordinary screen position.
+The complete logical surface is then fitted and centered in the resizable native
+window.
 
-With `tile_batches` negotiated, v2 frames may include:
+### Field motion
+
+`field_motion` lets the producer present committed field steps as slides.
+The renderer decides no position: every sprite cell is already where the
+producer put it, and the renderer only draws it partway along the step.
 
 ```json
-"tileBatches":[{"id":"terrain","asset":"Field.png","layer":-100,"sources":[{"x":0,"y":0,"width":16,"height":32}],"cells":[{"column":8,"row":3,"source":0}]}]
+{"id":"player","asset":"Graphics/Characters/$Hero.png","x":12,"y":6,"width":48,"height":48,"anchor":"bottom_center","layer":100,"order":0,"motion":{"duration":0.2667}}
+{"scale":1,"origin":{"x":0,"y":0},"clipRect":{"x":0,"y":0,"width":1350,"height":720},"worldId":"map","worldOrigin":{"column":40,"row":22},"textLayerIds":["npc:guide","field-prompt"],"spriteIds":["player"],"follow":{"spriteId":"player","textLayerIds":["field-prompt"]}}
 ```
 
-Cells are already Camera-projected, unsigned grid coordinates. Each fills one
-session cell; `source` indexes image-pixel rectangles in the batch catalog.
-There is no map interpretation or terrain animation in Rust. Omission and `[]`
-clear previous tiles; explicit null is invalid. A malformed batch, invalid crop
-or budget failure rejects the entire frame, preserving the accepted display.
+A viewport sprite's world cell is its screen cell plus `worldOrigin`. When that
+cell changes by one step (at most one cell on each axis) and the sprite carries
+`motion`, the renderer slides it from its previous cell over `duration`
+seconds (more than 0, at most 60) on its own monotonic clock, starting when the
+frame is presented. A step that arrives within 50 ms of the end of the one
+before it continues seamlessly from that end, so steady walking has one even
+speed whatever the arrival jitter; any other step starts from where the sprite
+is drawn. A change without `motion`, or larger than one step, snaps. `motion`
+persists with the value, so a sprite standing where its step ended is not
+resent, and only a changed cell starts a slide.
 
-Terrain has an independent 32768-cell budget and one canvas/layout element per
-batch, while each cell still emits an image primitive. Guarded source regions
-are prepared and cached for reuse, with separate byte/count accounting; they
-isolate neighbouring atlas tiles. Cached device-pixel samples compensate for
-GPUI's image-bound rounding, preserving the selected artwork's full mapping at
-fractional scales and positions. Unchanged samples are reused across cells/frames.
-See [S8-B implementation and validation](docs/s8-b-validation.md) and the
-[shared exact wire fixtures](fixtures/tile-batches/manifest.json).
+`follow` names a viewport sprite the camera follows. When `worldOrigin`
+changes by one step in the same frame that sprite starts a slide, the camera
+slides with the same start and duration, so the followed sprite stays steady
+while the field scrolls under it; otherwise the camera snaps. World layers
+paint from the drawn origin, and other named text layers and sprites move with
+the drawn camera. The follow's own `textLayerIds` (an action prompt) move with
+the followed sprite instead. Slides reset when the world changes or the
+viewport is cleared, and a removed sprite forgets its slide. While anything
+slides the view requests animation frames; otherwise it repaints only on
+change. Reduced motion is the producer's choice: it sends no `motion`.
+
+### Sprite lift
+
+`sprite_lift` lets the producer draw a retained field sprite above the cell
+that places it, as RPG Maker draws a character 6 pixels above its tile:
+
+```json
+{"id":"player","asset":"Graphics/Characters/$Hero.png","x":12,"y":6,"width":48,"height":48,"anchor":"bottom_center","layer":100,"order":0,"lift":6}
+```
+
+`lift` is a whole number of logical pixels, the same pixels as `width` and
+`height`, from 0 to the sprite's height; anything else rejects the frame. A
+viewport sprite is drawn that many pixels higher than its bottom-centre
+placement, at rest, while it slides and while the camera follows it. The
+renderer derives nothing from the asset: which sprites are lifted is the
+producer's decision. The lift changes only where the sprite is drawn. Its
+cell, its slides and its draw order stay those of the cell, so a sprite lower
+on the field still draws in front. A put without `lift` draws the sprite on
+its cell; protocol v1 sprites never accept it.
+
+### Sprite image pivots
+
+Optional protocol 2 capability `sprite_pivot` accepts `pivot: {x, y}` on retained
+sprites. Each coordinate must be a finite number in `0..1`; omitted points use
+bottom-centre `{x:0.5,y:1}`. The point addresses the drawn image after source
+crop and fitting, and meets the unchanged cell's ground anchor. Lift, viewport
+scaling, slides and camera follow apply to that placement. Cell coordinates and
+draw order remain independent of the image point.
+
+```json
+{"id":"healing-ring","asset":"Graphics/Effects/Healing.png","x":12,"y":6,"width":96,"height":96,"anchor":"bottom_center","layer":100,"order":0,"pivot":{"x":0.5,"y":0.77}}
+```
+
+The producer chooses the point. A replacement put without `pivot` resets to
+bottom-centre, and an explicit point requires the negotiated capability.
+This does not change the protocol version or gameplay geometry.
+
+### Sprite quarter turns
+
+With `sprite_quarter_turns` enabled in protocol 2, a retained sprite may carry
+`quarterTurns`: an integer from 0 through 3. Omission means 0. Each step turns
+the selected image 90 degrees clockwise in screen coordinates, so 0, 1, 2 and 3
+mean 0, 90, 180 and 270 degrees. Even an explicit 0 requires the capability;
+negative, fractional, out-of-range, null and string values reject the frame.
+
+```json
+{"id":"road-arrow","asset":"UI/Arrows/east.png","x":12,"y":6,"width":48,"height":48,"anchor":"bottom_center","layer":100,"order":0,"quarterTurns":1}
+```
+
+If a `sourceRect` is present, the renderer selects those source pixels before
+turning them. The turn rotates about the selected image's center. Destination
+`width` and `height`, bottom-center anchor, layer, PNG alpha and viewport behavior
+remain unchanged. An odd turn of an uncropped non-square image swaps its source
+aspect ratio before contain-fit; a cropped image still fills its destination.
+The producer chooses the turn and owns any timing or direction changes. No
+directional files or caches are part of the wire contract. A replacement put
+without `quarterTurns` resets the sprite to 0.
 
 ### Structured colour
 
@@ -573,7 +933,10 @@ Omitting `sourceRect` retains the existing full-image drawing behavior, includin
 GPUI's contain fit. A supplied rectangle fills the destination `width/height`;
 these dimensions, cell coordinates, bottom-center anchor and layer are independent
 of sheet dimensions. The full sheet is scaled/translated behind a destination-sized
-GPU clip mask. Actor sheets use no CPU cropping or generated frame images.
+GPU clip mask when `quarterTurns` is omitted or 0. Quarter-turned sprites prepare
+an in-memory image from the selected pixels for the retained scene; this does not
+create artwork files or an independent directional cache. Actor sheets otherwise
+use no CPU cropping or generated frame images.
 PHP chooses each rectangle and owns animation timing; Rust has no animation clock.
 See [S8-A renderer validation](docs/s8-a-validation.md).
 
@@ -583,6 +946,11 @@ feetY = (y + 1.0) * cellHeight
 left  = feetX - width / 2
 top   = feetY - height
 ```
+
+`cellWidth` and `cellHeight` are the world's cell size for sprites named by a
+world viewport (their `x` and `y` are whole field cells), and the session
+grid's cell otherwise. A 48 x 48 field character on a 48 x 48 cell stands on
+the cell's bottom edge and fills the cell exactly.
 
 Geometry uses logical presentation pixels (1× corresponds to macOS points).
 The viewport transform below places the grid inside native content, below the
@@ -633,8 +1001,10 @@ independent X/Y scaling. Resizing requests a GPUI repaint; it never modifies sto
 frames, negotiates a grid, sends protocol resize events or changes gameplay/camera
 coordinates. A zero-sized viewport paints no surface and retains the focus root.
 Large maps can extend beyond this fixed logical viewport: PHP's camera scrolls the
-visible portion and sends new snapshots. The renderer does not fit an entire map
-unless its caller deliberately sends the entire map as the logical surface.
+visible portion and sends new snapshots. A negotiated selected frame viewport
+can scale just that visible field area while the session grid, menus and HUD stay
+fixed. The renderer does not fit an entire map unless its caller deliberately
+sends the entire map as the logical surface.
 
 `window_layout.rs` uses the same public GPUI path on every backend. It selects the
 primary display (first display fallback), fits centered restore-size hints inside
@@ -691,12 +1061,12 @@ records and clock anchors use the same switch, as described below. PHP consumpti
 and actual GPU/display completion are not measured by this renderer.
 
 ```sh
-ICHILOTO_GPUI_TRACE=1 python3 scripts/inspect-fixture.py --binary target/release/gpui-renderer --geometry last-legend \
+ICHILOTO_GPUI_TRACE=1 php scripts/inspect-fixture.php --binary target/release/gpui-renderer --geometry last-legend \
   > /tmp/events.ndjson 2> /tmp/trace.ndjson
-python3 scripts/analyze-trace.py /tmp/trace.ndjson --events /tmp/events.ndjson
+php scripts/analyze-trace.php /tmp/trace.ndjson --events /tmp/events.ndjson
 # Select an inclusive ID interval or only events GPUI flags as held:
-python3 scripts/analyze-trace.py /tmp/trace.ndjson --ids 3:12
-python3 scripts/analyze-trace.py /tmp/trace.ndjson --held
+php scripts/analyze-trace.php /tmp/trace.ndjson --ids 3:12
+php scripts/analyze-trace.php /tmp/trace.ndjson --held
 ```
 
 On pinned GPUI 0.2.2 macOS, nonprinting keys can pass through
@@ -787,9 +1157,13 @@ paths and symlinks escaping the root are rejected. In-root parent traversal/syml
 can resolve successfully. Files must decode as PNG regardless of suffix. The root
 and filesystem are trusted host configuration; concurrent hostile filesystem mutation
 is outside the contract. PNGs decode off the UI thread. A session LRU cache reuses
-full decoded sheets across frames, keyed by canonical path and file length/mtime.
-Metadata changes reload the image; same-length edits with preserved timestamps
-require a new session. Choose a suitably narrow asset root.
+full decoded sheets across frames, keyed by canonical path, file length/mtime and
+the current 33-byte PNG signature/IHDR. A bounded header read precedes reuse, so changed
+dimensions or invalid headers reload even when length and timestamps are preserved.
+Cache misses still decode the complete current PNG, and unchanged headers reuse
+decoded pixels. Same-header pixel edits preserving both length and timestamps
+require a new session; header freshness is not full-content hashing or a
+transactional concurrent-edit guarantee. Choose a suitably narrow asset root.
 
 The cache holds at most 64 MiB / 1024 images. Prepared snapshots retain their cache
 generation while queued or displayed; these retained generations and the in-progress
@@ -838,7 +1212,7 @@ Glyph raster dimensions are bounded to 16384 device pixels per axis, and a bound
 cache-miss work check applies before preparation. These are native resource checks,
 not increases or replacements of the wire layer/run/scalar limits.
 
-## Key identities (both versions)
+## Key identities
 
 ```json
 {"protocol":2,"type":"key","key":"C"}
@@ -865,10 +1239,37 @@ special key or F-key can pass even when GPUI retains its function modifier. GPUI
 Shift-Tab to `key:"tab"` with Shift. The normalizer follows the actual GPUI API,
 not browser `KeyboardEvent` names. Shift on other named keys adds no chord identity.
 
-OS repeats are forwarded; key-up events are not. The renderer never emits actions
+OS repeats are forwarded as `key` events. Without `key_transitions`, key-up
+events are not reported. The renderer never emits actions
 such as `cancel`, `map`, `move_up`, `confirm` or `quit`. **PHP owns input bindings.**
-This expansion also applies to v1; existing v1 key identities are unchanged.
-Native validation covers the required C/M/T/Tab/Shift-Tab/F5 and legacy keys.
+
+### Key transitions
+
+Request `key_transitions` in v2 `hello.requiredCapabilities` to subscribe.
+Every key event then also names its physical `control` and whether it repeats
+an already held control, and releases and resets are reported:
+
+```json
+{"protocol":2,"type":"key","key":"S","control":"s","repeat":false}
+{"protocol":2,"type":"key","key":"S","control":"s","repeat":true}
+{"protocol":2,"type":"key_release","control":"s"}
+{"protocol":2,"type":"input_reset"}
+```
+
+`key` keeps its exact legacy identity, so consumers of the event stream see
+the same keys and repeats as before. `control` is the key's identity
+independent of case, Shift and Caps Lock: lowercase letters, the special
+names above, and `tab` for both Tab and Shift-Tab. The renderer tracks held
+controls itself (at most 64); a key-down for a held control has
+`repeat:true`, because GPUI's `is_held` is false for keys macOS routes
+through text input, the arrows among them. A key-up releases its control
+whatever modifiers are down, so a modifier change never strands a key.
+Platform shortcuts remain ignored and press nothing. `input_reset` releases
+everything: it is sent when the window loses OS focus, where later key-ups
+never arrive, and when Command engages while keys are held, because macOS
+withholds key-up events while Command is down. Unsubscribed sessions receive
+none of these fields or events.
+Historical native validation covered C/M/T/Tab/Shift-Tab/F5 and legacy keys.
 F0, Insert and uncommon keys still depend on platform availability; see the explicit
 native-evidence limitations in the validation document.
 
@@ -882,34 +1283,19 @@ native-evidence limitations in the validation document.
 | Out | `error`, with `message` | Recoverable rejection retains display; fatal errors exit nonzero |
 
 Each object includes its selected numeric `protocol` and string `type`. Shutdown
-before hello is allowed for either supported version and emits nothing. EOF after
+before hello is allowed for protocol 2 and emits nothing. EOF after
 hello keeps the window and keyboard active. EOF before a successful hello is fatal.
 Broken/full stdout or window-creation failure is fatal. Shutdown allows two seconds
 to drain output; an unavailable output channel can only report diagnostics to stderr.
 
 ## Native fixtures
 
-```sh
-# Existing v1 fixture; EOF leaves the native window open.
-python3 scripts/fixture.py | target/release/gpui-renderer
-# V2 first visual frame; --frame second selects the changed style snapshot.
-python3 scripts/fixture.py --protocol 2 --frame first | target/release/gpui-renderer
-# Controlled single-window fixture, with protocol logs captured separately.
-python3 scripts/inspect-fixture.py --binary target/release/gpui-renderer > /tmp/events.ndjson 2> /tmp/renderer.log
-```
-
-For the controlled fixture, type commands into its launching terminal: `second`
-changes colours without changing text; `first` restores; `invalid` attempts a missing
-asset; `clear` empties the snapshot; `shutdown` exits via the protocol. Use the native
-window for actual keyboard testing. Native close also ends the driver. `--protocol 1`
-selects the original Home calibration fixture. `--binary PATH` supports a local app
-bundle executable. `--geometry last-legend` selects 135×36 at10×20 and adds a complete
-grid border; `--geometry oversized` selects 135×36 at20×40 (2700×1440 logical).
-`--geometry oversized-tall` selects 135×36 at20×80 to exercise height/chrome fitting.
-The unused area is intentional; these are alignment fixtures, not game screens.
-All fixture assets belong to this repository; no Ichiloto/PHP,
-game checkout, game process or audio is used. Check existing processes first and
-keep only one interactive fixture window open.
+The original `scripts/fixture.php` and `scripts/inspect-fixture.php` emit
+stateless protocol 1 or 2 frames and remain historical calibration fixtures;
+they cannot drive the production retained renderer. Use the retained replay tool
+above with an NDJSON capture for native presentation inspection, or the Engine's
+retained fixture smoke for a small controlled window. Both are fixture-only and
+silent. Check existing processes first and keep only one inspection window open.
 
 ## Implementation boundaries
 
@@ -927,9 +1313,16 @@ The UI never reads stdin, decodes PNGs or writes pipes. Queues are bounded at tw
 input updates and 256 output events. Every queued event carries its own version, so
 buffered pre-session errors cannot be relabelled after a successful hello. There is
 no equality-based redraw suppression; all accepted state (IDs, layers, runs, styles,
-sprites) is replaced and notified intact. The only renderer timer is shutdown drain.
+sprites) is replaced and notified intact. The only renderer timer is shutdown drain;
+field slides request animation frames only while one is in progress.
 
 Engine uses v2 with negotiated graphical capabilities for GPUI; v1 remains a
 compatibility path. PHP supplies structured colors without ANSI, preserves
 explicit blank UI cells and chooses layering and transient timing.
 The renderer does not infer missing UI backgrounds, masks, overlays or game bindings.
+
+## Contributing and Git workflow
+
+Read [GIT_WORKFLOW.md](GIT_WORKFLOW.md) and install the Git guards with
+`sh scripts/install-git-guards.sh` before contributing. All changes integrate
+into `develop`; `main` is updated only by a PR from this repository's `develop`.

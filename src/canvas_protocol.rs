@@ -88,8 +88,22 @@ pub struct CanvasImage {
     pub source_rect: Option<SourceRect>,
     #[serde(default = "opaque")]
     pub opacity: f64,
+    /// RGB multiplier for image tone; alpha remains unchanged. Presence is
+    /// retained so use of this feature can be capability-gated even at 1.0.
+    #[serde(default, deserialize_with = "present")]
+    pub brightness: Option<f64>,
+    #[serde(default, deserialize_with = "present")]
+    pub flip_x: Option<bool>,
+    #[serde(default, deserialize_with = "present")]
+    pub flip_y: Option<bool>,
     #[serde(default, deserialize_with = "present")]
     pub clip_rect: Option<Rect>,
+}
+
+impl CanvasImage {
+    pub fn get_brightness(&self) -> f64 {
+        self.brightness.unwrap_or(1.0)
+    }
 }
 
 // Preserve explicit field presence for negotiation, without accepting null.
@@ -251,6 +265,11 @@ impl Canvas {
             if !image.opacity.is_finite() || !(0.0..=1.0).contains(&image.opacity) {
                 return Err("canvas opacity must be finite and between 0 and 1".into());
             }
+            if let Some(brightness) = image.brightness
+                && (!brightness.is_finite() || !(0.0..=1.0).contains(&brightness))
+            {
+                return Err("canvas brightness must be finite and between 0 and 1".into());
+            }
             if let Some(rect) = image.source_rect {
                 rect.validate()?;
             }
@@ -315,5 +334,120 @@ impl Canvas {
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod coordinate_wire_tests {
+    use super::*;
+
+    fn read_canvases(wire: &str) -> [Canvas; 2] {
+        [
+            serde_json::from_str(wire).unwrap(),
+            serde_json::from_value(serde_json::from_str::<serde_json::Value>(wire).unwrap())
+                .unwrap(),
+        ]
+    }
+
+    #[test]
+    fn fractional_coordinates_round_trip_at_the_canvas_edge() {
+        // Half an ulp at the canvas edge rounds to that edge, not outside it.
+        let wire = r#"{"width":1350,"height":720,"images":[{"id":"image","asset":"image.png","layer":0,"destination":{"x":155,"y":5.684341886080802e-14,"width":1024,"height":720}}]}"#;
+        let half_ulp = (720.0_f64.next_up() - 720.0) / 2.0;
+        for canvas in read_canvases(wire) {
+            let rect = canvas.images[0].destination;
+            assert_eq!(rect.y.to_bits(), half_ulp.to_bits());
+            assert_eq!(rect.y + rect.height, 720.0);
+            canvas.validate().unwrap();
+        }
+    }
+
+    #[test]
+    fn genuinely_outside_fractional_coordinates_are_still_rejected() {
+        let wire = r#"{"width":1350,"height":720,"images":[{"id":"image","asset":"image.png","layer":0,"destination":{"x":155,"y":5.684341886080803e-14,"width":1024,"height":720}}]}"#;
+        for canvas in read_canvases(wire) {
+            let rect = canvas.images[0].destination;
+            assert_eq!(rect.y + rect.height, 720.0_f64.next_up());
+            assert!(canvas.validate().is_err());
+        }
+    }
+}
+
+#[cfg(test)]
+mod brightness_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn make_canvas_image_value() -> serde_json::Value {
+        json!({
+            "id":"actor", "asset":"actor.png", "layer":1,
+            "destination":{"x":0,"y":0,"width":8,"height":8}
+        })
+    }
+
+    #[test]
+    fn image_brightness_is_optional_but_explicit_null_is_invalid() {
+        let image: CanvasImage = serde_json::from_value(make_canvas_image_value()).unwrap();
+        assert_eq!(image.brightness, None);
+        assert_eq!(image.get_brightness(), 1.0);
+
+        let mut value = make_canvas_image_value();
+        value["brightness"] = json!(1.0);
+        let image: CanvasImage = serde_json::from_value(value.clone()).unwrap();
+        assert_eq!(image.brightness, Some(1.0));
+        value["brightness"] = serde_json::Value::Null;
+        assert!(serde_json::from_value::<CanvasImage>(value).is_err());
+    }
+
+    #[test]
+    fn image_brightness_is_finite_and_bounded() {
+        let mut canvas = Canvas {
+            width: 8,
+            height: 8,
+            images: vec![serde_json::from_value(make_canvas_image_value()).unwrap()],
+            composites: None,
+            indicators: vec![],
+            text_layers: vec![],
+        };
+        for valid in [0.0, 0.6, 1.0] {
+            canvas.images[0].brightness = Some(valid);
+            assert!(canvas.validate().is_ok());
+        }
+        for invalid in [-0.1, 1.1, f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            canvas.images[0].brightness = Some(invalid);
+            assert_eq!(
+                canvas.validate().unwrap_err(),
+                "canvas brightness must be finite and between 0 and 1"
+            );
+        }
+    }
+    #[test]
+    fn image_flips_are_optional_boolean_fields_not_nullable_or_numeric() {
+        let image: CanvasImage = serde_json::from_value(make_canvas_image_value()).unwrap();
+        assert_eq!((image.flip_x, image.flip_y), (None, None));
+        for field in ["flipX", "flipY"] {
+            for valid in [true, false] {
+                let mut value = make_canvas_image_value();
+                value[field] = serde_json::json!(valid);
+                let image: CanvasImage = serde_json::from_value(value).unwrap();
+                assert_eq!(
+                    if field == "flipX" {
+                        image.flip_x
+                    } else {
+                        image.flip_y
+                    },
+                    Some(valid)
+                );
+            }
+            for invalid in [
+                serde_json::json!(null),
+                serde_json::json!(1),
+                serde_json::json!("true"),
+            ] {
+                let mut value = make_canvas_image_value();
+                value[field] = invalid;
+                assert!(serde_json::from_value::<CanvasImage>(value).is_err());
+            }
+        }
     }
 }

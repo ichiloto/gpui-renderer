@@ -151,7 +151,7 @@ exactly640×288 content for a1280×576 logical grid (scale0.5). Every interactiv
 fixture closed normally with exit0; the final process inventory found no renderer,
 fixture driver or game process running.
 
-Reproduce reports with `scripts/analyze-trace.py TRACE --events STDOUT`, optionally
+Reproduce reports with `scripts/analyze-trace.php TRACE --events STDOUT`, optionally
 `--ids FIRST:LAST` or `--held`. It correlates each stage by ID/timestamp and checks
 stdout event identities against complete traces. Queue snapshots are separate
 observations; they are not summed. Submission-through-flush lifetimes are reported
@@ -215,3 +215,7 @@ manual repeat never accumulated a queue. They cannot exonerate OS/GPUI dispatch 
 PHP/frame presentation outside this boundary. The Engine's separate pump fix and
 cross-process diagnostic work are separate changes and were not tested by these
 standalone fixtures.
+
+Utility links and reproduction commands now point to PHP equivalents. Recorded
+native measurements above predate this utility migration; the migration did not
+rerun native validation or change retained measurement data.

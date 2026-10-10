@@ -1,0 +1,26 @@
+{
+  "operations": [
+    {"op":"put","kind":"world","id":"map","value":{
+      "columns":4,"rows":1,"cellWidth":48,"cellHeight":48,
+      "layers":[
+        {"id":"map:terrain","layer":-99,"kind":"gameplay"},
+        {"id":"map:buildings","layer":-98,"kind":"gameplay"},
+        {"id":"map:detail","layer":-97,"kind":"decoration"},
+        {"id":"tiles:floor","layer":-100,"kind":"tiles","coversLayerId":"map:buildings"}
+      ],
+      "tileset":{"tileSize":2,"sheets":["floor.png"],"tiles":[
+        {"frames":[[{"sheet":0,"x":2,"y":0,"width":2,"height":2,"left":0,"top":0}]]}
+      ]}
+    }},
+    {"op":"worldRows","id":"map","rows":[{"row":0,"cells":[
+      {"glyph":" ","foreground":null,"background":null,"ownerLayerId":"map:terrain"},
+      {"glyph":".","foreground":null,"background":null,"ownerLayerId":"map:terrain"},
+      {"glyph":"#","foreground":null,"background":null,"ownerLayerId":"map:buildings"},
+      {"glyph":" ","foreground":null,"background":null,"ownerLayerId":"map:terrain"}
+    ]}]},
+    {"op":"worldTiles","id":"map","layerId":"tiles:floor","rows":[{"row":0,"cells":[
+      {"column":0,"tile":0},{"column":1,"tile":0},{"column":2,"tile":0}
+    ]}]}
+  ],
+  "shownGlyphs":[{"x":1,"y":0,"glyph":".","layer":"terrain"}]
+}

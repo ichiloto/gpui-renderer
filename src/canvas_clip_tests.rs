@@ -50,7 +50,7 @@ fn clipping_wire_corpus_negotiates_validates_and_preserves_accepted_frames() {
         let original_source = accepted.canvas.as_ref().unwrap().source.clone();
         let mut state = RendererState {
             hello: config.clone(),
-            frame: Some(accepted),
+            frame: Some(accepted.into()),
         };
         if let Some(caps) = case.get("capabilities") {
             config.required_capabilities = serde_json::from_value(caps.clone()).unwrap();
@@ -74,7 +74,13 @@ fn clipping_wire_corpus_negotiates_validates_and_preserves_accepted_frames() {
                     assert!(session.prepare(incoming).is_err(), "{name}");
                 }
             },
-            "session" | "preparation" => {
+            "session" => {
+                assert!(
+                    matches!(session.prepare(parsed.unwrap()).unwrap(), Update::Frame(_)),
+                    "{name}"
+                );
+            }
+            "preparation" => {
                 let incoming = parsed.unwrap_or_else(|error| panic!("{name}: {error}"));
                 let Message::FrameV2(frame) = &incoming.message else {
                     panic!("{name}")
@@ -119,7 +125,7 @@ fn clipping_wire_corpus_negotiates_validates_and_preserves_accepted_frames() {
                         panic!("{name}")
                     };
                     let expected = frame(name).canvas;
-                    state.replace(next);
+                    state.replace(*next);
                     assert_eq!(
                         state
                             .frame
